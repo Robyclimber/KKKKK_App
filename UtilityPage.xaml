@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="WallPanelPlanner.UtilityPage"
+             Title="Utility">
+    <ScrollView>
+        <VerticalStackLayout Padding="20,16,20,24" Spacing="18">
+            <VerticalStackLayout Spacing="4">
+                <Label Text="Utility"
+                       FontSize="30"
+                       TextColor="{StaticResource WarmGold}"
+                       FontFamily="OpenSansSemibold"
+                       CharacterSpacing="6"
+                       LineBreakMode="NoWrap" />
+                <Label Text="Azioni tecniche e manutenzione dell'app."
+                       TextColor="{StaticResource MutedText}" />
+            </VerticalStackLayout>
+
+            <Border BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Reset database" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
+                    <Label Text="Cancella sale, pareti, pannelli, fori e circuiti salvati. Usalo solo quando vuoi ripartire completamente da zero."
+                           TextColor="{StaticResource MutedText}" />
+                    <Button Text="Resetta tutto il DB"
+                            Clicked="OnResetDatabaseClicked"
+                            BackgroundColor="{StaticResource Danger}"
+                            TextColor="{StaticResource WarmText}" />
+                    <Label x:Name="ResetStatusLabel"
+                           Text="Nessun reset eseguito."
+                           TextColor="{StaticResource MutedText}"
+                           FontSize="12" />
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

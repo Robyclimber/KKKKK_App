@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="456" height="456" viewBox="0 0 456 456" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <path d="M 78 284 L 160 178 L 224 258 L 294 142 L 382 284"
+          fill="none"
+          stroke="#F2C94C"
+          stroke-width="24"
+          stroke-linecap="round"
+          stroke-linejoin="round" />
+    <path d="M 124 284 L 184 206 L 236 270"
+          fill="none"
+          stroke="#B9922F"
+          stroke-width="16"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          opacity="0.95" />
+    <text x="228"
+          y="358"
+          font-family="Open Sans, Segoe UI, sans-serif"
+          font-size="44"
+          font-weight="700"
+          letter-spacing="6"
+          text-anchor="middle"
+          fill="#F8E7A8">K-K-K-K</text>
+</svg>

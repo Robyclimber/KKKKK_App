@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="WallPanelPlanner.HomePage"
+             Title="Home">
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="18">
+            <VerticalStackLayout Spacing="6">
+                <Label Text="KKKK KonKiKingKong"
+                       FontSize="34"
+                       FontFamily="OpenSansSemibold"
+                       CharacterSpacing="8"
+                       LineBreakMode="NoWrap"
+                       TextColor="{StaticResource WarmGold}" />
+                <Label Text="Configurazione palestra, circuiti e allenamento."
+                       TextColor="{StaticResource MutedText}" />
+            </VerticalStackLayout>
+
+            <Border BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="18">
+                <VerticalStackLayout Spacing="12">
+                    <Label x:Name="NextStepTitleLabel"
+                           Text="Prossimo passo"
+                           FontSize="22"
+                           TextColor="{StaticResource WarmGold}"
+                           FontFamily="OpenSansSemibold" />
+                    <Label x:Name="NextStepMessageLabel"
+                           Text="Controllo lo stato della palestra..."
+                           TextColor="{StaticResource MutedText}" />
+                    <Button x:Name="PrimaryActionButton"
+                            Text="Vai alla configurazione"
+                            Clicked="OnPrimaryActionClicked" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="18">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Azioni rapide" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Button Text="Configura palestra"
+                                Clicked="OnGoToGymSetupClicked" />
+                        <Button Grid.Column="1"
+                                Text="Circuiti"
+                                Clicked="OnGoToCircuitsClicked" />
+                    </Grid>
+                    <Button Text="Allenamento"
+                            Clicked="OnTrainingClicked"
+                            BackgroundColor="{StaticResource PanelBlackAlt}"
+                            TextColor="{StaticResource WarmGold}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="18">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Stato attuale" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
+                        <Border BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGoldMuted}" Padding="12">
+                            <VerticalStackLayout Spacing="4">
+                                <Label Text="Sale" TextColor="{StaticResource MutedText}" FontSize="12" />
+                                <Label x:Name="RoomsCountLabel" Text="0" FontSize="24" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
+                            </VerticalStackLayout>
+                        </Border>
+                        <Border Grid.Column="1" BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGoldMuted}" Padding="12">
+                            <VerticalStackLayout Spacing="4">
+                                <Label Text="Pareti" TextColor="{StaticResource MutedText}" FontSize="12" />
+                                <Label x:Name="WallsCountLabel" Text="0" FontSize="24" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
+                            </VerticalStackLayout>
+                        </Border>
+                        <Border Grid.Column="2" BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGoldMuted}" Padding="12">
+                            <VerticalStackLayout Spacing="4">
+                                <Label Text="Circuiti" TextColor="{StaticResource MutedText}" FontSize="12" />
+                                <Label x:Name="CircuitsCountLabel" Text="0" FontSize="24" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="WallPanelPlanner.CircuitPage"
+             Title="Circuiti">
+    <ScrollView>
+        <VerticalStackLayout Padding="20,16,20,24" Spacing="18">
+            <VerticalStackLayout Spacing="4">
+                <Label Text="Circuiti"
+                       FontSize="30"
+                       TextColor="{StaticResource WarmGold}"
+                       FontFamily="OpenSansSemibold"
+                       CharacterSpacing="6"
+                       LineBreakMode="NoWrap" />
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="Sala" FontSize="13" TextColor="{StaticResource MutedText}" />
+                    <Picker x:Name="CircuitRoomPicker"
+                            Title="Seleziona una sala"
+                            SelectedIndexChanged="OnCircuitRoomChanged" />
+                </VerticalStackLayout>
+                <Label x:Name="CurrentWallLabel"
+                       Text="Nessuna parete disponibile."
+                       TextColor="{StaticResource MutedText}" />
+            </VerticalStackLayout>
+
+            <Border BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGold}" StrokeShape="RoundRectangle 18" Padding="16">
+                <VerticalStackLayout Spacing="6">
+                    <Label x:Name="WorkflowTitleLabel"
+                           Text="Circuiti"
+                           FontSize="20"
+                           TextColor="{StaticResource WarmGold}"
+                           FontFamily="OpenSansSemibold" />
+                    <Label x:Name="WorkflowMessageLabel"
+                           Text="Seleziona una sala per vedere i circuiti disponibili."
+                           TextColor="{StaticResource MutedText}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Editor circuito" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
+                    <Label Text="Scegli la parete del circuito. Dopo la creazione, il circuito lavora sempre sulla sua parete."
+                           FontSize="12"
+                           TextColor="{StaticResource MutedText}" />
+                    <Label x:Name="EditorModeLabel"
+                           Text="Nuovo circuito"
+                           FontSize="13"
+                           TextColor="{StaticResource MutedText}" />
+                    <Label x:Name="CircuitSummaryLabel"
+                           Text="Nessun circuito selezionato."
+                           FontSize="12"
+                           TextColor="{StaticResource MutedText}" />
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Parete del circuito" FontSize="13" TextColor="{StaticResource MutedText}" />
+                        <Picker x:Name="CircuitWallPicker"
+                                Title="Seleziona una parete"
+                                ItemDisplayBinding="{Binding DisplayLabel}" />
+                    </VerticalStackLayout>
+                    <Entry x:Name="CircuitNameEntry" Placeholder="Nome circuito" />
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <Entry x:Name="CircuitDifficultyEntry" Placeholder="Difficolta" />
+                        <Entry Grid.Column="1" x:Name="CircuitInclinationEntry" Placeholder="Inclinazione" />
+                    </Grid>
+                    <Button x:Name="NewCircuitButton" Text="Nuovo circuito" Clicked="OnNewCircuitClicked" />
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Button x:Name="CreateCircuitButton" Text="Crea circuito" Clicked="OnCreateCircuitClicked" />
+                        <Button x:Name="UpdateCircuitButton" Grid.Column="1" Text="Aggiorna circuito" Clicked="OnUpdateCircuitClicked" />
+                    </Grid>
+                    <Button x:Name="DeleteCircuitButton" Text="Elimina circuito" Clicked="OnDeleteCircuitClicked" BackgroundColor="{StaticResource Danger}" TextColor="White" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Modalita selezione movimento" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
+                    <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="10">
+                        <Button x:Name="RightHandModeButton" Text="DX" Clicked="OnRightHandModeClicked" />
+                        <Button x:Name="LeftHandModeButton" Grid.Column="1" Text="SX" Clicked="OnLeftHandModeClicked" />
+                        <Button x:Name="StartModeButton" Grid.Column="2" Text="S" Clicked="OnStartModeClicked" />
+                        <Button x:Name="TopModeButton" Grid.Column="3" Text="T" Clicked="OnTopModeClicked" />
+                    </Grid>
+                    <Button x:Name="RemoveModeButton"
+                            Text="Rimuovi presa"
+                            Clicked="OnRemoveModeClicked"
+                            BackgroundColor="{StaticResource Danger}"
+                            TextColor="White" />
+                    <Label x:Name="InteractionHintLabel"
+                           Text="Posiziona i due start, poi scegli DX o SX per il primo movimento: i successivi alternano automaticamente la mano."
+                           FontSize="12"
+                           TextColor="{StaticResource MutedText}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
+                        <Label Text="Parete e fori" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" VerticalOptions="Center" />
+                        <Button Grid.Column="1" Text="-" Clicked="OnZoomOutClicked" Padding="10,4" />
+                        <Button Grid.Column="2" Text="Reset" Clicked="OnZoomResetClicked" Padding="10,4" />
+                        <Button Grid.Column="3" Text="+" Clicked="OnZoomInClicked" Padding="10,4" />
+                    </Grid>
+                    <Grid x:Name="PreviewViewport" HeightRequest="420" SizeChanged="OnPreviewViewportSizeChanged">
+                        <ScrollView Orientation="Both">
+                            <AbsoluteLayout x:Name="CircuitPreviewLayer">
+                                <GraphicsView x:Name="CircuitPreviewCanvas"
+                                              AbsoluteLayout.LayoutBounds="0,0,1,1"
+                                              AbsoluteLayout.LayoutFlags="All">
+                                    <GraphicsView.GestureRecognizers>
+                                        <PinchGestureRecognizer PinchUpdated="OnPreviewPinchUpdated" />
+                                        <TapGestureRecognizer Tapped="OnPreviewSingleTapped" />
+                                        <TapGestureRecognizer NumberOfTapsRequired="2" Tapped="OnPreviewDoubleTappedForLeftHand" />
+                                        <TapGestureRecognizer NumberOfTapsRequired="3" Tapped="OnPreviewTripleTappedToRemove" />
+                                    </GraphicsView.GestureRecognizers>
+                                </GraphicsView>
+                                <Image x:Name="CircuitWallImageOverlay"
+                                       InputTransparent="True"
+                                       Aspect="Fill"
+                                       IsVisible="False" />
+                            </AbsoluteLayout>
+                        </ScrollView>
+                    </Grid>
+                    <Grid ColumnDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="12">
+                        <HorizontalStackLayout Spacing="6">
+                            <BoxView WidthRequest="14" HeightRequest="14" Color="#C44536" />
+                            <Label Text="Mov. DX" FontSize="12" TextColor="{StaticResource MutedText}" VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                        <HorizontalStackLayout Grid.Column="1" Spacing="6">
+                            <BoxView WidthRequest="14" HeightRequest="14" Color="#247BA0" />
+                            <Label Text="Mov. SX" FontSize="12" TextColor="{StaticResource MutedText}" VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                        <HorizontalStackLayout Grid.Column="2" Spacing="6">
+                            <BoxView WidthRequest="14" HeightRequest="14" Color="#2E8B57" />
+                            <Label Text="Start" FontSize="12" TextColor="{StaticResource MutedText}" VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                        <HorizontalStackLayout Grid.Column="3" Spacing="6">
+                            <BoxView WidthRequest="14" HeightRequest="14" Color="#F2C94C" />
+                            <Label Text="Top" FontSize="12" TextColor="{StaticResource MutedText}" VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                    </Grid>
+                    <Label x:Name="SelectedHoleInfoLabel"
+                           Text="Nessun foro selezionato."
+                           FontSize="12"
+                           TextColor="{StaticResource MutedText}" />
+                    <VerticalStackLayout x:Name="SelectedHoleActionsHost" Spacing="8" IsVisible="False">
+                        <Label Text="Azioni rapide sul foro selezionato"
+                               FontSize="13"
+                               TextColor="{StaticResource WarmGold}" />
+                        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                            <Button x:Name="QuickRightButton" Text="DX" Clicked="OnQuickRightClicked" />
+                            <Button x:Name="QuickLeftButton" Grid.Column="1" Text="SX" Clicked="OnQuickLeftClicked" />
+                            <Button x:Name="QuickRemoveButton" Grid.Column="2" Text="Rimuovi" Clicked="OnQuickRemoveClicked" BackgroundColor="{StaticResource Danger}" TextColor="White" />
+                        </Grid>
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                            <Button x:Name="QuickStartRightButton" Text="Start DX" Clicked="OnQuickStartRightClicked" />
+                            <Button x:Name="QuickStartLeftButton" Grid.Column="1" Text="Start SX" Clicked="OnQuickStartLeftClicked" />
+                        </Grid>
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                            <Button x:Name="QuickTopRightButton" Text="Top DX" Clicked="OnQuickTopRightClicked" />
+                            <Button x:Name="QuickTopLeftButton" Grid.Column="1" Text="Top SX" Clicked="OnQuickTopLeftClicked" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Circuiti sala" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
+                    <VerticalStackLayout x:Name="CircuitsHost" Spacing="10" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Movimenti circuito" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
+                    <Label x:Name="MovementsEmptyLabel"
+                           Text="Nessun movimento nel circuito selezionato."
+                           TextColor="{StaticResource MutedText}" />
+                    <VerticalStackLayout x:Name="MovementsHost" Spacing="10" />
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="WallPanelPlanner.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:WallPanelPlanner"
+    Title="KKKK KonKiKingKong"
+    FlyoutBehavior="Flyout">
+
+    <FlyoutItem Title="Home" Route="home">
+        <ShellContent
+            Title="Home"
+            ContentTemplate="{DataTemplate local:HomePage}"
+            Route="home-page" />
+    </FlyoutItem>
+
+    <FlyoutItem Title="Configura palestra" Route="sala-arrampicata">
+        <ShellContent
+            Title="Configura palestra"
+            ContentTemplate="{DataTemplate local:GymSetupPage}"
+            Route="gym-setup-page" />
+    </FlyoutItem>
+
+    <FlyoutItem Title="Circuiti" Route="circuiti">
+        <ShellContent
+            Title="Circuiti"
+            ContentTemplate="{DataTemplate local:CircuitPage}"
+            Route="circuit-page" />
+    </FlyoutItem>
+
+    <FlyoutItem Title="Utility" Route="utility">
+        <ShellContent
+            Title="Utility"
+            ContentTemplate="{DataTemplate local:UtilityPage}"
+            Route="utility-page" />
+    </FlyoutItem>
+
+</Shell>
