@@ -6,7 +6,7 @@ public sealed class WallImageService : IWallImageService
     {
         var result = await FilePicker.Default.PickAsync(new PickOptions
         {
-            PickerTitle = "Seleziona immagine parete",
+            PickerTitle = "Seleziona immagine pannello",
             FileTypes = FilePickerFileType.Images
         });
 

@@ -79,7 +79,16 @@ public sealed class GymSetupService : IGymSetupService
             HorizontalSpacing = input.HorizontalSpacing,
             VerticalSpacing = input.VerticalSpacing,
             EdgeOffsetX = input.EdgeOffsetX,
-            EdgeOffsetY = input.EdgeOffsetY
+            EdgeOffsetY = input.EdgeOffsetY,
+            ImagePath = currentPanel?.ImagePath,
+            ImageOffsetX = currentPanel?.ImageOffsetX ?? 0d,
+            ImageOffsetY = currentPanel?.ImageOffsetY ?? 0d,
+            ImageScale = currentPanel?.ImageScale ?? 1d,
+            ImageOpacity = currentPanel?.ImageOpacity ?? 0.55d,
+            ImageCropLeft = currentPanel?.ImageCropLeft ?? 0d,
+            ImageCropTop = currentPanel?.ImageCropTop ?? 0d,
+            ImageCropRight = currentPanel?.ImageCropRight ?? 0d,
+            ImageCropBottom = currentPanel?.ImageCropBottom ?? 0d
         };
 
         if (!wall.Contains(panel))
@@ -95,36 +104,44 @@ public sealed class GymSetupService : IGymSetupService
         return panel;
     }
 
-    public void SetWallImage(WallDefinition wall, string imagePath)
+    public void SetPanelImage(PanelDefinition panel, string imagePath)
     {
-        ArgumentNullException.ThrowIfNull(wall);
+        ArgumentNullException.ThrowIfNull(panel);
 
         if (string.IsNullOrWhiteSpace(imagePath))
         {
             throw new InvalidOperationException("Percorso immagine non valido.");
         }
 
-        wall.ImagePath = imagePath;
-        wall.ImageOffsetX = 0;
-        wall.ImageOffsetY = 0;
-        wall.ImageScale = 1d;
-        wall.ImageOpacity = 0.55d;
+        panel.ImagePath = imagePath;
+        panel.ImageOffsetX = 0;
+        panel.ImageOffsetY = 0;
+        panel.ImageScale = 1d;
+        panel.ImageOpacity = 0.55d;
+        panel.ImageCropLeft = 0d;
+        panel.ImageCropTop = 0d;
+        panel.ImageCropRight = 0d;
+        panel.ImageCropBottom = 0d;
     }
 
-    public void ClearWallImage(WallDefinition wall)
+    public void ClearPanelImage(PanelDefinition panel)
     {
-        ArgumentNullException.ThrowIfNull(wall);
+        ArgumentNullException.ThrowIfNull(panel);
 
-        wall.ImagePath = null;
-        wall.ImageOffsetX = 0;
-        wall.ImageOffsetY = 0;
-        wall.ImageScale = 1d;
-        wall.ImageOpacity = 0.55d;
+        panel.ImagePath = null;
+        panel.ImageOffsetX = 0;
+        panel.ImageOffsetY = 0;
+        panel.ImageScale = 1d;
+        panel.ImageOpacity = 0.55d;
+        panel.ImageCropLeft = 0d;
+        panel.ImageCropTop = 0d;
+        panel.ImageCropRight = 0d;
+        panel.ImageCropBottom = 0d;
     }
 
-    public void UpdateWallImageAlignment(WallDefinition wall, double offsetX, double offsetY, double scale, double opacity)
+    public void UpdatePanelImageAlignment(PanelDefinition panel, double offsetX, double offsetY, double scale, double opacity)
     {
-        ArgumentNullException.ThrowIfNull(wall);
+        ArgumentNullException.ThrowIfNull(panel);
 
         if (scale <= 0)
         {
@@ -136,9 +153,34 @@ public sealed class GymSetupService : IGymSetupService
             throw new InvalidOperationException("L'opacita immagine deve essere compresa tra 0 e 1.");
         }
 
-        wall.ImageOffsetX = offsetX;
-        wall.ImageOffsetY = offsetY;
-        wall.ImageScale = scale;
-        wall.ImageOpacity = opacity;
+        panel.ImageOffsetX = offsetX;
+        panel.ImageOffsetY = offsetY;
+        panel.ImageScale = scale;
+        panel.ImageOpacity = opacity;
+    }
+
+    public void UpdatePanelImageCrop(PanelDefinition panel, double cropLeft, double cropTop, double cropRight, double cropBottom)
+    {
+        ArgumentNullException.ThrowIfNull(panel);
+
+        cropLeft = Math.Clamp(cropLeft, 0d, 0.999d);
+        cropTop = Math.Clamp(cropTop, 0d, 0.999d);
+        cropRight = Math.Clamp(cropRight, 0d, 0.999d);
+        cropBottom = Math.Clamp(cropBottom, 0d, 0.999d);
+
+        if (cropLeft + cropRight >= 0.999d)
+        {
+            throw new InvalidOperationException("Il ritaglio orizzontale e' troppo grande.");
+        }
+
+        if (cropTop + cropBottom >= 0.999d)
+        {
+            throw new InvalidOperationException("Il ritaglio verticale e' troppo grande.");
+        }
+
+        panel.ImageCropLeft = cropLeft;
+        panel.ImageCropTop = cropTop;
+        panel.ImageCropRight = cropRight;
+        panel.ImageCropBottom = cropBottom;
     }
 }

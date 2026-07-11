@@ -112,10 +112,10 @@
                                         <TapGestureRecognizer NumberOfTapsRequired="3" Tapped="OnPreviewTripleTappedToRemove" />
                                     </GraphicsView.GestureRecognizers>
                                 </GraphicsView>
-                                <Image x:Name="CircuitWallImageOverlay"
-                                       InputTransparent="True"
-                                       Aspect="Fill"
-                                       IsVisible="False" />
+                                <AbsoluteLayout x:Name="CircuitPanelImagesHost"
+                                                InputTransparent="True"
+                                                AbsoluteLayout.LayoutBounds="0,0,1,1"
+                                                AbsoluteLayout.LayoutFlags="All" />
                             </AbsoluteLayout>
                         </ScrollView>
                     </Grid>

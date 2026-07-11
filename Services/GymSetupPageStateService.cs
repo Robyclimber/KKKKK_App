@@ -22,7 +22,8 @@ public sealed class GymSetupPageStateService : IGymSetupPageStateService
         var roomCount = viewModel.Rooms.Count;
         var wallCount = visibleWalls.Count;
         var panelCount = selectedWall?.Panels.Count ?? 0;
-        var wallHasImage = selectedWall is not null && !string.IsNullOrWhiteSpace(selectedWall.ImagePath);
+        var selectedPanel = viewModel.SelectedPanel;
+        var panelHasImage = selectedPanel is not null && !string.IsNullOrWhiteSpace(selectedPanel.ImagePath);
         var panelEditorState = editorStateService.BuildPanelEditor(viewModel, useSelectedPanelValues: true);
         var workflow = BuildWorkflowState(selectedRoom, selectedWall, roomCount, wallCount, panelCount);
 
@@ -37,7 +38,7 @@ public sealed class GymSetupPageStateService : IGymSetupPageStateService
             HasVisibleWalls = wallCount > 0,
             CanAddWall = selectedRoom is not null,
             CanEditPanels = selectedWall is not null,
-            CanManageWallImage = selectedWall is not null,
+            CanManageWallImage = selectedPanel is not null,
             CanSaveWall = selectedWall is not null,
             RoomSummaryText = selectedRoom is null
                 ? $"Sale presenti: {roomCount}"
@@ -52,13 +53,19 @@ public sealed class GymSetupPageStateService : IGymSetupPageStateService
                 : $"{selectedWall.RoomName} - {selectedWall.Name} - Pannelli: {selectedWall.Panels.Count}",
             PanelEditorModeText = panelEditorState.ModeText,
             ShowEmptyPanels = selectedWall is null || selectedWall.Panels.Count == 0,
-            WallImageInfoText = wallHasImage
-                ? $"Immagine associata: {Path.GetFileName(selectedWall!.ImagePath)}"
-                : "Nessuna immagine associata.",
-            WallImageOffsetXText = ToEditorText(selectedWall?.ImageOffsetX ?? 0d),
-            WallImageOffsetYText = ToEditorText(selectedWall?.ImageOffsetY ?? 0d),
-            WallImageScale = selectedWall is null || selectedWall.ImageScale <= 0 ? 1d : selectedWall.ImageScale,
-            WallImageOpacity = selectedWall is null || selectedWall.ImageOpacity <= 0 ? 0.55d : selectedWall.ImageOpacity
+            WallImageInfoText = selectedPanel is null
+                ? "Seleziona un pannello per associare l'immagine."
+                : panelHasImage
+                    ? $"Immagine associata al pannello {selectedPanel.Name}: {Path.GetFileName(selectedPanel.ImagePath)}"
+                    : $"Nessuna immagine associata al pannello {selectedPanel.Name}.",
+            WallImageOffsetXText = ToEditorText(selectedPanel?.ImageOffsetX ?? 0d),
+            WallImageOffsetYText = ToEditorText(selectedPanel?.ImageOffsetY ?? 0d),
+            WallImageScale = selectedPanel is null || selectedPanel.ImageScale <= 0 ? 1d : selectedPanel.ImageScale,
+            WallImageOpacity = selectedPanel is null || selectedPanel.ImageOpacity <= 0 ? 0.55d : selectedPanel.ImageOpacity,
+            WallImageCropLeftText = ToPercentEditorText(selectedPanel?.ImageCropLeft ?? 0d),
+            WallImageCropTopText = ToPercentEditorText(selectedPanel?.ImageCropTop ?? 0d),
+            WallImageCropRightText = ToPercentEditorText(selectedPanel?.ImageCropRight ?? 0d),
+            WallImageCropBottomText = ToPercentEditorText(selectedPanel?.ImageCropBottom ?? 0d)
         };
     }
 
@@ -100,5 +107,10 @@ public sealed class GymSetupPageStateService : IGymSetupPageStateService
     private static string ToEditorText(double value)
     {
         return value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+    }
+
+    private static string ToPercentEditorText(double value)
+    {
+        return (value * 100d).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
     }
 }

@@ -14,6 +14,7 @@ public sealed class WallConfigurationStorageService : IWallConfigurationStorageS
     public async Task<string> SaveAsync(WallDefinition wall, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(wall);
+        wall.ValidateHardwareMappings();
         var wallId = await wallRepository.SaveAsync(wall, cancellationToken);
         return $"DB wall id: {wallId}";
     }

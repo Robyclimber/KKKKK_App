@@ -30,6 +30,16 @@ public sealed class WallDefinition
 
     public string DisplayLabel => $"{RoomName} - {Name} - {Width:0.#} x {Height:0.#} mm";
 
+    public PanelDefinition? FindPanel(string panelName)
+    {
+        return Panels.FirstOrDefault(panel => string.Equals(panel.Name, panelName, StringComparison.Ordinal));
+    }
+
+    public PanelDefinition? FindPanel(WallHoleDefinition hole)
+    {
+        return FindPanel(hole.PanelName);
+    }
+
     public IReadOnlyList<WallHoleDefinition> GetOrderedHoles()
     {
         var allHoles = HoleLayout.Count > 0
@@ -60,7 +70,14 @@ public sealed class WallDefinition
 
             foreach (var hole in holesInColumn)
             {
-                numbered.Add(hole with { Number = number++ });
+                var assignedNumber = number++;
+                numbered.Add(hole with
+                {
+                    Number = assignedNumber,
+                    PointId = string.IsNullOrWhiteSpace(hole.PointId) ? BuildDefaultPointId(Name, assignedNumber) : hole.PointId,
+                    LedIndex = hole.LedIndex > 0 ? hole.LedIndex : assignedNumber,
+                    IsEnabled = hole.IsEnabled
+                });
             }
         }
 
@@ -80,6 +97,9 @@ public sealed class WallDefinition
             {
                 HoleLayout.Add(hole with
                 {
+                    PointId = string.IsNullOrWhiteSpace(existingHole.PointId) ? BuildDefaultPointId(Name, hole.Number) : existingHole.PointId,
+                    LedIndex = existingHole.LedIndex > 0 ? existingHole.LedIndex : hole.Number,
+                    IsEnabled = existingHole.IsEnabled,
                     HasHold = existingHole.HasHold,
                     HoldSize = existingHole.HoldSize,
                     HoldType = existingHole.HoldType
@@ -123,6 +143,65 @@ public sealed class WallDefinition
         });
     }
 
+    public void UpdateHoleHardware(int holeNumber, string? pointId, int ledIndex, bool isEnabled)
+    {
+        var orderedHoles = GetOrderedHoles();
+        var targetHole = orderedHoles.FirstOrDefault(hole => hole.Number == holeNumber);
+        if (targetHole.Number == 0)
+        {
+            throw new InvalidOperationException("Foro non trovato.");
+        }
+
+        if (ledIndex <= 0)
+        {
+            throw new InvalidOperationException("L'indice LED deve essere maggiore di zero.");
+        }
+
+        var normalizedPointId = string.IsNullOrWhiteSpace(pointId)
+            ? BuildDefaultPointId(Name, holeNumber)
+            : pointId.Trim();
+
+        ReplaceHoleMetadata(targetHole with
+        {
+            PointId = normalizedPointId,
+            LedIndex = ledIndex,
+            IsEnabled = isEnabled
+        });
+
+        ValidateHardwareMappings();
+    }
+
+    public void ValidateHardwareMappings()
+    {
+        var orderedHoles = GetOrderedHoles();
+
+        var duplicateLedIndices = orderedHoles
+            .Where(hole => hole.IsEnabled)
+            .GroupBy(hole => hole.LedIndex)
+            .Where(group => group.Key > 0 && group.Count() > 1)
+            .Select(group => group.Key)
+            .OrderBy(value => value)
+            .ToList();
+
+        if (duplicateLedIndices.Count > 0)
+        {
+            throw new InvalidOperationException($"Conflitto mapping LED: i LED {string.Join(", ", duplicateLedIndices)} sono assegnati a piu fori.");
+        }
+
+        var duplicatePointIds = orderedHoles
+            .Where(hole => !string.IsNullOrWhiteSpace(hole.PointId))
+            .GroupBy(hole => hole.PointId, StringComparer.OrdinalIgnoreCase)
+            .Where(group => group.Count() > 1)
+            .Select(group => group.Key)
+            .OrderBy(value => value)
+            .ToList();
+
+        if (duplicatePointIds.Count > 0)
+        {
+            throw new InvalidOperationException($"Conflitto pointId: {string.Join(", ", duplicatePointIds)}");
+        }
+    }
+
     public bool Contains(PanelDefinition panel)
     {
         return panel.X >= 0
@@ -143,6 +222,9 @@ public sealed class WallDefinition
                 hole.Y,
                 panel.X + hole.X,
                 panel.Y + hole.Y,
+                string.Empty,
+                0,
+                true,
                 false,
                 HoldSize.M,
                 HoldType.Jug)))
@@ -167,5 +249,13 @@ public sealed class WallDefinition
     private static string BuildHoleMetadataKey(string panelName, double relativeX, double relativeY)
     {
         return $"{panelName}|{relativeX:0.####}|{relativeY:0.####}";
+    }
+
+    private static string BuildDefaultPointId(string wallName, int holeNumber)
+    {
+        var safeWallName = string.IsNullOrWhiteSpace(wallName)
+            ? "wall"
+            : wallName.Trim().ToLowerInvariant().Replace(' ', '-');
+        return $"{safeWallName}-hole-{holeNumber:000}";
     }
 }

@@ -28,4 +28,22 @@ public sealed class PanelEntity
     public double EdgeOffsetX { get; set; }
 
     public double EdgeOffsetY { get; set; }
+
+    public string? ImagePath { get; set; }
+
+    public double ImageOffsetX { get; set; }
+
+    public double ImageOffsetY { get; set; }
+
+    public double ImageScale { get; set; }
+
+    public double ImageOpacity { get; set; }
+
+    public double ImageCropLeft { get; set; }
+
+    public double ImageCropTop { get; set; }
+
+    public double ImageCropRight { get; set; }
+
+    public double ImageCropBottom { get; set; }
 }

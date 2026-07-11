@@ -43,4 +43,12 @@ public sealed class GymSetupPageState
     public double WallImageScale { get; init; } = 1d;
 
     public double WallImageOpacity { get; init; } = 0.55d;
+
+    public string WallImageCropLeftText { get; init; } = "0";
+
+    public string WallImageCropTopText { get; init; } = "0";
+
+    public string WallImageCropRightText { get; init; } = "0";
+
+    public string WallImageCropBottomText { get; init; } = "0";
 }

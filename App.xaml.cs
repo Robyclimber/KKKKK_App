@@ -26,6 +26,10 @@ public partial class App : Application
         CircuitPageStateService = new CircuitPageStateService();
         WallConfigurationStorageService = new WallConfigurationStorageService(WallRepository);
         WallImageService = new WallImageService();
+        PanelImageAlignmentService = new PanelImageAlignmentService();
+        Esp32SettingsService = new Esp32SettingsService();
+        Esp32PayloadBuilderService = new Esp32PayloadBuilderService();
+        Esp32ApiClient = new Esp32ApiClient();
         GymSetupViewModel = new GymSetupViewModel(GymSetupService, WallConfigurationStorageService, WallRepository, RoomRepository);
         CircuitEditorViewModel = new CircuitEditorViewModel(CircuitEditingService, GymSetupViewModel, CircuitRepository);
         LayoutPreviewDrawable = new LayoutPreviewDrawable();
@@ -56,6 +60,14 @@ public partial class App : Application
     public IWallConfigurationStorageService WallConfigurationStorageService { get; }
 
     public IWallImageService WallImageService { get; }
+
+    public IPanelImageAlignmentService PanelImageAlignmentService { get; }
+
+    public IEsp32SettingsService Esp32SettingsService { get; }
+
+    public IEsp32PayloadBuilderService Esp32PayloadBuilderService { get; }
+
+    public IEsp32ApiClient Esp32ApiClient { get; }
 
     public GymSetupViewModel GymSetupViewModel { get; }
 

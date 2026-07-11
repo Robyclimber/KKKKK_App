@@ -22,6 +22,36 @@ public sealed class PanelDefinition
 
     public double EdgeOffsetY { get; init; }
 
+    public string? ImagePath { get; set; }
+
+    public double ImageOffsetX { get; set; }
+
+    public double ImageOffsetY { get; set; }
+
+    public double ImageScale { get; set; } = 1d;
+
+    public double ImageOpacity { get; set; } = 0.55d;
+
+    public double ImageCropLeft { get; set; }
+
+    public double ImageCropTop { get; set; }
+
+    public double ImageCropRight { get; set; }
+
+    public double ImageCropBottom { get; set; }
+
+    public double EffectiveImageCropLeft => ClampCrop(ImageCropLeft);
+
+    public double EffectiveImageCropTop => ClampCrop(ImageCropTop);
+
+    public double EffectiveImageCropRight => ClampCrop(ImageCropRight);
+
+    public double EffectiveImageCropBottom => ClampCrop(ImageCropBottom);
+
+    public double EffectiveImageCropWidthFactor => Math.Max(0.001d, 1d - EffectiveImageCropLeft - EffectiveImageCropRight);
+
+    public double EffectiveImageCropHeightFactor => Math.Max(0.001d, 1d - EffectiveImageCropTop - EffectiveImageCropBottom);
+
     public string Summary =>
         $"{Name} - Pos({X:0.#}, {Y:0.#}) mm - {Width:0.#} x {Height:0.#} mm - Fori: {HoleCount}";
 
@@ -78,5 +108,10 @@ public sealed class PanelDefinition
         }
 
         return new ReadOnlyCollection<HoleDefinition>(holes);
+    }
+
+    private static double ClampCrop(double value)
+    {
+        return Math.Clamp(value, 0d, 0.999d);
     }
 }

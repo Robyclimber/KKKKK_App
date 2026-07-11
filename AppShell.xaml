@@ -28,6 +28,13 @@
             Route="circuit-page" />
     </FlyoutItem>
 
+    <FlyoutItem Title="Mapping hardware" Route="mapping-hardware">
+        <ShellContent
+            Title="Mapping hardware"
+            ContentTemplate="{DataTemplate local:HardwareMappingPage}"
+            Route="hardware-mapping-page" />
+    </FlyoutItem>
+
     <FlyoutItem Title="Utility" Route="utility">
         <ShellContent
             Title="Utility"

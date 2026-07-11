@@ -17,6 +17,7 @@ public sealed class SqliteWallRepository : IWallRepository
     public async Task<int> SaveAsync(WallDefinition wall, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(wall);
+        wall.ValidateHardwareMappings();
 
         var connection = await databaseFactory.GetConnectionAsync();
         var roomName = string.IsNullOrWhiteSpace(wall.RoomName) ? "Sala Arrampicata" : wall.RoomName;
@@ -64,7 +65,16 @@ public sealed class SqliteWallRepository : IWallRepository
                 HorizontalSpacing = panel.HorizontalSpacing,
                 VerticalSpacing = panel.VerticalSpacing,
                 EdgeOffsetX = panel.EdgeOffsetX,
-                EdgeOffsetY = panel.EdgeOffsetY
+                EdgeOffsetY = panel.EdgeOffsetY,
+                ImagePath = panel.ImagePath,
+                ImageOffsetX = panel.ImageOffsetX,
+                ImageOffsetY = panel.ImageOffsetY,
+                ImageScale = panel.ImageScale,
+                ImageOpacity = panel.ImageOpacity,
+                ImageCropLeft = panel.ImageCropLeft,
+                ImageCropTop = panel.ImageCropTop,
+                ImageCropRight = panel.ImageCropRight,
+                ImageCropBottom = panel.ImageCropBottom
             });
         }
 
@@ -73,7 +83,7 @@ public sealed class SqliteWallRepository : IWallRepository
             wall.RegenerateHoleLayoutFromPanels();
         }
 
-        foreach (var hole in wall.HoleLayout)
+        foreach (var hole in wall.GetOrderedHoles())
         {
             await connection.InsertAsync(new WallHoleEntity
             {
@@ -85,6 +95,9 @@ public sealed class SqliteWallRepository : IWallRepository
                 RelativeY = hole.RelativeY,
                 AbsoluteX = hole.AbsoluteX,
                 AbsoluteY = hole.AbsoluteY,
+                PointId = hole.PointId,
+                LedIndex = hole.LedIndex,
+                IsEnabled = hole.IsEnabled,
                 HasHold = hole.HasHold,
                 HoldSize = (int)hole.HoldSize,
                 HoldType = (int)hole.HoldType
@@ -131,8 +144,29 @@ public sealed class SqliteWallRepository : IWallRepository
                     HorizontalSpacing = panelEntity.HorizontalSpacing,
                     VerticalSpacing = panelEntity.VerticalSpacing,
                     EdgeOffsetX = panelEntity.EdgeOffsetX,
-                    EdgeOffsetY = panelEntity.EdgeOffsetY
+                    EdgeOffsetY = panelEntity.EdgeOffsetY,
+                    ImagePath = panelEntity.ImagePath,
+                    ImageOffsetX = panelEntity.ImageOffsetX,
+                    ImageOffsetY = panelEntity.ImageOffsetY,
+                    ImageScale = panelEntity.ImageScale <= 0 ? 1d : panelEntity.ImageScale,
+                    ImageOpacity = panelEntity.ImageOpacity <= 0 ? 0.55d : panelEntity.ImageOpacity,
+                    ImageCropLeft = panelEntity.ImageCropLeft,
+                    ImageCropTop = panelEntity.ImageCropTop,
+                    ImageCropRight = panelEntity.ImageCropRight,
+                    ImageCropBottom = panelEntity.ImageCropBottom
                 });
+            }
+
+            if (wall.Panels.Count > 0 &&
+                wall.Panels.All(panel => string.IsNullOrWhiteSpace(panel.ImagePath)) &&
+                !string.IsNullOrWhiteSpace(wall.ImagePath))
+            {
+                var firstPanel = wall.Panels[0];
+                firstPanel.ImagePath = wall.ImagePath;
+                firstPanel.ImageOffsetX = wall.ImageOffsetX;
+                firstPanel.ImageOffsetY = wall.ImageOffsetY;
+                firstPanel.ImageScale = wall.ImageScale <= 0 ? 1d : wall.ImageScale;
+                firstPanel.ImageOpacity = wall.ImageOpacity <= 0 ? 0.55d : wall.ImageOpacity;
             }
 
             var wallHoleEntities = holes
@@ -154,6 +188,9 @@ public sealed class SqliteWallRepository : IWallRepository
                         RelativeY = generatedHole.RelativeY,
                         AbsoluteX = generatedHole.AbsoluteX,
                         AbsoluteY = generatedHole.AbsoluteY,
+                        PointId = generatedHole.PointId,
+                        LedIndex = generatedHole.LedIndex,
+                        IsEnabled = generatedHole.IsEnabled,
                         HasHold = generatedHole.HasHold,
                         HoldSize = (int)generatedHole.HoldSize,
                         HoldType = (int)generatedHole.HoldType
@@ -173,6 +210,9 @@ public sealed class SqliteWallRepository : IWallRepository
                         holeEntity.RelativeY,
                         holeEntity.AbsoluteX,
                         holeEntity.AbsoluteY,
+                        holeEntity.PointId,
+                        holeEntity.LedIndex,
+                        holeEntity.IsEnabled,
                         holeEntity.HasHold,
                         (HoldSize)holeEntity.HoldSize,
                         (HoldType)holeEntity.HoldType));

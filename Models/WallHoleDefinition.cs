@@ -9,6 +9,9 @@ public readonly record struct WallHoleDefinition(
     double RelativeY,
     double AbsoluteX,
     double AbsoluteY,
+    string PointId = "",
+    int LedIndex = 0,
+    bool IsEnabled = true,
     bool HasHold = false,
     HoldSize HoldSize = HoldSize.M,
     HoldType HoldType = HoldType.Jug)

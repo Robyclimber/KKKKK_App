@@ -10,9 +10,11 @@ public interface IGymSetupService
 
     PanelDefinition CreatePanel(PanelInput input, WallDefinition wall, PanelDefinition? currentPanel);
 
-    void SetWallImage(WallDefinition wall, string imagePath);
+    void SetPanelImage(PanelDefinition panel, string imagePath);
 
-    void ClearWallImage(WallDefinition wall);
+    void ClearPanelImage(PanelDefinition panel);
 
-    void UpdateWallImageAlignment(WallDefinition wall, double offsetX, double offsetY, double scale, double opacity);
+    void UpdatePanelImageAlignment(PanelDefinition panel, double offsetX, double offsetY, double scale, double opacity);
+
+    void UpdatePanelImageCrop(PanelDefinition panel, double cropLeft, double cropTop, double cropRight, double cropBottom);
 }

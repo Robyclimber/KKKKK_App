@@ -18,7 +18,7 @@ public sealed class PanelEditorState
 
     public string HoleOffsetYText { get; init; } = "40";
 
-    public string HoleHorizontalText { get; init; } = "150";
+    public string HoleHorizontalText { get; init; } = "200";
 
-    public string HoleVerticalText { get; init; } = "180";
+    public string HoleVerticalText { get; init; } = "200";
 }

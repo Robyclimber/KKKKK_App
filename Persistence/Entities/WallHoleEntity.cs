@@ -25,6 +25,12 @@ public sealed class WallHoleEntity
 
     public double AbsoluteY { get; set; }
 
+    public string PointId { get; set; } = string.Empty;
+
+    public int LedIndex { get; set; }
+
+    public bool IsEnabled { get; set; } = true;
+
     public bool HasHold { get; set; }
 
     public int HoldSize { get; set; }

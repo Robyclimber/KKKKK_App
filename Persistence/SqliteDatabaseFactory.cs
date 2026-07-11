@@ -34,9 +34,21 @@ public sealed class SqliteDatabaseFactory : ISqliteDatabaseFactory
             await connection.CreateTableAsync<CircuitMovementEntity>();
             await EnsureColumnAsync("walls", "RoomName", "TEXT NOT NULL DEFAULT 'Sala Arrampicata'");
             await EnsureColumnAsync("circuits", "RoomName", "TEXT NOT NULL DEFAULT 'Sala Arrampicata'");
+            await EnsureColumnAsync("panels", "ImagePath", "TEXT NULL");
+            await EnsureColumnAsync("panels", "ImageOffsetX", "REAL NOT NULL DEFAULT 0");
+            await EnsureColumnAsync("panels", "ImageOffsetY", "REAL NOT NULL DEFAULT 0");
+            await EnsureColumnAsync("panels", "ImageScale", "REAL NOT NULL DEFAULT 1");
+            await EnsureColumnAsync("panels", "ImageOpacity", "REAL NOT NULL DEFAULT 0.55");
+            await EnsureColumnAsync("panels", "ImageCropLeft", "REAL NOT NULL DEFAULT 0");
+            await EnsureColumnAsync("panels", "ImageCropTop", "REAL NOT NULL DEFAULT 0");
+            await EnsureColumnAsync("panels", "ImageCropRight", "REAL NOT NULL DEFAULT 0");
+            await EnsureColumnAsync("panels", "ImageCropBottom", "REAL NOT NULL DEFAULT 0");
             await EnsureColumnAsync("wall_holes", "HasHold", "INTEGER NOT NULL DEFAULT 0");
             await EnsureColumnAsync("wall_holes", "HoldSize", "INTEGER NOT NULL DEFAULT 2");
             await EnsureColumnAsync("wall_holes", "HoldType", "INTEGER NOT NULL DEFAULT 0");
+            await EnsureColumnAsync("wall_holes", "PointId", "TEXT NOT NULL DEFAULT ''");
+            await EnsureColumnAsync("wall_holes", "LedIndex", "INTEGER NOT NULL DEFAULT 0");
+            await EnsureColumnAsync("wall_holes", "IsEnabled", "INTEGER NOT NULL DEFAULT 1");
             await EnsureDefaultRoomAsync();
 
             return connection;

@@ -240,22 +240,34 @@ public class GymSetupViewModel
         SelectedPanel = null;
     }
 
-    public void SetSelectedWallImage(string imagePath)
+    public void SetSelectedPanelImage(string imagePath)
     {
-        EnsureWallSelected();
-        gymSetupService.SetWallImage(SelectedWall!, imagePath);
+        EnsurePanelSelected();
+        gymSetupService.SetPanelImage(SelectedPanel!, imagePath);
     }
 
-    public void ClearSelectedWallImage()
+    public void ClearSelectedPanelImage()
     {
-        EnsureWallSelected();
-        gymSetupService.ClearWallImage(SelectedWall!);
+        EnsurePanelSelected();
+        gymSetupService.ClearPanelImage(SelectedPanel!);
     }
 
-    public void UpdateSelectedWallImageAlignment(double offsetX, double offsetY, double scale, double opacity)
+    public void UpdateSelectedPanelImageAlignment(double offsetX, double offsetY, double scale, double opacity)
+    {
+        EnsurePanelSelected();
+        gymSetupService.UpdatePanelImageAlignment(SelectedPanel!, offsetX, offsetY, scale, opacity);
+    }
+
+    public void UpdateSelectedPanelImageCrop(double cropLeft, double cropTop, double cropRight, double cropBottom)
+    {
+        EnsurePanelSelected();
+        gymSetupService.UpdatePanelImageCrop(SelectedPanel!, cropLeft, cropTop, cropRight, cropBottom);
+    }
+
+    public void UpdateHoleHardware(int holeNumber, string? pointId, int ledIndex, bool isEnabled)
     {
         EnsureWallSelected();
-        gymSetupService.UpdateWallImageAlignment(SelectedWall!, offsetX, offsetY, scale, opacity);
+        SelectedWall!.UpdateHoleHardware(holeNumber, pointId, ledIndex, isEnabled);
     }
 
     public bool IsPanelSelected(PanelDefinition panel)

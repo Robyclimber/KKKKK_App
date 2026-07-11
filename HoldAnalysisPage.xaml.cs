@@ -199,7 +199,8 @@ public partial class HoldAnalysisPage : ContentPage
 
     private View? CreateHolePreview(WallHoleDefinition hole)
     {
-        if (string.IsNullOrWhiteSpace(wall.ImagePath) || !File.Exists(wall.ImagePath))
+        var panel = wall.FindPanel(hole);
+        if (panel is null || string.IsNullOrWhiteSpace(panel.ImagePath) || !File.Exists(panel.ImagePath))
         {
             return new Border
             {
@@ -223,7 +224,7 @@ public partial class HoldAnalysisPage : ContentPage
             };
         }
 
-        var source = TryCreateHolePreviewSource(hole, 92d) ?? ImageSource.FromFile(wall.ImagePath);
+        var source = TryCreateHolePreviewSource(hole, 92d) ?? ImageSource.FromFile(panel.ImagePath);
         return new Border
         {
             WidthRequest = 92,
@@ -259,36 +260,45 @@ public partial class HoldAnalysisPage : ContentPage
 
     private ImageSource? TryCreateHolePreviewSource(WallHoleDefinition hole, double previewSize)
     {
-        var pixelSize = TryGetImagePixelSize(wall.ImagePath!);
+        var panel = wall.FindPanel(hole);
+        if (panel is null || string.IsNullOrWhiteSpace(panel.ImagePath))
+        {
+            return null;
+        }
+
+        var pixelSize = TryGetImagePixelSize(panel.ImagePath);
         if (pixelSize is null)
         {
-            return ImageSource.FromFile(wall.ImagePath!);
+            return ImageSource.FromFile(panel.ImagePath);
         }
 
         var sourceWidth = Math.Max(1d, pixelSize.Value.Width);
         var sourceHeight = Math.Max(1d, pixelSize.Value.Height);
-        var imageScale = Math.Max(0.2d, wall.ImageScale);
-        var overlayWidth = Math.Max(1d, wall.Width * imageScale);
-        var overlayHeight = Math.Max(1d, wall.Height * imageScale);
-        var aspectFillScale = Math.Max(overlayWidth / sourceWidth, overlayHeight / sourceHeight);
-        var imageInsetX = (overlayWidth - (sourceWidth * aspectFillScale)) / 2d;
-        var imageInsetY = (overlayHeight - (sourceHeight * aspectFillScale)) / 2d;
-        var holeOverlayX = hole.AbsoluteX - wall.ImageOffsetX;
-        var holeOverlayY = hole.AbsoluteY - wall.ImageOffsetY;
-        var sourceHoleX = (holeOverlayX - imageInsetX) / aspectFillScale;
-        var sourceHoleY = (holeOverlayY - imageInsetY) / aspectFillScale;
+        var cropLeftPx = sourceWidth * panel.EffectiveImageCropLeft;
+        var cropTopPx = sourceHeight * panel.EffectiveImageCropTop;
+        var cropWidthPx = sourceWidth * panel.EffectiveImageCropWidthFactor;
+        var cropHeightPx = sourceHeight * panel.EffectiveImageCropHeightFactor;
+        var imageScale = Math.Max(0.2d, panel.ImageScale);
+        var overlayWidth = Math.Max(1d, panel.Width * imageScale);
+        var overlayHeight = Math.Max(1d, panel.Height * imageScale);
+        var holeOverlayX = hole.RelativeX - panel.ImageOffsetX;
+        var holeOverlayY = hole.RelativeY - panel.ImageOffsetY;
+        var sourceHoleX = cropLeftPx + ((holeOverlayX / overlayWidth) * cropWidthPx);
+        var sourceHoleY = cropTopPx + ((holeOverlayY / overlayHeight) * cropHeightPx);
 
 #if ANDROID
         try
         {
-            using var bitmap = Android.Graphics.BitmapFactory.DecodeFile(wall.ImagePath!);
+            using var bitmap = Android.Graphics.BitmapFactory.DecodeFile(panel.ImagePath);
             if (bitmap is null)
             {
-                return ImageSource.FromFile(wall.ImagePath!);
+                return ImageSource.FromFile(panel.ImagePath);
             }
 
             const double cropWindowMillimeters = 220d;
-            var cropSizePx = (int)Math.Round(cropWindowMillimeters / aspectFillScale);
+            var cropScaleX = cropWidthPx / overlayWidth;
+            var cropScaleY = cropHeightPx / overlayHeight;
+            var cropSizePx = (int)Math.Round(cropWindowMillimeters * ((cropScaleX + cropScaleY) / 2d));
             cropSizePx = Math.Max(96, cropSizePx);
             cropSizePx = Math.Min(cropSizePx, Math.Min(bitmap.Width, bitmap.Height));
 
@@ -306,10 +316,10 @@ public partial class HoldAnalysisPage : ContentPage
         }
         catch
         {
-            return ImageSource.FromFile(wall.ImagePath!);
+            return ImageSource.FromFile(panel.ImagePath);
         }
 #else
-        return ImageSource.FromFile(wall.ImagePath!);
+        return ImageSource.FromFile(panel.ImagePath);
 #endif
     }
 

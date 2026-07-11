@@ -18,6 +18,79 @@
 
             <Border BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
                 <VerticalStackLayout Spacing="12">
+                    <Label Text="ESP32" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
+                    <Label Text="Pannello tecnico per testare le API HTTP dell'ESP32 direttamente dall'app."
+                           TextColor="{StaticResource MutedText}" />
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Base URL dispositivo" TextColor="{StaticResource MutedText}" FontSize="13" />
+                        <Entry x:Name="Esp32BaseUrlEntry" Placeholder="http://192.168.1.50" />
+                    </VerticalStackLayout>
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Controller ID" TextColor="{StaticResource MutedText}" FontSize="13" />
+                            <Entry x:Name="Esp32ControllerIdEntry" Placeholder="esp32-sala-1" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <Label Text="LED parete" TextColor="{StaticResource MutedText}" FontSize="13" />
+                            <Entry x:Name="Esp32WallLedCountEntry" Keyboard="Numeric" />
+                        </VerticalStackLayout>
+                    </Grid>
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Brightness limit" TextColor="{StaticResource MutedText}" FontSize="13" />
+                        <Entry x:Name="Esp32BrightnessLimitEntry" Keyboard="Numeric" />
+                    </VerticalStackLayout>
+                    <Button Text="Salva impostazioni ESP32"
+                            Clicked="OnSaveEsp32SettingsClicked" />
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Button Text="Health" Clicked="OnEsp32HealthClicked" />
+                        <Button Grid.Column="1" Text="Status" Clicked="OnEsp32StatusClicked" />
+                    </Grid>
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Parete da sincronizzare" TextColor="{StaticResource MutedText}" FontSize="13" />
+                        <Picker x:Name="Esp32WallPicker"
+                                Title="Seleziona parete"
+                                ItemDisplayBinding="{Binding DisplayLabel}"
+                                SelectedIndexChanged="OnEsp32WallSelectionChanged" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Circuito da mostrare" TextColor="{StaticResource MutedText}" FontSize="13" />
+                        <Picker x:Name="Esp32CircuitPicker"
+                                Title="Seleziona circuito"
+                                ItemDisplayBinding="{Binding DisplayLabel}" />
+                    </VerticalStackLayout>
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Button Text="Invia config parete"
+                                Clicked="OnSendWallConfigClicked" />
+                        <Button Grid.Column="1"
+                                Text="Sync circuiti"
+                                Clicked="OnSyncCircuitsClicked" />
+                    </Grid>
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Button Text="Show circuito"
+                                Clicked="OnShowCircuitClicked" />
+                        <Button Grid.Column="1"
+                                Text="Stop circuito"
+                                Clicked="OnStopCircuitClicked" />
+                    </Grid>
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Button Text="Reset circuito"
+                                Clicked="OnResetCircuitClicked" />
+                        <Button Grid.Column="1"
+                                Text="Clear LED"
+                                Clicked="OnClearCircuitClicked" />
+                    </Grid>
+                    <Label Text="Assunzione attuale: ogni foro viene esportato su LED progressivo in ordine foro, partendo da 0."
+                           TextColor="{StaticResource MutedText}"
+                           FontSize="12" />
+                    <Label x:Name="Esp32StatusLabel"
+                           Text="Nessuna chiamata ESP32 eseguita."
+                           TextColor="{StaticResource MutedText}"
+                           FontSize="12" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
+                <VerticalStackLayout Spacing="12">
                     <Label Text="Reset database" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
                     <Label Text="Cancella sale, pareti, pannelli, fori e circuiti salvati. Usalo solo quando vuoi ripartire completamente da zero."
                            TextColor="{StaticResource MutedText}" />

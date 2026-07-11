@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="WallPanelPlanner.HardwareMappingPage"
+             Title="Mapping hardware">
+    <ScrollView>
+        <VerticalStackLayout Padding="20,16,20,24" Spacing="18">
+            <VerticalStackLayout Spacing="4">
+                <Label Text="KKKK KonKiKingKong"
+                       FontSize="30"
+                       TextColor="{StaticResource WarmGold}"
+                       FontFamily="OpenSansSemibold"
+                       CharacterSpacing="8"
+                       LineBreakMode="NoWrap" />
+                <Label Text="Configura il mapping fori, pointId e LED della parete."
+                       TextColor="{StaticResource MutedText}" />
+            </VerticalStackLayout>
+
+            <Border BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Selezione parete" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Sala" TextColor="{StaticResource MutedText}" FontSize="13" />
+                        <Picker x:Name="RoomsPicker"
+                                Title="Seleziona una sala"
+                                ItemDisplayBinding="{Binding DisplayLabel}"
+                                SelectedIndexChanged="OnRoomSelectionChanged" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Parete" TextColor="{StaticResource MutedText}" FontSize="13" />
+                        <Picker x:Name="WallsPicker"
+                                Title="Seleziona una parete"
+                                ItemDisplayBinding="{Binding DisplayLabel}"
+                                SelectedIndexChanged="OnWallSelectionChanged" />
+                    </VerticalStackLayout>
+                    <Label x:Name="WallInfoLabel"
+                           Text="Nessuna parete selezionata."
+                           TextColor="{StaticResource MutedText}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Mapping fori -> LED" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
+                    <Label Text="Default automatico: foro 1 = LED 1. Qui puoi correggere il cablaggio reale per ESP32."
+                           TextColor="{StaticResource MutedText}"
+                           FontSize="12" />
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                        <Button Text="Rinumera LED automaticamente"
+                                Clicked="OnAutoRenumberHoleLedsClicked" />
+                        <HorizontalStackLayout Grid.Column="1"
+                                               Spacing="8"
+                                               VerticalOptions="Center">
+                            <Label Text="Solo conflitti"
+                                   VerticalOptions="Center"
+                                   TextColor="{StaticResource MutedText}" />
+                            <Switch x:Name="ShowOnlyHoleConflictsSwitch"
+                                    Toggled="OnShowOnlyHoleConflictsToggled" />
+                        </HorizontalStackLayout>
+                    </Grid>
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Button x:Name="SaveWallButton"
+                                Text="Salva parete"
+                                Clicked="OnSaveWallClicked" />
+                        <Button Grid.Column="1"
+                                Text="Aggiorna elenco"
+                                Clicked="OnRefreshClicked" />
+                    </Grid>
+                    <Label x:Name="HoleMappingEmptyLabel"
+                           Text="Nessun foro disponibile."
+                           TextColor="{StaticResource MutedText}" />
+                    <Label x:Name="HoleMappingSummaryLabel"
+                           TextColor="{StaticResource MutedText}"
+                           FontSize="12" />
+                    <VerticalStackLayout x:Name="HoleMappingsHost" Spacing="10" />
+                    <Button x:Name="LoadMoreHoleMappingsButton"
+                            Text="Carica altri fori"
+                            IsVisible="False"
+                            Clicked="OnLoadMoreHoleMappingsClicked" />
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

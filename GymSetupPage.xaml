@@ -219,15 +219,27 @@
                 </VerticalStackLayout>
             </Border>
 
+            <Border BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="5. Mapping hardware" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
+                    <Label Text="Il mapping fori -> LED e' in una pagina separata, per mantenere veloce la configurazione palestra."
+                           TextColor="{StaticResource MutedText}"
+                           FontSize="12" />
+                    <Button x:Name="OpenHardwareMappingButton"
+                            Text="Apri mapping hardware"
+                            Clicked="OnOpenHardwareMappingClicked" />
+                </VerticalStackLayout>
+            </Border>
+
             <Border x:Name="WallImageSectionBorder" BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
                 <VerticalStackLayout Spacing="12">
-                    <Label Text="4. Foto e allineamento" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
-                    <Label Text="La foto e' facoltativa, ma utile per allineare prese e fori."
+                    <Label Text="4. Foto pannello e allineamento" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
+                    <Label Text="Seleziona un pannello: l'immagine viene associata al pannello e allineata ai suoi fori."
                            TextColor="{StaticResource MutedText}"
                            FontSize="12" />
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
                         <Button x:Name="LoadWallImageButton"
-                                Text="Carica immagine parete"
+                                Text="Carica immagine pannello"
                                 Clicked="OnLoadWallImageClicked" />
                         <Button x:Name="ClearWallImageButton"
                                 Grid.Column="1"
@@ -235,19 +247,130 @@
                                 Clicked="OnClearWallImageClicked" />
                     </Grid>
                     <Button x:Name="AnalyzeHoldsButton"
-                            Text="Analizza prese dai fori"
+                            Text="Analizza prese dal pannello"
                             Clicked="OnAnalyzeHoldsClicked" />
+                    <Button x:Name="AutoAlignPanelImageButton"
+                            Text="Auto allinea immagine ai fori"
+                            Clicked="OnAutoAlignPanelImageClicked" />
                     <Label x:Name="WallImageInfoLabel"
                            Text="Nessuna immagine associata."
                            TextColor="{StaticResource MutedText}"
                            FontSize="12" />
+                    <Border Stroke="{StaticResource WarmGoldMuted}"
+                            StrokeShape="RoundRectangle 12"
+                            Padding="8"
+                            BackgroundColor="{StaticResource PanelBlack}">
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="Anteprima ritaglio"
+                                   TextColor="{StaticResource WarmGold}"
+                                   FontSize="13" />
+                            <Grid x:Name="CropEditorViewport"
+                                  InputTransparent="True"
+                                  HeightRequest="260"
+                                  SizeChanged="OnCropEditorViewportSizeChanged">
+                                <AbsoluteLayout x:Name="CropEditorLayer">
+                                    <Image x:Name="CropEditorImage"
+                                           Aspect="AspectFit"
+                                           AbsoluteLayout.LayoutBounds="0,0,1,1"
+                                           AbsoluteLayout.LayoutFlags="All"
+                                           IsVisible="False" />
+                                    <BoxView x:Name="CropMaskTop"
+                                             Color="#AA000000"
+                                             InputTransparent="True"
+                                             IsVisible="False" />
+                                    <BoxView x:Name="CropMaskBottom"
+                                             Color="#AA000000"
+                                             InputTransparent="True"
+                                             IsVisible="False" />
+                                    <BoxView x:Name="CropMaskLeft"
+                                             Color="#AA000000"
+                                             InputTransparent="True"
+                                             IsVisible="False" />
+                                    <BoxView x:Name="CropMaskRight"
+                                             Color="#AA000000"
+                                             InputTransparent="True"
+                                             IsVisible="False" />
+                                    <Border x:Name="CropSelectionBorder"
+                                            Stroke="{StaticResource WarmGold}"
+                                            StrokeThickness="2"
+                                            BackgroundColor="#11F2C94C"
+                                            StrokeShape="RoundRectangle 4"
+                                            IsVisible="False">
+                                        <Border.GestureRecognizers>
+                                            <PanGestureRecognizer PanUpdated="OnCropMovePanUpdated" />
+                                        </Border.GestureRecognizers>
+                                    </Border>
+                                    <Border x:Name="CropHandleTopLeft"
+                                            WidthRequest="24"
+                                            HeightRequest="24"
+                                            BackgroundColor="{StaticResource WarmGold}"
+                                            Stroke="#14110B"
+                                            StrokeThickness="1"
+                                            StrokeShape="RoundRectangle 12"
+                                            IsVisible="False">
+                                        <Border.GestureRecognizers>
+                                            <PanGestureRecognizer PanUpdated="OnCropTopLeftPanUpdated" />
+                                        </Border.GestureRecognizers>
+                                    </Border>
+                                    <Border x:Name="CropHandleTopRight"
+                                            WidthRequest="24"
+                                            HeightRequest="24"
+                                            BackgroundColor="{StaticResource WarmGold}"
+                                            Stroke="#14110B"
+                                            StrokeThickness="1"
+                                            StrokeShape="RoundRectangle 12"
+                                            IsVisible="False">
+                                        <Border.GestureRecognizers>
+                                            <PanGestureRecognizer PanUpdated="OnCropTopRightPanUpdated" />
+                                        </Border.GestureRecognizers>
+                                    </Border>
+                                    <Border x:Name="CropHandleBottomLeft"
+                                            WidthRequest="24"
+                                            HeightRequest="24"
+                                            BackgroundColor="{StaticResource WarmGold}"
+                                            Stroke="#14110B"
+                                            StrokeThickness="1"
+                                            StrokeShape="RoundRectangle 12"
+                                            IsVisible="False">
+                                        <Border.GestureRecognizers>
+                                            <PanGestureRecognizer PanUpdated="OnCropBottomLeftPanUpdated" />
+                                        </Border.GestureRecognizers>
+                                    </Border>
+                                    <Border x:Name="CropHandleBottomRight"
+                                            WidthRequest="24"
+                                            HeightRequest="24"
+                                            BackgroundColor="{StaticResource WarmGold}"
+                                            Stroke="#14110B"
+                                            StrokeThickness="1"
+                                            StrokeShape="RoundRectangle 12"
+                                            IsVisible="False">
+                                        <Border.GestureRecognizers>
+                                            <PanGestureRecognizer PanUpdated="OnCropBottomRightPanUpdated" />
+                                        </Border.GestureRecognizers>
+                                    </Border>
+                                    <Label x:Name="CropEditorEmptyLabel"
+                                           Text="Carica un'immagine e seleziona un pannello per ritagliare."
+                                           TextColor="{StaticResource MutedText}"
+                                           HorizontalOptions="Center"
+                                           VerticalOptions="Center"
+                                           AbsoluteLayout.LayoutBounds="0.5,0.5,-1,-1"
+                                           AbsoluteLayout.LayoutFlags="PositionProportional" />
+                                </AbsoluteLayout>
+                            </Grid>
+                            <Label Text="Per modificare il ritaglio usa l'editor full-screen."
+                                   TextColor="{StaticResource MutedText}"
+                                   FontSize="12" />
+                            <Button Text="Apri editor ritaglio full-screen"
+                                    Clicked="OnOpenCropEditorClicked" />
+                        </VerticalStackLayout>
+                    </Border>
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                         <VerticalStackLayout Spacing="4">
-                            <Label Text="Offset immagine X (mm)" TextColor="{StaticResource MutedText}" FontSize="13" />
+                            <Label Text="Offset immagine X nel pannello (mm)" TextColor="{StaticResource MutedText}" FontSize="13" />
                             <Entry x:Name="WallImageOffsetXEntry" Keyboard="Numeric" Text="0" />
                         </VerticalStackLayout>
                         <VerticalStackLayout Grid.Column="1" Spacing="4">
-                            <Label Text="Offset immagine Y (mm)" TextColor="{StaticResource MutedText}" FontSize="13" />
+                            <Label Text="Offset immagine Y nel pannello (mm)" TextColor="{StaticResource MutedText}" FontSize="13" />
                             <Entry x:Name="WallImageOffsetYEntry" Keyboard="Numeric" Text="0" />
                         </VerticalStackLayout>
                     </Grid>
@@ -277,6 +400,31 @@
                                 Maximum="1"
                                 Value="0.55"
                                 ValueChanged="OnWallImageOpacitySliderValueChanged" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Ritaglio immagine (%)" TextColor="{StaticResource MutedText}" FontSize="13" />
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                            <VerticalStackLayout Spacing="4">
+                                <Label Text="Sinistra %" TextColor="{StaticResource MutedText}" FontSize="12" />
+                                <Entry x:Name="WallImageCropLeftEntry" Keyboard="Numeric" Text="0" />
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="1" Spacing="4">
+                                <Label Text="Alto %" TextColor="{StaticResource MutedText}" FontSize="12" />
+                                <Entry x:Name="WallImageCropTopEntry" Keyboard="Numeric" Text="0" />
+                            </VerticalStackLayout>
+                        </Grid>
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                            <VerticalStackLayout Spacing="4">
+                                <Label Text="Destra %" TextColor="{StaticResource MutedText}" FontSize="12" />
+                                <Entry x:Name="WallImageCropRightEntry" Keyboard="Numeric" Text="0" />
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="1" Spacing="4">
+                                <Label Text="Basso %" TextColor="{StaticResource MutedText}" FontSize="12" />
+                                <Entry x:Name="WallImageCropBottomEntry" Keyboard="Numeric" Text="0" />
+                            </VerticalStackLayout>
+                        </Grid>
+                        <Button Text="Reset ritaglio"
+                                Clicked="OnResetWallImageCropClicked" />
                     </VerticalStackLayout>
                     <Button Text="Applica allineamento immagine"
                             Clicked="OnApplyWallImageAlignmentClicked" />

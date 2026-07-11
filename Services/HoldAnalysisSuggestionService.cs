@@ -88,7 +88,8 @@ public sealed class HoldAnalysisSuggestionService : IHoldAnalysisSuggestionServi
 
     private static HoldSuggestion? TrySuggestFromImage(WallDefinition wall, WallHoleDefinition hole)
     {
-        if (string.IsNullOrWhiteSpace(wall.ImagePath) || !File.Exists(wall.ImagePath))
+        var panel = wall.FindPanel(hole);
+        if (panel is null || string.IsNullOrWhiteSpace(panel.ImagePath) || !File.Exists(panel.ImagePath))
         {
             return null;
         }
@@ -102,7 +103,7 @@ public sealed class HoldAnalysisSuggestionService : IHoldAnalysisSuggestionServi
                 return null;
             }
 
-            using var bitmap = Android.Graphics.BitmapFactory.DecodeFile(wall.ImagePath);
+            using var bitmap = Android.Graphics.BitmapFactory.DecodeFile(panel.ImagePath);
             if (bitmap is null)
             {
                 return null;
@@ -276,7 +277,13 @@ public sealed class HoldAnalysisSuggestionService : IHoldAnalysisSuggestionServi
 
     private static HoleCropArea? TryGetHoleCropArea(WallDefinition wall, WallHoleDefinition hole)
     {
-        var pixelSize = TryGetImagePixelSize(wall.ImagePath!);
+        var panel = wall.FindPanel(hole);
+        if (panel is null || string.IsNullOrWhiteSpace(panel.ImagePath))
+        {
+            return null;
+        }
+
+        var pixelSize = TryGetImagePixelSize(panel.ImagePath);
         if (pixelSize is null)
         {
             return null;
@@ -284,19 +291,22 @@ public sealed class HoldAnalysisSuggestionService : IHoldAnalysisSuggestionServi
 
         var sourceWidth = Math.Max(1d, pixelSize.Value.Width);
         var sourceHeight = Math.Max(1d, pixelSize.Value.Height);
-        var imageScale = Math.Max(0.2d, wall.ImageScale);
-        var overlayWidth = Math.Max(1d, wall.Width * imageScale);
-        var overlayHeight = Math.Max(1d, wall.Height * imageScale);
-        var aspectFillScale = Math.Max(overlayWidth / sourceWidth, overlayHeight / sourceHeight);
-        var imageInsetX = (overlayWidth - (sourceWidth * aspectFillScale)) / 2d;
-        var imageInsetY = (overlayHeight - (sourceHeight * aspectFillScale)) / 2d;
-        var holeOverlayX = hole.AbsoluteX - wall.ImageOffsetX;
-        var holeOverlayY = hole.AbsoluteY - wall.ImageOffsetY;
-        var sourceHoleX = (holeOverlayX - imageInsetX) / aspectFillScale;
-        var sourceHoleY = (holeOverlayY - imageInsetY) / aspectFillScale;
+        var cropLeftPx = sourceWidth * panel.EffectiveImageCropLeft;
+        var cropTopPx = sourceHeight * panel.EffectiveImageCropTop;
+        var cropWidthPx = sourceWidth * panel.EffectiveImageCropWidthFactor;
+        var cropHeightPx = sourceHeight * panel.EffectiveImageCropHeightFactor;
+        var imageScale = Math.Max(0.2d, panel.ImageScale);
+        var overlayWidth = Math.Max(1d, panel.Width * imageScale);
+        var overlayHeight = Math.Max(1d, panel.Height * imageScale);
+        var holeOverlayX = hole.RelativeX - panel.ImageOffsetX;
+        var holeOverlayY = hole.RelativeY - panel.ImageOffsetY;
+        var sourceHoleX = cropLeftPx + ((holeOverlayX / overlayWidth) * cropWidthPx);
+        var sourceHoleY = cropTopPx + ((holeOverlayY / overlayHeight) * cropHeightPx);
 
         const double cropWindowMillimeters = 220d;
-        var cropSizePx = (int)Math.Round(cropWindowMillimeters / aspectFillScale);
+        var cropScaleX = cropWidthPx / overlayWidth;
+        var cropScaleY = cropHeightPx / overlayHeight;
+        var cropSizePx = (int)Math.Round(cropWindowMillimeters * ((cropScaleX + cropScaleY) / 2d));
         cropSizePx = Math.Max(96, cropSizePx);
 
         var cropLeft = (int)Math.Round(sourceHoleX - (cropSizePx / 2d));
