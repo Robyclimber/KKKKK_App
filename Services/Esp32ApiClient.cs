@@ -1,4 +1,5 @@
-using System.Net.Http.Json;
+using System.Net.Http.Headers;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using WallPanelPlanner.Models;
@@ -56,6 +57,11 @@ public sealed class Esp32ApiClient : IEsp32ApiClient
         return SendAsync<Esp32SimpleResultData>(settings, HttpMethod.Post, "circuit/clear", new { }, cancellationToken);
     }
 
+    public Task<Esp32ApiResponse<Esp32SimpleResultData>> StartRandomSequenceTestAsync(Esp32DeviceSettings settings, CancellationToken cancellationToken = default)
+    {
+        return SendAsync<Esp32SimpleResultData>(settings, HttpMethod.Post, "test/random-sequence", new { }, cancellationToken);
+    }
+
     private static async Task<Esp32ApiResponse<T>> SendAsync<T>(Esp32DeviceSettings settings, HttpMethod method, string relativePath, object? payload, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(settings);
@@ -69,7 +75,7 @@ public sealed class Esp32ApiClient : IEsp32ApiClient
         using var request = new HttpRequestMessage(method, relativePath);
         if (payload is not null)
         {
-            request.Content = JsonContent.Create(payload, options: JsonOptions);
+            request.Content = BuildJsonContent(payload);
         }
 
         using var response = await client.SendAsync(request, cancellationToken);
@@ -128,5 +134,16 @@ public sealed class Esp32ApiClient : IEsp32ApiClient
         }
 
         return new Uri(normalized, UriKind.Absolute);
+    }
+
+    private static HttpContent BuildJsonContent(object payload)
+    {
+        var json = JsonSerializer.Serialize(payload, JsonOptions);
+        var content = new ByteArrayContent(Encoding.UTF8.GetBytes(json));
+        content.Headers.ContentType = new MediaTypeHeaderValue("application/json")
+        {
+            CharSet = "utf-8"
+        };
+        return content;
     }
 }

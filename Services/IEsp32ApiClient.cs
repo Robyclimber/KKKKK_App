@@ -19,4 +19,6 @@ public interface IEsp32ApiClient
     Task<Esp32ApiResponse<Esp32SimpleResultData>> ResetCircuitAsync(Esp32DeviceSettings settings, CancellationToken cancellationToken = default);
 
     Task<Esp32ApiResponse<Esp32SimpleResultData>> ClearCircuitAsync(Esp32DeviceSettings settings, CancellationToken cancellationToken = default);
+
+    Task<Esp32ApiResponse<Esp32SimpleResultData>> StartRandomSequenceTestAsync(Esp32DeviceSettings settings, CancellationToken cancellationToken = default);
 }

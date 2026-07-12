@@ -79,6 +79,13 @@
                                 Text="Clear LED"
                                 Clicked="OnClearCircuitClicked" />
                     </Grid>
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Button Text="Test random LED"
+                                Clicked="OnRandomSequenceTestClicked" />
+                        <Button Grid.Column="1"
+                                Text="Stop test random"
+                                Clicked="OnStopRandomSequenceTestClicked" />
+                    </Grid>
                     <Label Text="Assunzione attuale: ogni foro viene esportato su LED progressivo in ordine foro, partendo da 0."
                            TextColor="{StaticResource MutedText}"
                            FontSize="12" />

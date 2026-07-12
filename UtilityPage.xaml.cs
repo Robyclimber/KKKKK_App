@@ -214,6 +214,28 @@ public partial class UtilityPage : ContentPage
         });
     }
 
+    private async void OnRandomSequenceTestClicked(object? sender, EventArgs e)
+    {
+        await RunEsp32ActionAsync(async settings =>
+        {
+            var response = await app!.Esp32ApiClient.StartRandomSequenceTestAsync(settings);
+            return response.Success
+                ? "Test random LED avviato."
+                : $"Test random KO - {response.ErrorCode} - {response.Message}";
+        });
+    }
+
+    private async void OnStopRandomSequenceTestClicked(object? sender, EventArgs e)
+    {
+        await RunEsp32ActionAsync(async settings =>
+        {
+            var response = await app!.Esp32ApiClient.StopCircuitAsync(settings);
+            return response.Success
+                ? "Test random LED fermato."
+                : $"Stop test random KO - {response.ErrorCode} - {response.Message}";
+        });
+    }
+
     private async Task RunEsp32ActionAsync(Func<Esp32DeviceSettings, Task<string>> action)
     {
         if (isBusyWithEsp32)
