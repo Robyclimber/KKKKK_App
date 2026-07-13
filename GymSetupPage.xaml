@@ -30,6 +30,35 @@
             </Border>
 
             <Border BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Contesto attivo"
+                           FontSize="20"
+                           TextColor="{StaticResource WarmGold}"
+                           FontFamily="OpenSansSemibold" />
+                    <Label x:Name="ActiveRoomContextLabel"
+                           Text="Nessuna sala attiva."
+                           TextColor="{StaticResource WarmText}" />
+                    <Label x:Name="ActiveWallContextLabel"
+                           Text="Nessuna parete attiva."
+                           TextColor="{StaticResource WarmText}" />
+                    <Label x:Name="ActivePanelContextLabel"
+                           Text="Nessun pannello attivo."
+                           TextColor="{StaticResource WarmText}" />
+                    <Border BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 12" Padding="12">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Prossima azione consigliata"
+                                   TextColor="{StaticResource MutedText}"
+                                   FontSize="12" />
+                            <Label x:Name="NextActionLabel"
+                                   Text="Crea una sala per iniziare."
+                                   TextColor="{StaticResource WarmGold}"
+                                   FontFamily="OpenSansSemibold" />
+                        </VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
                 <VerticalStackLayout Spacing="12">
                     <Label Text="1. Sala" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
                     <Label Text="Una sala contiene una o piu pareti."
@@ -49,8 +78,8 @@
 
             <Border BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
                 <VerticalStackLayout Spacing="12">
-                    <Label Text="2. Parete" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
-                    <Label Text="Ogni parete appartiene alla sala selezionata."
+                    <Label Text="2. Scegli sala e configura parete" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
+                    <Label Text="Prima scegli la sala attiva, poi crea o modifica una parete di quella sala."
                            TextColor="{StaticResource MutedText}"
                            FontSize="12" />
                     <Label x:Name="WallEditorModeLabel"
@@ -68,6 +97,16 @@
                            Text="Crea o seleziona prima una sala."
                            TextColor="{StaticResource MutedText}"
                            FontSize="12" />
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Parete attiva" TextColor="{StaticResource MutedText}" FontSize="13" />
+                        <Picker x:Name="WallsPicker"
+                                Title="Seleziona una parete"
+                                ItemDisplayBinding="{Binding DisplayLabel}"
+                                SelectedIndexChanged="OnWallSelectionChanged" />
+                    </VerticalStackLayout>
+                    <Label x:Name="WallInfoLabel"
+                           Text="Nessuna parete selezionata."
+                           TextColor="{StaticResource MutedText}" />
                     <VerticalStackLayout Spacing="4">
                         <Label Text="Nome parete" TextColor="{StaticResource MutedText}" FontSize="13" />
                         <Entry x:Name="WallNameEntry" Placeholder="Nome parete" Text="Parete 1" />
@@ -93,25 +132,25 @@
                 </VerticalStackLayout>
             </Border>
 
-            <Border BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
-                <VerticalStackLayout Spacing="12">
-                    <Label Text="Parete attiva" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
-                    <Picker x:Name="WallsPicker"
-                            Title="Seleziona una parete"
-                            ItemDisplayBinding="{Binding DisplayLabel}"
-                            SelectedIndexChanged="OnWallSelectionChanged" />
-                    <Label x:Name="WallInfoLabel"
-                           Text="Nessuna parete selezionata."
-                           TextColor="{StaticResource MutedText}" />
-                </VerticalStackLayout>
-            </Border>
-
             <Border x:Name="PanelsSectionBorder" BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
                 <VerticalStackLayout Spacing="12">
-                    <Label Text="3. Pannelli" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
-                    <Label Text="I pannelli definiscono la posizione dei fori nella parete."
+                    <Label Text="3. Scegli o modifica pannello" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
+                    <Label Text="Seleziona un pannello dall'elenco per modificarlo. Se nessuno va bene, compilane uno nuovo qui sotto."
                            TextColor="{StaticResource MutedText}"
                            FontSize="12" />
+                    <Label x:Name="SelectedPanelSummaryLabel"
+                           Text="Nessun pannello selezionato."
+                           TextColor="{StaticResource WarmText}"
+                           FontSize="12" />
+                    <Border BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 12" Padding="12">
+                        <VerticalStackLayout Spacing="10">
+                            <Label Text="Pannelli nella parete" FontSize="16" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
+                            <Label x:Name="PanelsEmptyLabel"
+                                   Text="Nessun pannello presente."
+                                   TextColor="{StaticResource MutedText}" />
+                            <VerticalStackLayout x:Name="PanelsHost" Spacing="10" />
+                        </VerticalStackLayout>
+                    </Border>
                     <Label x:Name="PanelEditorModeLabel"
                            Text="Inserimento nuovo pannello"
                            TextColor="{StaticResource MutedText}" />
@@ -211,17 +250,7 @@
 
             <Border BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
                 <VerticalStackLayout Spacing="12">
-                    <Label Text="Pannelli nella parete" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
-                    <Label x:Name="PanelsEmptyLabel"
-                           Text="Nessun pannello presente."
-                           TextColor="{StaticResource MutedText}" />
-                    <VerticalStackLayout x:Name="PanelsHost" Spacing="10" />
-                </VerticalStackLayout>
-            </Border>
-
-            <Border BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
-                <VerticalStackLayout Spacing="12">
-                    <Label Text="5. Mapping hardware" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
+                    <Label Text="4. Mapping hardware" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
                     <Label Text="Il mapping fori -> LED e' in una pagina separata, per mantenere veloce la configurazione palestra."
                            TextColor="{StaticResource MutedText}"
                            FontSize="12" />
@@ -233,7 +262,7 @@
 
             <Border x:Name="WallImageSectionBorder" BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
                 <VerticalStackLayout Spacing="12">
-                    <Label Text="4. Foto pannello e allineamento" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
+                    <Label Text="5. Foto pannello e allineamento" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
                     <Label Text="Seleziona un pannello: l'immagine viene associata al pannello e allineata ai suoi fori."
                            TextColor="{StaticResource MutedText}"
                            FontSize="12" />
@@ -433,7 +462,7 @@
 
             <Border BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
                 <VerticalStackLayout Spacing="12">
-                    <Label Text="5. Salvataggio" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
+                    <Label Text="6. Salvataggio" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
                     <Label Text="Salva la parete attiva con pannelli, fori e immagine associata."
                            TextColor="{StaticResource MutedText}"
                            FontSize="12" />

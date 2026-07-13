@@ -478,9 +478,14 @@ public partial class GymSetupPage : ContentPage
         WallInfoLabel.Text = pageState.WallInfoText;
         WorkflowTitleLabel.Text = pageState.WorkflowTitleText;
         WorkflowMessageLabel.Text = pageState.WorkflowMessageText;
+        ActiveRoomContextLabel.Text = pageState.ActiveRoomText;
+        ActiveWallContextLabel.Text = pageState.ActiveWallText;
+        ActivePanelContextLabel.Text = pageState.ActivePanelText;
+        NextActionLabel.Text = pageState.NextActionText;
         RoomSummaryLabel.Text = pageState.RoomSummaryText;
         WallSelectionHintLabel.Text = pageState.WallSelectionHintText;
         PanelEditorModeLabel.Text = pageState.PanelEditorModeText;
+        SelectedPanelSummaryLabel.Text = pageState.SelectedPanelSummaryText;
         PanelsEmptyLabel.IsVisible = pageState.ShowEmptyPanels;
         WallImageInfoLabel.Text = pageState.WallImageInfoText;
         AddWallButton.IsEnabled = pageState.CanAddWall;

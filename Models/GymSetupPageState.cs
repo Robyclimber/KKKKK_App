@@ -6,6 +6,14 @@ public sealed class GymSetupPageState
 
     public string WorkflowMessageText { get; init; } = "Inizia creando una sala.";
 
+    public string ActiveRoomText { get; init; } = "Nessuna sala attiva.";
+
+    public string ActiveWallText { get; init; } = "Nessuna parete attiva.";
+
+    public string ActivePanelText { get; init; } = "Nessun pannello attivo.";
+
+    public string NextActionText { get; init; } = "Crea una sala per iniziare.";
+
     public RoomDefinition? SelectedRoom { get; init; }
 
     public IReadOnlyList<WallDefinition> VisibleWalls { get; init; } = Array.Empty<WallDefinition>();
@@ -31,6 +39,8 @@ public sealed class GymSetupPageState
     public string WallInfoText { get; init; } = "Nessuna parete selezionata.";
 
     public string PanelEditorModeText { get; init; } = "Inserimento nuovo pannello";
+
+    public string SelectedPanelSummaryText { get; init; } = "Nessun pannello selezionato.";
 
     public bool ShowEmptyPanels { get; init; }
 

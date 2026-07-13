@@ -31,6 +31,16 @@ public sealed class GymSetupPageStateService : IGymSetupPageStateService
         {
             WorkflowTitleText = workflow.Title,
             WorkflowMessageText = workflow.Message,
+            ActiveRoomText = selectedRoom is null
+                ? "Nessuna sala attiva."
+                : $"Sala attiva: {selectedRoom.Name}",
+            ActiveWallText = selectedWall is null
+                ? "Nessuna parete attiva."
+                : $"Parete attiva: {selectedWall.Name} - {selectedWall.Width:0.#} x {selectedWall.Height:0.#} mm",
+            ActivePanelText = selectedPanel is null
+                ? "Nessun pannello attivo."
+                : $"Pannello attivo: {selectedPanel.Name} - {selectedPanel.Width:0.#} x {selectedPanel.Height:0.#} mm - Fori: {selectedPanel.HoleCount}",
+            NextActionText = workflow.NextAction,
             SelectedRoom = selectedRoom,
             VisibleWalls = visibleWalls,
             SelectedWall = selectedWall,
@@ -52,6 +62,9 @@ public sealed class GymSetupPageStateService : IGymSetupPageStateService
                 ? "Nessuna parete selezionata."
                 : $"{selectedWall.RoomName} - {selectedWall.Name} - Pannelli: {selectedWall.Panels.Count}",
             PanelEditorModeText = panelEditorState.ModeText,
+            SelectedPanelSummaryText = selectedPanel is null
+                ? "Seleziona un pannello dall'elenco per modificarlo, oppure inseriscine uno nuovo."
+                : selectedPanel.Summary,
             ShowEmptyPanels = selectedWall is null || selectedWall.Panels.Count == 0,
             WallImageInfoText = selectedPanel is null
                 ? "Seleziona un pannello per associare l'immagine."
@@ -69,7 +82,7 @@ public sealed class GymSetupPageStateService : IGymSetupPageStateService
         };
     }
 
-    private static (string Title, string Message) BuildWorkflowState(
+    private static (string Title, string Message, string NextAction) BuildWorkflowState(
         RoomDefinition? selectedRoom,
         WallDefinition? selectedWall,
         int roomCount,
@@ -78,30 +91,30 @@ public sealed class GymSetupPageStateService : IGymSetupPageStateService
     {
         if (roomCount == 0)
         {
-            return ("Passo 1: crea una sala", "Definisci la prima sala della palestra. Dopo potrai aggiungere le pareti.");
+            return ("Passo 1: crea una sala", "Definisci la prima sala della palestra. Dopo potrai aggiungere le pareti.", "Aggiungi una sala.");
         }
 
         if (selectedRoom is null)
         {
-            return ("Seleziona una sala", "Scegli una sala esistente per vedere o aggiungere le sue pareti.");
+            return ("Seleziona una sala", "Scegli una sala esistente per vedere o aggiungere le sue pareti.", "Seleziona la sala su cui lavorare.");
         }
 
         if (wallCount == 0)
         {
-            return ("Passo 2: aggiungi una parete", $"La sala {selectedRoom.Name} e' pronta. Ora crea la prima parete.");
+            return ("Passo 2: aggiungi una parete", $"La sala {selectedRoom.Name} e' pronta. Ora crea la prima parete.", "Compila il form parete e premi Aggiungi parete.");
         }
 
         if (selectedWall is null)
         {
-            return ("Seleziona una parete", "Scegli una parete esistente per configurare pannelli, fori e immagine.");
+            return ("Seleziona una parete", "Scegli una parete esistente per configurare pannelli, fori e immagine.", "Seleziona la parete attiva dall'elenco.");
         }
 
         if (panelCount == 0)
         {
-            return ("Passo 3: aggiungi i pannelli", $"La parete {selectedWall.Name} e' pronta. Inserisci il primo pannello.");
+            return ("Passo 3: aggiungi i pannelli", $"La parete {selectedWall.Name} e' pronta. Inserisci il primo pannello.", "Compila il form pannello e premi Aggiungi pannello.");
         }
 
-        return ("Parete pronta per il salvataggio", $"Hai {panelCount} pannelli su {selectedWall.Name}. Puoi rifinire foto e allineamento oppure salvare.");
+        return ("Parete pronta per il salvataggio", $"Hai {panelCount} pannelli su {selectedWall.Name}. Puoi rifinire foto e allineamento oppure salvare.", "Seleziona un pannello per modificarlo oppure salva la parete.");
     }
 
     private static string ToEditorText(double value)
