@@ -9,33 +9,27 @@ namespace WallPanelPlanner;
 
 public partial class GymSetupPage : ContentPage
 {
-    private enum CropDragMode
+    private enum WorkspaceSection
     {
-        None,
-        Move,
-        TopLeft,
-        TopRight,
-        BottomLeft,
-        BottomRight
+        Setup,
+        Panels,
+        Preview,
+        Image,
+        Output
     }
 
     private readonly Services.IGymSetupEditorStateService editorStateService;
     private readonly Services.IGymSetupPageStateService pageStateService;
     private readonly GymSetupViewModel viewModel;
     private readonly LayoutPreviewDrawable previewDrawable;
-    private readonly Services.IWallImageService wallImageService;
-    private readonly Services.IPanelImageAlignmentService panelImageAlignmentService;
     private double previewZoom = 1d;
     private double previewZoomStart = 1d;
     private double basePreviewWidth = 320d;
     private double basePreviewHeight = 320d;
     private bool isSyncingSelection;
-    private Rect cropEditorImageBounds;
-    private CropDragMode cropDragMode;
-    private double cropDragStartLeft;
-    private double cropDragStartTop;
-    private double cropDragStartRight;
-    private double cropDragStartBottom;
+    private bool isWallEditorExpanded;
+    private bool isPanelEditorExpanded;
+    private WorkspaceSection activeWorkspaceSection = WorkspaceSection.Setup;
 
     public GymSetupPage()
     {
@@ -48,8 +42,6 @@ public partial class GymSetupPage : ContentPage
             pageStateService = app.GymSetupPageStateService;
             viewModel = app.GymSetupViewModel;
             previewDrawable = app.LayoutPreviewDrawable;
-            wallImageService = app.WallImageService;
-            panelImageAlignmentService = app.PanelImageAlignmentService;
 
             RoomsPicker.ItemsSource = viewModel.Rooms;
             PreviewCanvas.Drawable = previewDrawable;
@@ -71,8 +63,6 @@ public partial class GymSetupPage : ContentPage
                 wallRepository,
                 roomRepository);
             previewDrawable = new LayoutPreviewDrawable();
-            wallImageService = new Services.WallImageService();
-            panelImageAlignmentService = new Services.PanelImageAlignmentService();
             Title = "Errore Configurazione";
             Content = BuildErrorView("Errore inizializzazione GymSetupPage", ex);
         }
@@ -100,6 +90,7 @@ public partial class GymSetupPage : ContentPage
             await viewModel.LoadWallsAsync();
             ApplyWallEditorState(useSelectedWallValues: viewModel.SelectedWall is not null);
             ApplyPanelEditorState(resetToDefaults: true);
+            activeWorkspaceSection = ResolveSuggestedWorkspaceSection();
             SyncViewFromState();
         }
         catch (Exception ex)
@@ -119,8 +110,11 @@ public partial class GymSetupPage : ContentPage
                 Height = ParsePositiveDouble(WallHeightEntry.Text, "Inserisci larghezza e altezza valide per la parete.")
             });
 
+            isWallEditorExpanded = false;
+            isPanelEditorExpanded = false;
             ApplyWallEditorDefaults();
             ApplyPanelEditorState(resetToDefaults: true);
+            activeWorkspaceSection = WorkspaceSection.Panels;
             SyncViewFromState();
         }
         catch (InvalidOperationException ex)
@@ -134,8 +128,11 @@ public partial class GymSetupPage : ContentPage
         try
         {
             await viewModel.AddRoomAsync(RoomNameEntry.Text);
+            isWallEditorExpanded = false;
+            isPanelEditorExpanded = false;
             ApplyWallEditorDefaults();
             ApplyPanelEditorState(resetToDefaults: true);
+            activeWorkspaceSection = WorkspaceSection.Setup;
             SyncViewFromState();
         }
         catch (InvalidOperationException ex)
@@ -155,8 +152,11 @@ public partial class GymSetupPage : ContentPage
                 Height = ParsePositiveDouble(WallHeightEntry.Text, "Inserisci larghezza e altezza valide per la parete.")
             });
 
+            isWallEditorExpanded = false;
+            isPanelEditorExpanded = false;
             ApplyWallEditorState(useSelectedWallValues: true);
             ApplyPanelEditorState(resetToDefaults: true);
+            activeWorkspaceSection = WorkspaceSection.Panels;
             SyncViewFromState();
         }
         catch (InvalidOperationException ex)
@@ -170,7 +170,9 @@ public partial class GymSetupPage : ContentPage
         try
         {
             viewModel.AddPanel(ReadPanelInput());
+            isPanelEditorExpanded = false;
             ApplyPanelEditorState(resetToDefaults: true);
+            activeWorkspaceSection = WorkspaceSection.Preview;
             SyncViewFromState();
         }
         catch (InvalidOperationException ex)
@@ -184,7 +186,9 @@ public partial class GymSetupPage : ContentPage
         try
         {
             viewModel.UpdateSelectedPanel(ReadPanelInput());
+            isPanelEditorExpanded = false;
             ApplyPanelEditorState();
+            activeWorkspaceSection = WorkspaceSection.Preview;
             SyncViewFromState();
         }
         catch (InvalidOperationException ex)
@@ -198,7 +202,9 @@ public partial class GymSetupPage : ContentPage
         try
         {
             viewModel.DeleteSelectedPanel();
+            isPanelEditorExpanded = false;
             ApplyPanelEditorState(resetToDefaults: true);
+            activeWorkspaceSection = WorkspaceSection.Panels;
             SyncViewFromState();
         }
         catch (InvalidOperationException ex)
@@ -220,135 +226,6 @@ public partial class GymSetupPage : ContentPage
         }
     }
 
-    private async void OnLoadWallImageClicked(object? sender, EventArgs e)
-    {
-        try
-        {
-            if (viewModel.SelectedPanel is null)
-            {
-                throw new InvalidOperationException("Seleziona prima un pannello.");
-            }
-
-            var importedPath = await wallImageService.PickAndImportImageAsync();
-            if (string.IsNullOrWhiteSpace(importedPath))
-            {
-                return;
-            }
-
-            viewModel.SetSelectedPanelImage(importedPath);
-            ApplyWallImageEditorState();
-            SyncViewFromState();
-        }
-        catch (InvalidOperationException ex)
-        {
-            await ShowError(ex.Message);
-        }
-    }
-
-    private async void OnClearWallImageClicked(object? sender, EventArgs e)
-    {
-        try
-        {
-            viewModel.ClearSelectedPanelImage();
-            ApplyWallImageEditorState();
-            SyncViewFromState();
-        }
-        catch (InvalidOperationException ex)
-        {
-            await ShowError(ex.Message);
-        }
-    }
-
-    private async void OnAnalyzeHoldsClicked(object? sender, EventArgs e)
-    {
-        try
-        {
-            if (viewModel.SelectedWall is null)
-            {
-                throw new InvalidOperationException("Seleziona prima una parete.");
-            }
-
-            if (viewModel.SelectedPanel is null)
-            {
-                throw new InvalidOperationException("Seleziona prima un pannello.");
-            }
-
-            if (string.IsNullOrWhiteSpace(viewModel.SelectedPanel.ImagePath) || !File.Exists(viewModel.SelectedPanel.ImagePath))
-            {
-                throw new InvalidOperationException("Carica prima una foto del pannello.");
-            }
-
-            await Navigation.PushAsync(new HoldAnalysisPage(viewModel, ((App)Application.Current!).WallConfigurationStorageService, viewModel.SelectedWall));
-        }
-        catch (InvalidOperationException ex)
-        {
-            await ShowError(ex.Message);
-        }
-    }
-
-    private async void OnAutoAlignPanelImageClicked(object? sender, EventArgs e)
-    {
-        try
-        {
-            if (viewModel.SelectedPanel is null)
-            {
-                throw new InvalidOperationException("Seleziona prima un pannello.");
-            }
-
-            if (string.IsNullOrWhiteSpace(viewModel.SelectedPanel.ImagePath) || !File.Exists(viewModel.SelectedPanel.ImagePath))
-            {
-                throw new InvalidOperationException("Carica prima una foto del pannello.");
-            }
-
-            var suggestion = await panelImageAlignmentService.SuggestAlignmentAsync(viewModel.SelectedPanel);
-            if (suggestion is null)
-            {
-                throw new InvalidOperationException("Auto allineamento non disponibile su questa immagine o su questa piattaforma.");
-            }
-
-            viewModel.UpdateSelectedPanelImageAlignment(
-                suggestion.OffsetX,
-                suggestion.OffsetY,
-                suggestion.Scale,
-                WallImageOpacitySlider.Value);
-
-            ApplyWallImageEditorState();
-            SyncViewFromState();
-            await DisplayAlertAsync(
-                "Auto allineamento",
-                $"Applicato.\nOffset X: {suggestion.OffsetX:0.#} mm\nOffset Y: {suggestion.OffsetY:0.#} mm\nScala: {suggestion.Scale:0.00}\nConfidenza: {suggestion.Confidence:P0}\n{suggestion.Reason}",
-                "OK");
-        }
-        catch (InvalidOperationException ex)
-        {
-            await ShowError(ex.Message);
-        }
-    }
-
-    private async void OnApplyWallImageAlignmentClicked(object? sender, EventArgs e)
-    {
-        try
-        {
-            viewModel.UpdateSelectedPanelImageCrop(
-                ParsePercent(WallImageCropLeftEntry.Text),
-                ParsePercent(WallImageCropTopEntry.Text),
-                ParsePercent(WallImageCropRightEntry.Text),
-                ParsePercent(WallImageCropBottomEntry.Text));
-
-            viewModel.UpdateSelectedPanelImageAlignment(
-                ParseDouble(WallImageOffsetXEntry.Text),
-                ParseDouble(WallImageOffsetYEntry.Text),
-                WallImageScaleSlider.Value,
-                WallImageOpacitySlider.Value);
-
-            SyncViewFromState();
-        }
-        catch (InvalidOperationException ex)
-        {
-            await ShowError(ex.Message);
-        }
-    }
-
     private void OnWallSelectionChanged(object? sender, EventArgs e)
     {
         if (isSyncingSelection)
@@ -357,8 +234,11 @@ public partial class GymSetupPage : ContentPage
         }
 
         viewModel.SelectWall(WallsPicker.SelectedItem as WallDefinition);
+        isWallEditorExpanded = false;
+        isPanelEditorExpanded = false;
         ApplyWallEditorState(useSelectedWallValues: viewModel.SelectedWall is not null);
         ApplyPanelEditorState(resetToDefaults: true);
+        activeWorkspaceSection = viewModel.SelectedWall is null ? WorkspaceSection.Setup : WorkspaceSection.Panels;
         SyncViewFromState();
     }
 
@@ -370,8 +250,11 @@ public partial class GymSetupPage : ContentPage
         }
 
         viewModel.SelectRoom(RoomsPicker.SelectedItem as RoomDefinition);
+        isWallEditorExpanded = false;
+        isPanelEditorExpanded = false;
         ApplyWallEditorDefaults();
         ApplyPanelEditorState(resetToDefaults: true);
+        activeWorkspaceSection = WorkspaceSection.Setup;
         SyncViewFromState();
     }
 
@@ -386,11 +269,6 @@ public partial class GymSetupPage : ContentPage
         basePreviewHeight = Math.Max(280d, PreviewViewport.Height - 4d);
         UpdatePreviewBaseScale();
         UpdatePreviewZoomLayout();
-    }
-
-    private void OnCropEditorViewportSizeChanged(object? sender, EventArgs e)
-    {
-        UpdateCropEditorOverlay();
     }
 
     private void OnPreviewPinchUpdated(object? sender, PinchGestureUpdatedEventArgs e)
@@ -435,41 +313,11 @@ public partial class GymSetupPage : ContentPage
         UpdatePreviewZoomLayout();
     }
 
-    private void OnWallImageScaleCoarseDecreaseClicked(object? sender, EventArgs e)
-    {
-        AdjustWallImageScale(-0.10d);
-    }
-
-    private void OnWallImageScaleFineDecreaseClicked(object? sender, EventArgs e)
-    {
-        AdjustWallImageScale(-0.01d);
-    }
-
-    private void OnWallImageScaleFineIncreaseClicked(object? sender, EventArgs e)
-    {
-        AdjustWallImageScale(0.01d);
-    }
-
-    private void OnWallImageScaleCoarseIncreaseClicked(object? sender, EventArgs e)
-    {
-        AdjustWallImageScale(0.10d);
-    }
-
-    private void OnWallImageScaleSliderValueChanged(object? sender, ValueChangedEventArgs e)
-    {
-        UpdateWallImageScaleValueLabel();
-        TryApplyLiveWallImageAlignment();
-    }
-
-    private void OnWallImageOpacitySliderValueChanged(object? sender, ValueChangedEventArgs e)
-    {
-        TryApplyLiveWallImageAlignment();
-    }
-
     private void SyncViewFromState()
     {
         isSyncingSelection = true;
         var pageState = pageStateService.Build(viewModel);
+        activeWorkspaceSection = NormalizeWorkspaceSection(activeWorkspaceSection, pageState);
         RoomsPicker.SelectedItem = pageState.SelectedRoom;
         WallsPicker.ItemsSource = pageState.VisibleWalls.ToList();
         WallsPicker.SelectedItem = pageState.SelectedWall;
@@ -490,14 +338,29 @@ public partial class GymSetupPage : ContentPage
         WallImageInfoLabel.Text = pageState.WallImageInfoText;
         AddWallButton.IsEnabled = pageState.CanAddWall;
         UpdateWallButton.IsEnabled = viewModel.HasSelectedWall;
+        NewWallButton.IsEnabled = viewModel.SelectedRoom is not null;
         PanelsSectionBorder.IsEnabled = pageState.CanEditPanels;
         WallImageSectionBorder.IsEnabled = pageState.CanManageWallImage;
-        LoadWallImageButton.IsEnabled = pageState.CanManageWallImage;
-        ClearWallImageButton.IsEnabled = pageState.CanManageWallImage;
-        AnalyzeHoldsButton.IsEnabled = pageState.CanManageWallImage;
-        AutoAlignPanelImageButton.IsEnabled = pageState.CanManageWallImage;
+        OpenPanelImagePageButton.IsEnabled = pageState.CanManageWallImage;
+        PreviewGoToImageButton.IsEnabled = pageState.CanManageWallImage;
+        ImageGoToOutputButton.IsEnabled = pageState.CanSaveWall;
         SaveWallButton.IsEnabled = pageState.CanSaveWall;
         OpenHardwareMappingButton.IsEnabled = viewModel.HasSelectedWall;
+        QuickOpenHardwareMappingButton.IsEnabled = viewModel.HasSelectedWall;
+        QuickSaveWallButton.IsEnabled = pageState.CanSaveWall;
+        Title = viewModel.SelectedWall is null ? "Dettaglio parete" : $"Parete · {viewModel.SelectedWall.Name}";
+        WallSummaryLabel.Text = viewModel.SelectedWall is null
+            ? "Nessuna parete selezionata."
+            : $"{viewModel.SelectedWall.Name} · {viewModel.SelectedWall.Width:0.#} x {viewModel.SelectedWall.Height:0.#} mm";
+        WallPanelsSummaryLabel.Text = viewModel.SelectedWall is null
+            ? "0 pannelli"
+            : viewModel.SelectedWall.Panels.Count == 1
+                ? "1 pannello"
+                : $"{viewModel.SelectedWall.Panels.Count} pannelli";
+        ApplyWorkspaceVisibility(pageState);
+        UpdateWorkspaceButtons();
+        UpdateWallEditorVisibility();
+        UpdatePanelEditorVisibility();
 
         previewDrawable.Wall = viewModel.SelectedWall;
         previewDrawable.SelectedPanel = viewModel.SelectedPanel;
@@ -506,7 +369,205 @@ public partial class GymSetupPage : ContentPage
         UpdatePreviewBaseScale();
         UpdatePreviewZoomLayout();
         UpdateEditorButtons();
-        ApplyWallImageEditorState();
+        UpdateWallImageOverlay();
+    }
+
+    private WorkspaceSection ResolveSuggestedWorkspaceSection()
+    {
+        if (viewModel.SelectedRoom is null)
+        {
+            return WorkspaceSection.Setup;
+        }
+
+        if (viewModel.SelectedWall is null)
+        {
+            return WorkspaceSection.Setup;
+        }
+
+        if (!viewModel.SelectedWall.Panels.Any())
+        {
+            return WorkspaceSection.Panels;
+        }
+
+        return WorkspaceSection.Panels;
+    }
+
+    private WorkspaceSection NormalizeWorkspaceSection(WorkspaceSection requestedSection, GymSetupPageState pageState)
+    {
+        return requestedSection switch
+        {
+            WorkspaceSection.Panels when !pageState.CanEditPanels => WorkspaceSection.Setup,
+            WorkspaceSection.Preview when !pageState.CanEditPanels => WorkspaceSection.Setup,
+            WorkspaceSection.Image when !pageState.CanManageWallImage => pageState.CanEditPanels ? WorkspaceSection.Panels : WorkspaceSection.Setup,
+            WorkspaceSection.Output when !pageState.CanSaveWall => pageState.CanEditPanels ? WorkspaceSection.Panels : WorkspaceSection.Setup,
+            _ => requestedSection
+        };
+    }
+
+    private void ApplyWorkspaceVisibility(GymSetupPageState pageState)
+    {
+        var isSetupVisible = activeWorkspaceSection == WorkspaceSection.Setup;
+        var isPanelsVisible = activeWorkspaceSection == WorkspaceSection.Panels;
+        var isPreviewVisible = activeWorkspaceSection == WorkspaceSection.Preview;
+        var isImageVisible = activeWorkspaceSection == WorkspaceSection.Image;
+        var isOutputVisible = activeWorkspaceSection == WorkspaceSection.Output;
+
+        RoomSectionBorder.IsVisible = false;
+        WallSectionBorder.IsVisible = isSetupVisible;
+        PanelsSectionBorder.IsVisible = isPanelsVisible;
+        PreviewSectionBorder.IsVisible = isPreviewVisible;
+        WallImageSectionBorder.IsVisible = isImageVisible;
+        OutputSectionBorder.IsVisible = isOutputVisible;
+
+        PanelsSectionBorder.IsEnabled = pageState.CanEditPanels;
+        PreviewSectionBorder.IsEnabled = pageState.CanEditPanels;
+        WallImageSectionBorder.IsEnabled = pageState.CanManageWallImage;
+        OutputSectionBorder.IsEnabled = pageState.CanSaveWall;
+    }
+
+    private void UpdateWorkspaceButtons()
+    {
+        ApplyWorkspaceButtonState(SetupWorkspaceButton, activeWorkspaceSection == WorkspaceSection.Setup);
+        ApplyWorkspaceButtonState(PanelsWorkspaceButton, activeWorkspaceSection == WorkspaceSection.Panels);
+        ApplyWorkspaceButtonState(PreviewWorkspaceButton, activeWorkspaceSection == WorkspaceSection.Preview);
+        ApplyWorkspaceButtonState(ImageWorkspaceButton, activeWorkspaceSection == WorkspaceSection.Image);
+        ApplyWorkspaceButtonState(OutputWorkspaceButton, activeWorkspaceSection == WorkspaceSection.Output);
+
+        PanelsWorkspaceButton.IsEnabled = viewModel.HasSelectedWall;
+        PreviewWorkspaceButton.IsEnabled = viewModel.HasSelectedWall;
+        ImageWorkspaceButton.IsEnabled = viewModel.HasSelectedPanel;
+        OutputWorkspaceButton.IsEnabled = viewModel.HasSelectedWall;
+    }
+
+    private void UpdatePanelEditorVisibility()
+    {
+        var canEditPanels = viewModel.HasSelectedWall;
+        PanelEditorContainer.IsVisible = canEditPanels && isPanelEditorExpanded;
+        NewPanelButton.IsEnabled = canEditPanels;
+        TogglePanelEditorButton.IsEnabled = canEditPanels;
+        TogglePanelEditorButton.Text = isPanelEditorExpanded ? "Nascondi editor" : "Mostra editor";
+    }
+
+    private void UpdateWallEditorVisibility()
+    {
+        var canEditWall = viewModel.SelectedRoom is not null;
+        WallEditorContainer.IsVisible = canEditWall && isWallEditorExpanded;
+        ToggleWallEditorButton.IsEnabled = canEditWall;
+        ToggleWallEditorButton.Text = isWallEditorExpanded ? "Nascondi editor" : "Mostra editor";
+    }
+
+    private void ApplyWorkspaceButtonState(Button button, bool isActive)
+    {
+        button.BackgroundColor = isActive ? Color.FromArgb("#F2C94C") : Color.FromArgb("#211C14");
+        button.TextColor = isActive ? Color.FromArgb("#14110B") : Color.FromArgb("#F8E7A8");
+        button.BorderColor = Color.FromArgb("#B9922F");
+        button.BorderWidth = 1;
+    }
+
+    private void OnSetupWorkspaceClicked(object? sender, EventArgs e)
+    {
+        activeWorkspaceSection = WorkspaceSection.Setup;
+        SyncViewFromState();
+    }
+
+    private void OnPanelsWorkspaceClicked(object? sender, EventArgs e)
+    {
+        activeWorkspaceSection = WorkspaceSection.Panels;
+        SyncViewFromState();
+    }
+
+    private void OnPreviewWorkspaceClicked(object? sender, EventArgs e)
+    {
+        activeWorkspaceSection = WorkspaceSection.Preview;
+        SyncViewFromState();
+    }
+
+    private void OnImageWorkspaceClicked(object? sender, EventArgs e)
+    {
+        activeWorkspaceSection = WorkspaceSection.Image;
+        SyncViewFromState();
+    }
+
+    private void OnOutputWorkspaceClicked(object? sender, EventArgs e)
+    {
+        activeWorkspaceSection = WorkspaceSection.Output;
+        SyncViewFromState();
+    }
+
+    private void OnNewWallClicked(object? sender, EventArgs e)
+    {
+        if (viewModel.SelectedRoom is null)
+        {
+            return;
+        }
+
+        isWallEditorExpanded = true;
+        viewModel.SelectWall(null);
+        ApplyWallEditorDefaults();
+        SyncViewFromState();
+    }
+
+    private void OnToggleWallEditorClicked(object? sender, EventArgs e)
+    {
+        if (viewModel.SelectedRoom is null)
+        {
+            return;
+        }
+
+        isWallEditorExpanded = !isWallEditorExpanded;
+        if (isWallEditorExpanded)
+        {
+            ApplyWallEditorState(useSelectedWallValues: viewModel.SelectedWall is not null);
+        }
+
+        SyncViewFromState();
+    }
+
+    private void OnPreviewGoToImageClicked(object? sender, EventArgs e)
+    {
+        activeWorkspaceSection = WorkspaceSection.Image;
+        SyncViewFromState();
+    }
+
+    private void OnPreviewGoToOutputClicked(object? sender, EventArgs e)
+    {
+        activeWorkspaceSection = WorkspaceSection.Output;
+        SyncViewFromState();
+    }
+
+    private void OnImageGoToOutputClicked(object? sender, EventArgs e)
+    {
+        activeWorkspaceSection = WorkspaceSection.Output;
+        SyncViewFromState();
+    }
+
+    private void OnNewPanelClicked(object? sender, EventArgs e)
+    {
+        if (!viewModel.HasSelectedWall)
+        {
+            return;
+        }
+
+        isPanelEditorExpanded = true;
+        viewModel.ClearSelectedPanel();
+        ApplyPanelEditorState(resetToDefaults: true);
+        SyncViewFromState();
+    }
+
+    private void OnTogglePanelEditorClicked(object? sender, EventArgs e)
+    {
+        if (!viewModel.HasSelectedWall)
+        {
+            return;
+        }
+
+        isPanelEditorExpanded = !isPanelEditorExpanded;
+        if (isPanelEditorExpanded && !viewModel.HasSelectedPanel)
+        {
+            ApplyPanelEditorState(resetToDefaults: true);
+        }
+
+        SyncViewFromState();
     }
 
     private void ApplyWallEditorDefaults()
@@ -591,14 +652,71 @@ public partial class GymSetupPage : ContentPage
         foreach (var panel in wall.Panels)
         {
             var isSelected = viewModel.IsPanelSelected(panel);
+            var selectButton = new Button
+            {
+                Text = isSelected ? "Pannello selezionato" : "Seleziona",
+                Style = (Style)Application.Current!.Resources[isSelected ? "SecondaryActionButtonStyle" : "PrimaryActionButtonStyle"]
+            };
+            selectButton.Clicked += (_, _) =>
+            {
+                viewModel.SelectPanel(panel);
+                isPanelEditorExpanded = true;
+                ApplyPanelEditorState();
+                activeWorkspaceSection = WorkspaceSection.Panels;
+                SyncViewFromState();
+            };
+
+            var imageButton = new Button
+            {
+                Text = "Apri immagine",
+                Style = (Style)Application.Current!.Resources["SecondaryActionButtonStyle"]
+            };
+            imageButton.Clicked += (_, _) =>
+            {
+                viewModel.SelectPanel(panel);
+                ApplyPanelEditorState();
+                _ = Shell.Current.GoToAsync("panel-image-page");
+            };
+
+            var cropButton = new Button
+            {
+                Text = "Ritaglio",
+                Style = (Style)Application.Current!.Resources["SecondaryActionButtonStyle"]
+            };
+            cropButton.Clicked += async (_, _) =>
+            {
+                viewModel.SelectPanel(panel);
+                ApplyPanelEditorState();
+                activeWorkspaceSection = WorkspaceSection.Image;
+                SyncViewFromState();
+                await OnOpenCropEditorForSelectedPanelAsync();
+            };
+
             var border = new Border
             {
                 Background = isSelected ? Color.FromArgb("#2A2212") : Color.FromArgb("#191611"),
                 Stroke = isSelected ? Color.FromArgb("#F2C94C") : Color.FromArgb("#B9922F"),
                 StrokeThickness = isSelected ? 3 : 1,
-                StrokeShape = new RoundRectangle { CornerRadius = 0 },
+                StrokeShape = new RoundRectangle { CornerRadius = 14 },
                 Padding = 12
             };
+
+            var actionsGrid = new Grid
+            {
+                ColumnDefinitions = new ColumnDefinitionCollection
+                {
+                    new ColumnDefinition(GridLength.Star),
+                    new ColumnDefinition(GridLength.Star),
+                    new ColumnDefinition(GridLength.Star)
+                },
+                ColumnSpacing = 8
+            };
+            actionsGrid.Add(selectButton);
+            Grid.SetColumn(selectButton, 0);
+            actionsGrid.Add(imageButton);
+            Grid.SetColumn(imageButton, 1);
+            actionsGrid.Add(cropButton);
+            Grid.SetColumn(cropButton, 2);
 
             border.Content = new VerticalStackLayout
             {
@@ -621,22 +739,18 @@ public partial class GymSetupPage : ContentPage
                         Text = isSelected ? "Pannello selezionato per modifica" : "Tocca per selezionare",
                         FontSize = 12,
                         TextColor = isSelected ? Color.FromArgb("#F2C94C") : Color.FromArgb("#B9AA79")
-                    }
+                    },
+                    actionsGrid
                 }
             };
 
-            border.GestureRecognizers.Add(new TapGestureRecognizer
-            {
-                Command = new Command(() =>
-                {
-                    viewModel.SelectPanel(panel);
-                    ApplyPanelEditorState();
-                    SyncViewFromState();
-                })
-            });
-
             PanelsHost.Children.Add(border);
         }
+    }
+
+    private async void OnBackToWallsClicked(object? sender, EventArgs e)
+    {
+        await Shell.Current.GoToAsync("..");
     }
 
     private async void OnOpenHardwareMappingClicked(object? sender, EventArgs e)
@@ -645,6 +759,22 @@ public partial class GymSetupPage : ContentPage
     }
 
     private async void OnOpenCropEditorClicked(object? sender, EventArgs e)
+    {
+        await OnOpenCropEditorForSelectedPanelAsync();
+    }
+
+    private async void OnOpenPanelImagePageClicked(object? sender, EventArgs e)
+    {
+        if (viewModel.SelectedPanel is null)
+        {
+            await ShowError("Seleziona prima un pannello.");
+            return;
+        }
+
+        await Shell.Current.GoToAsync("panel-image-page");
+    }
+
+    private async Task OnOpenCropEditorForSelectedPanelAsync()
     {
         if (viewModel.SelectedPanel is null)
         {
@@ -659,22 +789,6 @@ public partial class GymSetupPage : ContentPage
         }
 
         await Navigation.PushAsync(new PanelCropEditorPage());
-    }
-
-    private void ApplyWallImageEditorState()
-    {
-        var pageState = pageStateService.Build(viewModel);
-        WallImageOffsetXEntry.Text = pageState.WallImageOffsetXText;
-        WallImageOffsetYEntry.Text = pageState.WallImageOffsetYText;
-        WallImageScaleSlider.Value = pageState.WallImageScale;
-        WallImageOpacitySlider.Value = pageState.WallImageOpacity;
-        WallImageCropLeftEntry.Text = pageState.WallImageCropLeftText;
-        WallImageCropTopEntry.Text = pageState.WallImageCropTopText;
-        WallImageCropRightEntry.Text = pageState.WallImageCropRightText;
-        WallImageCropBottomEntry.Text = pageState.WallImageCropBottomText;
-        UpdateWallImageScaleValueLabel();
-        UpdateWallImageOverlay();
-        UpdateCropEditorOverlay();
     }
 
     private void UpdateWallImageOverlay()
@@ -706,54 +820,6 @@ public partial class GymSetupPage : ContentPage
         WallImageOverlay.IsVisible = true;
         AbsoluteLayout.SetLayoutBounds(WallImageOverlay, new Rect(imageX, imageY, stretchedWidth, stretchedHeight));
         AbsoluteLayout.SetLayoutFlags(WallImageOverlay, AbsoluteLayoutFlags.None);
-    }
-
-    private void UpdateCropEditorOverlay()
-    {
-        var panel = viewModel.SelectedPanel;
-        if (panel is null || string.IsNullOrWhiteSpace(panel.ImagePath) || !File.Exists(panel.ImagePath) || CropEditorViewport.Width <= 0 || CropEditorViewport.Height <= 0)
-        {
-            cropEditorImageBounds = Rect.Zero;
-            CropEditorImage.IsVisible = false;
-            CropSelectionBorder.IsVisible = false;
-            CropHandleTopLeft.IsVisible = false;
-            CropHandleTopRight.IsVisible = false;
-            CropHandleBottomLeft.IsVisible = false;
-            CropHandleBottomRight.IsVisible = false;
-            CropMaskTop.IsVisible = false;
-            CropMaskBottom.IsVisible = false;
-            CropMaskLeft.IsVisible = false;
-            CropMaskRight.IsVisible = false;
-            CropEditorEmptyLabel.IsVisible = true;
-            return;
-        }
-
-        CropEditorImage.Source = ImageSource.FromFile(panel.ImagePath);
-        CropEditorImage.IsVisible = true;
-        CropEditorEmptyLabel.IsVisible = false;
-
-        var imageBounds = GetCropEditorImageBounds(panel.ImagePath!, CropEditorViewport.Width, CropEditorViewport.Height);
-        cropEditorImageBounds = imageBounds;
-
-        AbsoluteLayout.SetLayoutBounds(CropEditorImage, imageBounds);
-        AbsoluteLayout.SetLayoutFlags(CropEditorImage, AbsoluteLayoutFlags.None);
-
-        var selectionX = imageBounds.X + (panel.EffectiveImageCropLeft * imageBounds.Width);
-        var selectionY = imageBounds.Y + (panel.EffectiveImageCropTop * imageBounds.Height);
-        var selectionWidth = panel.EffectiveImageCropWidthFactor * imageBounds.Width;
-        var selectionHeight = panel.EffectiveImageCropHeightFactor * imageBounds.Height;
-        var selectionRect = new Rect(selectionX, selectionY, selectionWidth, selectionHeight);
-
-        CropSelectionBorder.IsVisible = true;
-        AbsoluteLayout.SetLayoutBounds(CropSelectionBorder, selectionRect);
-        AbsoluteLayout.SetLayoutFlags(CropSelectionBorder, AbsoluteLayoutFlags.None);
-
-        UpdateCropHandle(CropHandleTopLeft, selectionRect.Left, selectionRect.Top);
-        UpdateCropHandle(CropHandleTopRight, selectionRect.Right, selectionRect.Top);
-        UpdateCropHandle(CropHandleBottomLeft, selectionRect.Left, selectionRect.Bottom);
-        UpdateCropHandle(CropHandleBottomRight, selectionRect.Right, selectionRect.Bottom);
-
-        UpdateCropMasks(imageBounds, selectionRect);
     }
 
     private PanelInput ReadPanelInput()
@@ -808,288 +874,6 @@ public partial class GymSetupPage : ContentPage
     private Task ShowError(string message)
     {
         return DisplayAlertAsync("Dati non validi", message, "OK");
-    }
-
-    private void AdjustWallImageScale(double delta)
-    {
-        var nextValue = Math.Clamp(WallImageScaleSlider.Value + delta, WallImageScaleSlider.Minimum, WallImageScaleSlider.Maximum);
-        WallImageScaleSlider.Value = Math.Round(nextValue, 2, MidpointRounding.AwayFromZero);
-        UpdateWallImageScaleValueLabel();
-    }
-
-    private void UpdateWallImageScaleValueLabel()
-    {
-        WallImageScaleValueLabel.Text = $"Scala attuale: {WallImageScaleSlider.Value:0.00}";
-    }
-
-    private async void OnResetWallImageCropClicked(object? sender, EventArgs e)
-    {
-        try
-        {
-            if (viewModel.SelectedPanel is null)
-            {
-                throw new InvalidOperationException("Seleziona prima un pannello.");
-            }
-
-            viewModel.UpdateSelectedPanelImageCrop(0d, 0d, 0d, 0d);
-            ApplyWallImageEditorState();
-            SyncViewFromState();
-        }
-        catch (InvalidOperationException ex)
-        {
-            await ShowError(ex.Message);
-        }
-    }
-
-    private void OnCropMovePanUpdated(object? sender, PanUpdatedEventArgs e)
-    {
-        HandleCropPanUpdated(CropDragMode.Move, e);
-    }
-
-    private void OnCropTopLeftPanUpdated(object? sender, PanUpdatedEventArgs e)
-    {
-        HandleCropPanUpdated(CropDragMode.TopLeft, e);
-    }
-
-    private void OnCropTopRightPanUpdated(object? sender, PanUpdatedEventArgs e)
-    {
-        HandleCropPanUpdated(CropDragMode.TopRight, e);
-    }
-
-    private void OnCropBottomLeftPanUpdated(object? sender, PanUpdatedEventArgs e)
-    {
-        HandleCropPanUpdated(CropDragMode.BottomLeft, e);
-    }
-
-    private void OnCropBottomRightPanUpdated(object? sender, PanUpdatedEventArgs e)
-    {
-        HandleCropPanUpdated(CropDragMode.BottomRight, e);
-    }
-
-    private void HandleCropPanUpdated(CropDragMode mode, PanUpdatedEventArgs e)
-    {
-        var panel = viewModel.SelectedPanel;
-        if (panel is null || cropEditorImageBounds.Width <= 1 || cropEditorImageBounds.Height <= 1)
-        {
-            return;
-        }
-
-        switch (e.StatusType)
-        {
-            case GestureStatus.Started:
-                cropDragMode = mode;
-                cropDragStartLeft = panel.EffectiveImageCropLeft;
-                cropDragStartTop = panel.EffectiveImageCropTop;
-                cropDragStartRight = panel.EffectiveImageCropRight;
-                cropDragStartBottom = panel.EffectiveImageCropBottom;
-                break;
-
-            case GestureStatus.Running:
-                ApplyCropDragDelta(e.TotalX / cropEditorImageBounds.Width, e.TotalY / cropEditorImageBounds.Height);
-                break;
-
-            case GestureStatus.Completed:
-            case GestureStatus.Canceled:
-                cropDragMode = CropDragMode.None;
-                break;
-        }
-    }
-
-    private void ApplyCropDragDelta(double deltaXRatio, double deltaYRatio)
-    {
-        var panel = viewModel.SelectedPanel;
-        if (panel is null)
-        {
-            return;
-        }
-
-        const double minFactor = 0.001d;
-        double left = cropDragStartLeft;
-        double top = cropDragStartTop;
-        double right = cropDragStartRight;
-        double bottom = cropDragStartBottom;
-
-        switch (cropDragMode)
-        {
-            case CropDragMode.Move:
-            {
-                var width = 1d - left - right;
-                var height = 1d - top - bottom;
-                left = Math.Clamp(cropDragStartLeft + deltaXRatio, 0d, 1d - width);
-                top = Math.Clamp(cropDragStartTop + deltaYRatio, 0d, 1d - height);
-                right = 1d - width - left;
-                bottom = 1d - height - top;
-                break;
-            }
-
-            case CropDragMode.TopLeft:
-                left = Math.Clamp(cropDragStartLeft + deltaXRatio, 0d, 1d - right - minFactor);
-                top = Math.Clamp(cropDragStartTop + deltaYRatio, 0d, 1d - bottom - minFactor);
-                break;
-
-            case CropDragMode.TopRight:
-                right = Math.Clamp(cropDragStartRight - deltaXRatio, 0d, 1d - left - minFactor);
-                top = Math.Clamp(cropDragStartTop + deltaYRatio, 0d, 1d - bottom - minFactor);
-                break;
-
-            case CropDragMode.BottomLeft:
-                left = Math.Clamp(cropDragStartLeft + deltaXRatio, 0d, 1d - right - minFactor);
-                bottom = Math.Clamp(cropDragStartBottom - deltaYRatio, 0d, 1d - top - minFactor);
-                break;
-
-            case CropDragMode.BottomRight:
-                right = Math.Clamp(cropDragStartRight - deltaXRatio, 0d, 1d - left - minFactor);
-                bottom = Math.Clamp(cropDragStartBottom - deltaYRatio, 0d, 1d - top - minFactor);
-                break;
-        }
-
-        try
-        {
-            viewModel.UpdateSelectedPanelImageCrop(left, top, right, bottom);
-            SyncCropEntriesFromPanel(panel);
-            UpdateWallImageOverlay();
-            UpdateCropEditorOverlay();
-        }
-        catch (InvalidOperationException)
-        {
-        }
-    }
-
-    private void TryApplyLiveWallImageAlignment()
-    {
-        if (viewModel.SelectedPanel is null)
-        {
-            return;
-        }
-
-        if (!TryParseDouble(WallImageOffsetXEntry.Text, out var offsetX) ||
-            !TryParseDouble(WallImageOffsetYEntry.Text, out var offsetY) ||
-            !TryParsePercent(WallImageCropLeftEntry.Text, out var cropLeft) ||
-            !TryParsePercent(WallImageCropTopEntry.Text, out var cropTop) ||
-            !TryParsePercent(WallImageCropRightEntry.Text, out var cropRight) ||
-            !TryParsePercent(WallImageCropBottomEntry.Text, out var cropBottom))
-        {
-            return;
-        }
-
-        try
-        {
-            viewModel.UpdateSelectedPanelImageCrop(cropLeft, cropTop, cropRight, cropBottom);
-            viewModel.UpdateSelectedPanelImageAlignment(offsetX, offsetY, WallImageScaleSlider.Value, WallImageOpacitySlider.Value);
-            UpdateWallImageOverlay();
-        }
-        catch (InvalidOperationException)
-        {
-        }
-    }
-
-    private static bool TryParseDouble(string? text, out double value)
-    {
-        var normalized = text?.Trim().Replace(',', '.');
-        return double.TryParse(normalized, NumberStyles.Float, CultureInfo.InvariantCulture, out value);
-    }
-
-    private static bool TryParsePercent(string? text, out double value)
-    {
-        if (!TryParseDouble(text, out var percent))
-        {
-            value = 0d;
-            return false;
-        }
-
-        value = percent / 100d;
-        return value >= 0d && value <= 99.9d / 100d;
-    }
-
-    private static double ParsePercent(string? text)
-    {
-        var percent = ParseDouble(text);
-        var value = percent / 100d;
-        if (value < 0d || value > 99.9d / 100d)
-        {
-            throw new InvalidOperationException("Il ritaglio deve stare tra 0 e 99.9 percento.");
-        }
-
-        return value;
-    }
-
-    private void SyncCropEntriesFromPanel(PanelDefinition panel)
-    {
-        WallImageCropLeftEntry.Text = (panel.EffectiveImageCropLeft * 100d).ToString("0.##", CultureInfo.InvariantCulture);
-        WallImageCropTopEntry.Text = (panel.EffectiveImageCropTop * 100d).ToString("0.##", CultureInfo.InvariantCulture);
-        WallImageCropRightEntry.Text = (panel.EffectiveImageCropRight * 100d).ToString("0.##", CultureInfo.InvariantCulture);
-        WallImageCropBottomEntry.Text = (panel.EffectiveImageCropBottom * 100d).ToString("0.##", CultureInfo.InvariantCulture);
-    }
-
-    private void UpdateCropHandle(VisualElement handle, double centerX, double centerY)
-    {
-        handle.IsVisible = true;
-        var width = handle.WidthRequest > 0 ? handle.WidthRequest : 24d;
-        var height = handle.HeightRequest > 0 ? handle.HeightRequest : 24d;
-        AbsoluteLayout.SetLayoutBounds(handle, new Rect(centerX - (width / 2d), centerY - (height / 2d), width, height));
-        AbsoluteLayout.SetLayoutFlags(handle, AbsoluteLayoutFlags.None);
-    }
-
-    private void UpdateCropMasks(Rect imageBounds, Rect selectionRect)
-    {
-        SetMaskBounds(CropMaskTop, new Rect(imageBounds.X, imageBounds.Y, imageBounds.Width, Math.Max(0d, selectionRect.Y - imageBounds.Y)));
-        SetMaskBounds(CropMaskBottom, new Rect(imageBounds.X, selectionRect.Bottom, imageBounds.Width, Math.Max(0d, imageBounds.Bottom - selectionRect.Bottom)));
-        SetMaskBounds(CropMaskLeft, new Rect(imageBounds.X, selectionRect.Y, Math.Max(0d, selectionRect.X - imageBounds.X), selectionRect.Height));
-        SetMaskBounds(CropMaskRight, new Rect(selectionRect.Right, selectionRect.Y, Math.Max(0d, imageBounds.Right - selectionRect.Right), selectionRect.Height));
-    }
-
-    private static void SetMaskBounds(BoxView mask, Rect rect)
-    {
-        mask.IsVisible = rect.Width > 0.5d && rect.Height > 0.5d;
-        AbsoluteLayout.SetLayoutBounds(mask, rect);
-        AbsoluteLayout.SetLayoutFlags(mask, AbsoluteLayoutFlags.None);
-    }
-
-    private Rect GetCropEditorImageBounds(string imagePath, double viewportWidth, double viewportHeight)
-    {
-        var pixelSize = TryGetImagePixelSize(imagePath);
-        if (pixelSize is null || pixelSize.Value.Width <= 0 || pixelSize.Value.Height <= 0)
-        {
-            return new Rect(0d, 0d, viewportWidth, viewportHeight);
-        }
-
-        var sourceAspect = pixelSize.Value.Width / pixelSize.Value.Height;
-        var viewportAspect = viewportWidth / Math.Max(1d, viewportHeight);
-
-        if (sourceAspect >= viewportAspect)
-        {
-            var width = viewportWidth;
-            var height = width / sourceAspect;
-            return new Rect(0d, (viewportHeight - height) / 2d, width, height);
-        }
-
-        var fittedHeight = viewportHeight;
-        var fittedWidth = fittedHeight * sourceAspect;
-        return new Rect((viewportWidth - fittedWidth) / 2d, 0d, fittedWidth, fittedHeight);
-    }
-
-    private static Size? TryGetImagePixelSize(string imagePath)
-    {
-#if ANDROID
-        try
-        {
-            var options = new Android.Graphics.BitmapFactory.Options
-            {
-                InJustDecodeBounds = true
-            };
-
-            Android.Graphics.BitmapFactory.DecodeFile(imagePath, options);
-            if (options.OutWidth > 0 && options.OutHeight > 0)
-            {
-                return new Size(options.OutWidth, options.OutHeight);
-            }
-        }
-        catch
-        {
-        }
-#endif
-
-        return null;
     }
 
     private static View BuildErrorView(string title, Exception ex)

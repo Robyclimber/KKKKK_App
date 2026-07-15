@@ -22,7 +22,7 @@ L'app permette gia di:
 - gestione pannelli
 - selezione pannello esistente per modifica/eliminazione
 - preview della parete con zoom
-- overlay immagine sul pannello selezionato
+- overlay dell'immagine del pannello selezionato
 - analisi prese dal pannello
 - auto align iniziale immagine/fori tramite euristica
 
@@ -54,7 +54,7 @@ Database SQLite con persistenza di:
 
 ### Mapping hardware
 
-- pagina dedicata `Mapping hardware`
+- pagina dedicata `Mapping hardware della parete`
 - filtro `solo conflitti`
 - rinumerazione automatica LED
 - salvataggio su DB
@@ -82,6 +82,7 @@ Gia presenti:
 - il mapping hardware e' stato spostato fuori da `Configura palestra` per evitare rallentamenti
 - l'immagine e' stata spostata da `parete` a `pannello`
 - i ritagli immagine per fori e movimenti ora usano il pannello corretto
+- il lessico ufficiale distingue tra `parete selezionata`, `pannello selezionato`, `immagine pannello` e `mapping hardware della parete`
 
 ## Stato build
 

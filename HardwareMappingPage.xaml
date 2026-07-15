@@ -2,7 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="WallPanelPlanner.HardwareMappingPage"
-             Title="Mapping hardware">
+             Title="Mapping hardware della parete">
     <ScrollView>
         <VerticalStackLayout Padding="20,16,20,24" Spacing="18">
             <VerticalStackLayout Spacing="4">
@@ -12,22 +12,22 @@
                        FontFamily="OpenSansSemibold"
                        CharacterSpacing="8"
                        LineBreakMode="NoWrap" />
-                <Label Text="Configura il mapping fori, pointId e LED della parete."
+                <Label Text="Configura il mapping hardware della parete: fori, pointId e LED."
                        TextColor="{StaticResource MutedText}" />
             </VerticalStackLayout>
 
             <Border BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
                 <VerticalStackLayout Spacing="12">
-                    <Label Text="Selezione parete" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
+                    <Label Text="Seleziona la parete" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
                     <VerticalStackLayout Spacing="4">
-                        <Label Text="Sala" TextColor="{StaticResource MutedText}" FontSize="13" />
+                        <Label Text="Sala selezionata" TextColor="{StaticResource MutedText}" FontSize="13" />
                         <Picker x:Name="RoomsPicker"
                                 Title="Seleziona una sala"
                                 ItemDisplayBinding="{Binding DisplayLabel}"
                                 SelectedIndexChanged="OnRoomSelectionChanged" />
                     </VerticalStackLayout>
                     <VerticalStackLayout Spacing="4">
-                        <Label Text="Parete" TextColor="{StaticResource MutedText}" FontSize="13" />
+                        <Label Text="Parete selezionata" TextColor="{StaticResource MutedText}" FontSize="13" />
                         <Picker x:Name="WallsPicker"
                                 Title="Seleziona una parete"
                                 ItemDisplayBinding="{Binding DisplayLabel}"
@@ -41,8 +41,8 @@
 
             <Border BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
                 <VerticalStackLayout Spacing="12">
-                    <Label Text="Mapping fori -> LED" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
-                    <Label Text="Default automatico: foro 1 = LED 1. Qui puoi correggere il cablaggio reale per ESP32."
+                    <Label Text="Mapping hardware della parete" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
+                    <Label Text="Default automatico: foro 1 = LED 1. Qui puoi correggere il cablaggio reale della parete per ESP32."
                            TextColor="{StaticResource MutedText}"
                            FontSize="12" />
                     <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">

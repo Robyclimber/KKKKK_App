@@ -42,7 +42,7 @@ public partial class HomePage : ContentPage
 
     private async void OnGoToGymSetupClicked(object? sender, EventArgs e)
     {
-        await Shell.Current.GoToAsync("//sala-arrampicata");
+        await Shell.Current.GoToAsync("//sale");
     }
 
     private async void OnGoToCircuitsClicked(object? sender, EventArgs e)
@@ -59,7 +59,7 @@ public partial class HomePage : ContentPage
                 await Shell.Current.GoToAsync("//circuiti");
                 break;
             default:
-                await Shell.Current.GoToAsync("//sala-arrampicata");
+                await Shell.Current.GoToAsync("//sale");
                 break;
         }
     }
@@ -102,7 +102,7 @@ public partial class HomePage : ContentPage
             default:
                 NextStepTitleLabel.Text = "Inizia da qui";
                 NextStepMessageLabel.Text = "Non hai ancora configurato nessuna sala. Crea la struttura iniziale della palestra per iniziare.";
-                PrimaryActionButton.Text = "Vai alla configurazione";
+                PrimaryActionButton.Text = "Vai a sale e pareti";
                 break;
         }
     }

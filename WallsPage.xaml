@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="WallPanelPlanner.WallsPage"
+             Title="Pareti">
+    <ScrollView>
+        <VerticalStackLayout Padding="20,16,20,24" Spacing="18">
+            <VerticalStackLayout Spacing="4">
+                <Label Text="Pareti"
+                       FontSize="30"
+                       TextColor="{StaticResource WarmGold}"
+                       FontFamily="OpenSansSemibold" />
+                <Label Text="Qui lavori sulla sala selezionata e scegli quale parete aprire nel dettaglio."
+                       TextColor="{StaticResource MutedText}" />
+            </VerticalStackLayout>
+
+            <Border BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Contesto attivo"
+                           FontSize="18"
+                           TextColor="{StaticResource WarmGold}"
+                           FontFamily="OpenSansSemibold" />
+                    <Label x:Name="SelectedRoomLabel"
+                           Text="Nessuna sala selezionata."
+                           TextColor="{StaticResource WarmText}" />
+                    <Label x:Name="SelectedWallLabel"
+                           Text="Nessuna parete selezionata."
+                           TextColor="{StaticResource WarmText}" />
+                    <Label x:Name="WallsSummaryLabel"
+                           Text="0 pareti"
+                           TextColor="{StaticResource MutedText}" />
+                    <Button x:Name="OpenSelectedWallDetailButton"
+                            Text="Apri dettaglio parete attiva"
+                            Style="{StaticResource SecondaryActionButtonStyle}"
+                            Clicked="OnOpenSelectedWallDetailClicked" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Nuova parete"
+                           FontSize="18"
+                           TextColor="{StaticResource WarmGold}"
+                           FontFamily="OpenSansSemibold" />
+                    <Entry x:Name="WallNameEntry"
+                           Placeholder="Nome parete" />
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Entry x:Name="WallWidthEntry"
+                               Placeholder="Larghezza mm"
+                               Keyboard="Numeric" />
+                        <Entry Grid.Column="1"
+                               x:Name="WallHeightEntry"
+                               Placeholder="Altezza mm"
+                               Keyboard="Numeric" />
+                    </Grid>
+                    <Button Text="Aggiungi parete"
+                            Style="{StaticResource PrimaryActionButtonStyle}"
+                            Clicked="OnAddWallClicked" />
+                    <Label x:Name="AddWallHintLabel"
+                           Text="Seleziona prima una sala."
+                           TextColor="{StaticResource MutedText}"
+                           FontSize="12" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Pareti della sala"
+                           FontSize="18"
+                           TextColor="{StaticResource WarmGold}"
+                           FontFamily="OpenSansSemibold" />
+                    <Label x:Name="WallsEmptyLabel"
+                           Text="Non ci sono ancora pareti."
+                           TextColor="{StaticResource MutedText}" />
+                    <VerticalStackLayout x:Name="WallsHost"
+                                         Spacing="10" />
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

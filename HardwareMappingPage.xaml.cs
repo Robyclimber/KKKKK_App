@@ -81,7 +81,7 @@ public partial class HardwareMappingPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlertAsync("Mapping hardware", $"Errore inizializzazione mapping hardware: {ex.Message}", "OK");
+            await DisplayAlertAsync("Mapping hardware della parete", $"Errore inizializzazione mapping hardware della parete: {ex.Message}", "OK");
         }
     }
 
@@ -206,7 +206,7 @@ public partial class HardwareMappingPage : ContentPage
             }
             catch (InvalidOperationException ex)
             {
-                await DisplayAlertAsync("Mapping hardware", ex.Message, "OK");
+                await DisplayAlertAsync("Mapping hardware della parete", ex.Message, "OK");
             }
         }
 
@@ -401,7 +401,7 @@ public partial class HardwareMappingPage : ContentPage
         }
         catch (InvalidOperationException ex)
         {
-            await DisplayAlertAsync("Mapping hardware", ex.Message, "OK");
+            await DisplayAlertAsync("Mapping hardware della parete", ex.Message, "OK");
         }
     }
 

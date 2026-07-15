@@ -17,6 +17,19 @@
 
 ## Dominio principale
 
+## Vocabolario ufficiale
+
+- `Sala`
+  contenitore logico principale
+- `Parete`
+  appartiene a una sala e contiene pannelli, fori e mapping hardware
+- `Pannello`
+  elemento geometrico della parete; ogni pannello puo' avere la sua immagine
+- `Immagine pannello`
+  foto associata al pannello selezionato
+- `Mapping hardware della parete`
+  relazione `foro -> pointId -> ledIndex` della parete selezionata
+
 ### Sala
 
 - una sala ha piu pareti
@@ -26,12 +39,14 @@
 - appartiene a una sala
 - contiene piu pannelli
 - contiene il layout fori derivato dai pannelli
+- contiene il mapping hardware dei fori
 
 ### Pannello
 
 - ha geometria propria
 - genera i fori locali
 - puo' avere una propria immagine con offset/scala/opacita
+- non contiene il mapping hardware
 
 ### Foro
 
@@ -62,6 +77,7 @@ Nota:
 
 - i campi immagine storici sulla parete esistono ancora per compatibilita legacy
 - i dati reali correnti dell'immagine stanno sul pannello
+- il vocabolario UI corretto e' `immagine pannello`, non `immagine parete`
 
 ## Servizi chiave
 
@@ -87,7 +103,7 @@ Nota:
 - `GymSetupPage`
   configurazione palestra
 - `HardwareMappingPage`
-  mapping fori/LED
+  mapping hardware della parete
 - `CircuitPage`
   editor circuiti
 - `HoldAnalysisPage`

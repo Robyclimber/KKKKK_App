@@ -174,7 +174,7 @@ public class GymSetupViewModel
 
         if (SelectedWall is null || !SelectedWall.Panels.Contains(panel))
         {
-            throw new InvalidOperationException("Il pannello selezionato non appartiene alla parete attiva.");
+            throw new InvalidOperationException("Il pannello selezionato non appartiene alla parete selezionata.");
         }
 
         SelectedPanel = panel;
@@ -203,6 +203,11 @@ public class GymSetupViewModel
         EnsurePanelSelected();
         SelectedWall!.Panels.Remove(SelectedPanel!);
         SelectedWall.RegenerateHoleLayoutFromPanels();
+        SelectedPanel = null;
+    }
+
+    public void ClearSelectedPanel()
+    {
         SelectedPanel = null;
     }
 

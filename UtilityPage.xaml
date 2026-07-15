@@ -62,9 +62,12 @@
                         <Button Text="Invia config parete"
                                 Clicked="OnSendWallConfigClicked" />
                         <Button Grid.Column="1"
-                                Text="Sync circuiti"
+                                Text="Invia e sostituisci circuiti"
                                 Clicked="OnSyncCircuitsClicked" />
                     </Grid>
+                    <Label Text="Attenzione: Sync circuiti sovrascrive i circuiti gia' presenti sul dispositivo per la parete selezionata."
+                           TextColor="{StaticResource WarmGold}"
+                           FontSize="12" />
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
                         <Button Text="Show circuito"
                                 Clicked="OnShowCircuitClicked" />

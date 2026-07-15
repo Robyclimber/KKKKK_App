@@ -8,6 +8,19 @@
     FlyoutBehavior="Flyout"
     FlyoutBackgroundColor="{StaticResource OffBlack}">
 
+    <Shell.ItemTemplate>
+        <DataTemplate>
+            <Grid Padding="18,12"
+                  BackgroundColor="{StaticResource OffBlack}">
+                <Label Text="{Binding Title}"
+                       TextColor="{StaticResource WarmText}"
+                       FontFamily="OpenSansSemibold"
+                       FontSize="16"
+                       VerticalOptions="Center" />
+            </Grid>
+        </DataTemplate>
+    </Shell.ItemTemplate>
+
     <FlyoutItem Title="Home" Route="home">
         <ShellContent
             Title="Home"
@@ -15,11 +28,11 @@
             Route="home-page" />
     </FlyoutItem>
 
-    <FlyoutItem Title="Configura palestra" Route="sala-arrampicata">
+    <FlyoutItem Title="Sale e pareti" Route="sale">
         <ShellContent
-            Title="Configura palestra"
-            ContentTemplate="{DataTemplate local:GymSetupPage}"
-            Route="gym-setup-page" />
+            Title="Sale e pareti"
+            ContentTemplate="{DataTemplate local:RoomsPage}"
+            Route="rooms-page" />
     </FlyoutItem>
 
     <FlyoutItem Title="Circuiti" Route="circuiti">
@@ -29,16 +42,9 @@
             Route="circuit-page" />
     </FlyoutItem>
 
-    <FlyoutItem Title="Mapping hardware" Route="mapping-hardware">
+    <FlyoutItem Title="Utility ESP32" Route="utility">
         <ShellContent
-            Title="Mapping hardware"
-            ContentTemplate="{DataTemplate local:HardwareMappingPage}"
-            Route="hardware-mapping-page" />
-    </FlyoutItem>
-
-    <FlyoutItem Title="Utility" Route="utility">
-        <ShellContent
-            Title="Utility"
+            Title="Utility ESP32"
             ContentTemplate="{DataTemplate local:UtilityPage}"
             Route="utility-page" />
     </FlyoutItem>

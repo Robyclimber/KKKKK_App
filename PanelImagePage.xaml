@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="WallPanelPlanner.PanelImagePage"
+             Title="Immagine pannello">
+    <ScrollView>
+        <VerticalStackLayout Padding="20,16,20,24" Spacing="18">
+            <VerticalStackLayout Spacing="4">
+                <Label Text="Immagine pannello"
+                       FontSize="28"
+                       TextColor="{StaticResource WarmGold}"
+                       FontFamily="OpenSansSemibold" />
+                <Label Text="Qui lavori solo sull'immagine del pannello: carica, ritaglia, allinea e applica."
+                       TextColor="{StaticResource MutedText}" />
+            </VerticalStackLayout>
+
+            <Border BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Contesto attivo"
+                           FontSize="18"
+                           TextColor="{StaticResource WarmGold}"
+                           FontFamily="OpenSansSemibold" />
+                    <Label x:Name="PanelContextLabel"
+                           Text="Nessun pannello selezionato."
+                           TextColor="{StaticResource WarmText}"
+                           FontFamily="OpenSansSemibold" />
+                    <Label x:Name="PanelImageInfoLabel"
+                           Text="Nessuna immagine associata."
+                           TextColor="{StaticResource MutedText}" />
+                    <Border BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 12" Padding="12">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Sequenza consigliata"
+                                   TextColor="{StaticResource MutedText}"
+                                   FontSize="12" />
+                            <Label x:Name="SuggestedFlowLabel"
+                                   Text="Carica immagine, apri ritaglio, poi applica l'allineamento."
+                                   TextColor="{StaticResource WarmGold}"
+                                   FontFamily="OpenSansSemibold" />
+                        </VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Anteprima immagine"
+                           FontSize="18"
+                           TextColor="{StaticResource WarmGold}"
+                           FontFamily="OpenSansSemibold" />
+                    <Border BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 12" Padding="8">
+                        <Grid HeightRequest="220">
+                            <Image x:Name="ImagePreview"
+                                   Aspect="AspectFit"
+                                   IsVisible="False" />
+                            <Label x:Name="ImagePreviewEmptyLabel"
+                                   Text="Carica un'immagine del pannello per vedere l'anteprima."
+                                   TextColor="{StaticResource MutedText}"
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="Center" />
+                        </Grid>
+                    </Border>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Azioni immagine"
+                           FontSize="18"
+                           TextColor="{StaticResource WarmGold}"
+                           FontFamily="OpenSansSemibold" />
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Button x:Name="LoadImageButton"
+                                Style="{StaticResource PrimaryActionButtonStyle}"
+                                Text="Carica immagine"
+                                Clicked="OnLoadImageClicked" />
+                        <Button x:Name="ClearImageButton"
+                                Grid.Column="1"
+                                Text="Rimuovi immagine"
+                                Clicked="OnClearImageClicked"
+                                Style="{StaticResource SecondaryActionButtonStyle}" />
+                    </Grid>
+                    <Label Text="Prima sistema il ritaglio, poi usa auto allineamento o la rifinitura manuale."
+                           TextColor="{StaticResource MutedText}"
+                           FontSize="12" />
+                    <Button x:Name="OpenCropEditorButton"
+                            Style="{StaticResource PrimaryActionButtonStyle}"
+                            Text="Apri editor ritaglio"
+                            Clicked="OnOpenCropEditorClicked" />
+                    <Button x:Name="AutoAlignButton"
+                            Style="{StaticResource PrimaryActionButtonStyle}"
+                            Text="Auto allinea immagine ai fori"
+                            Clicked="OnAutoAlignClicked" />
+                    <Button x:Name="AnalyzeHoldsButton"
+                            Text="Analizza prese dal pannello"
+                            Clicked="OnAnalyzeHoldsClicked"
+                            Style="{StaticResource SecondaryActionButtonStyle}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Allineamento immagine"
+                           FontSize="20"
+                           TextColor="{StaticResource WarmGold}"
+                           FontFamily="OpenSansSemibold" />
+                    <Button x:Name="ApplyAlignmentButton"
+                            Style="{StaticResource PrimaryActionButtonStyle}"
+                            Text="Applica modifiche"
+                            Clicked="OnApplyAlignmentClicked" />
+                    <Button x:Name="ToggleAdvancedButton"
+                            Text="Mostra controlli avanzati"
+                            Clicked="OnToggleAdvancedClicked"
+                            Style="{StaticResource SecondaryActionButtonStyle}" />
+
+                    <VerticalStackLayout x:Name="AdvancedSection"
+                                         IsVisible="False"
+                                         Spacing="12">
+                        <Label Text="Usa questi valori per la rifinitura finale. Per il ritaglio grande usa l'editor dedicato."
+                               TextColor="{StaticResource MutedText}"
+                               FontSize="12" />
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                            <VerticalStackLayout Spacing="4">
+                                <Label Text="Offset X (mm)" TextColor="{StaticResource MutedText}" FontSize="13" />
+                                <Entry x:Name="ImageOffsetXEntry" Keyboard="Numeric" Text="0" Placeholder="0" />
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="1" Spacing="4">
+                                <Label Text="Offset Y (mm)" TextColor="{StaticResource MutedText}" FontSize="13" />
+                                <Entry x:Name="ImageOffsetYEntry" Keyboard="Numeric" Text="0" Placeholder="0" />
+                            </VerticalStackLayout>
+                        </Grid>
+
+                        <Border BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 12" Padding="12">
+                            <VerticalStackLayout Spacing="6">
+                                <Label Text="Scala immagine" TextColor="{StaticResource MutedText}" FontSize="13" />
+                                <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto" ColumnSpacing="8">
+                                    <Button Text="-0.10" Clicked="OnScaleCoarseDecreaseClicked" Padding="8,4" />
+                                    <Button Grid.Column="1" Text="-0.01" Clicked="OnScaleFineDecreaseClicked" Padding="8,4" />
+                                    <Slider Grid.Column="2"
+                                            x:Name="ImageScaleSlider"
+                                            Minimum="0.2"
+                                            Maximum="2.5"
+                                            Value="1" />
+                                    <Button Grid.Column="3" Text="+0.01" Clicked="OnScaleFineIncreaseClicked" Padding="8,4" />
+                                    <Button Grid.Column="4" Text="+0.10" Clicked="OnScaleCoarseIncreaseClicked" Padding="8,4" />
+                                </Grid>
+                                <Label x:Name="ImageScaleValueLabel"
+                                       Text="Scala attuale: 1.00"
+                                       TextColor="{StaticResource MutedText}"
+                                       FontSize="12" />
+                            </VerticalStackLayout>
+                        </Border>
+
+                        <Border BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 12" Padding="12">
+                            <VerticalStackLayout Spacing="6">
+                                <Label Text="Opacita immagine" TextColor="{StaticResource MutedText}" FontSize="13" />
+                                <Slider x:Name="ImageOpacitySlider"
+                                        Minimum="0.1"
+                                        Maximum="1"
+                                        Value="0.55" />
+                                <Label x:Name="ImageOpacityValueLabel"
+                                       Text="Opacita attuale: 55%"
+                                       TextColor="{StaticResource MutedText}"
+                                       FontSize="12" />
+                            </VerticalStackLayout>
+                        </Border>
+
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Ritaglio immagine (%)" TextColor="{StaticResource MutedText}" FontSize="13" />
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                                <VerticalStackLayout Spacing="4">
+                                    <Label Text="Sinistra %" TextColor="{StaticResource MutedText}" FontSize="12" />
+                                    <Entry x:Name="ImageCropLeftEntry" Keyboard="Numeric" Text="0" Placeholder="0" />
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Column="1" Spacing="4">
+                                    <Label Text="Alto %" TextColor="{StaticResource MutedText}" FontSize="12" />
+                                    <Entry x:Name="ImageCropTopEntry" Keyboard="Numeric" Text="0" Placeholder="0" />
+                                </VerticalStackLayout>
+                            </Grid>
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                                <VerticalStackLayout Spacing="4">
+                                    <Label Text="Destra %" TextColor="{StaticResource MutedText}" FontSize="12" />
+                                    <Entry x:Name="ImageCropRightEntry" Keyboard="Numeric" Text="0" Placeholder="0" />
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Column="1" Spacing="4">
+                                    <Label Text="Basso %" TextColor="{StaticResource MutedText}" FontSize="12" />
+                                    <Entry x:Name="ImageCropBottomEntry" Keyboard="Numeric" Text="0" Placeholder="0" />
+                                </VerticalStackLayout>
+                            </Grid>
+                            <Button Text="Reset ritaglio"
+                                    Clicked="OnResetCropClicked"
+                                    Style="{StaticResource SecondaryActionButtonStyle}" />
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

@@ -6,11 +6,11 @@ public sealed class GymSetupPageState
 
     public string WorkflowMessageText { get; init; } = "Inizia creando una sala.";
 
-    public string ActiveRoomText { get; init; } = "Nessuna sala attiva.";
+    public string ActiveRoomText { get; init; } = "Nessuna sala selezionata.";
 
-    public string ActiveWallText { get; init; } = "Nessuna parete attiva.";
+    public string ActiveWallText { get; init; } = "Nessuna parete selezionata.";
 
-    public string ActivePanelText { get; init; } = "Nessun pannello attivo.";
+    public string ActivePanelText { get; init; } = "Nessun pannello selezionato.";
 
     public string NextActionText { get; init; } = "Crea una sala per iniziare.";
 

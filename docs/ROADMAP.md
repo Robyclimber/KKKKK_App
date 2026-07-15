@@ -41,6 +41,6 @@
 
 ## Debito tecnico noto
 
-- alcuni nomi legacy parlano ancora di `wall image`
+- alcuni nomi legacy potrebbero ancora parlare di `wall image`; il termine corretto e' `immagine pannello`
 - alcune classi UI sono ancora corpose
 - servono piu test di integrazione reale su Android

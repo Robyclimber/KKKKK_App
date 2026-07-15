@@ -21,9 +21,19 @@ Oggi il progetto e' concentrato soprattutto su `configurazione` ed `editor circu
 - Mapping hardware `foro -> pointId -> LED` salvato su SQLite
 - Immagini associate ai `pannelli`, non piu alla parete
 - Circuiti e movimenti salvati su SQLite
-- Pagina dedicata per mapping hardware
+- Pagina dedicata per il mapping hardware della parete
 - Prima versione di `auto allineamento immagine ai fori`
 - Integrazione app lato ESP32 gia impostata a livello payload/API
+
+## Vocabolario ufficiale
+
+- `Sala`: contenitore logico principale.
+- `Parete`: appartiene a una sala e contiene pannelli, fori e mapping hardware.
+- `Pannello`: elemento della parete con geometria propria; ogni pannello puo' avere la sua immagine.
+- `Immagine pannello`: foto associata al pannello selezionato, non alla parete intera.
+- `Mapping hardware della parete`: relazione `foro -> pointId -> ledIndex` della parete selezionata.
+- `Parete selezionata`: la parete su cui l'utente sta lavorando.
+- `Pannello selezionato`: il pannello della parete attualmente in modifica.
 
 ## Pagine principali
 

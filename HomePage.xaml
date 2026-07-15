@@ -27,7 +27,8 @@
                            Text="Controllo lo stato della palestra..."
                            TextColor="{StaticResource MutedText}" />
                     <Button x:Name="PrimaryActionButton"
-                            Text="Vai alla configurazione"
+                            Style="{StaticResource PrimaryActionButtonStyle}"
+                            Text="Vai a sale e pareti"
                             Clicked="OnPrimaryActionClicked" />
                 </VerticalStackLayout>
             </Border>
@@ -36,16 +37,17 @@
                 <VerticalStackLayout Spacing="12">
                     <Label Text="Azioni rapide" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                        <Button Text="Configura palestra"
+                        <Button Text="Sale e pareti"
+                                Style="{StaticResource PrimaryActionButtonStyle}"
                                 Clicked="OnGoToGymSetupClicked" />
                         <Button Grid.Column="1"
                                 Text="Circuiti"
+                                Style="{StaticResource SecondaryActionButtonStyle}"
                                 Clicked="OnGoToCircuitsClicked" />
                     </Grid>
                     <Button Text="Allenamento"
                             Clicked="OnTrainingClicked"
-                            BackgroundColor="{StaticResource PanelBlackAlt}"
-                            TextColor="{StaticResource WarmGold}" />
+                            Style="{StaticResource SecondaryActionButtonStyle}" />
                 </VerticalStackLayout>
             </Border>
 

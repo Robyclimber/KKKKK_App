@@ -38,6 +38,29 @@
         <Setter Property="MinimumWidthRequest" Value="44" />
     </Style>
 
+    <Style x:Key="PrimaryActionButtonStyle" TargetType="Button">
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="Padding" Value="14,10" />
+        <Setter Property="MinimumHeightRequest" Value="44" />
+        <Setter Property="MinimumWidthRequest" Value="44" />
+        <Setter Property="BackgroundColor" Value="{StaticResource WarmGold}" />
+        <Setter Property="TextColor" Value="{StaticResource PrimaryDarkText}" />
+        <Setter Property="BorderWidth" Value="0" />
+    </Style>
+
+    <Style x:Key="SecondaryActionButtonStyle" TargetType="Button">
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="Padding" Value="14,10" />
+        <Setter Property="MinimumHeightRequest" Value="44" />
+        <Setter Property="MinimumWidthRequest" Value="44" />
+        <Setter Property="BackgroundColor" Value="{StaticResource PanelBlackAlt}" />
+        <Setter Property="TextColor" Value="{StaticResource WarmText}" />
+        <Setter Property="BorderColor" Value="{StaticResource WarmGoldMuted}" />
+        <Setter Property="BorderWidth" Value="1" />
+    </Style>
+
     <Style TargetType="Entry">
         <Setter Property="TextColor" Value="{StaticResource WarmText}" />
         <Setter Property="PlaceholderColor" Value="{StaticResource MutedText}" />

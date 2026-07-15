@@ -156,9 +156,27 @@ public partial class UtilityPage : ContentPage
 
     private async void OnSyncCircuitsClicked(object? sender, EventArgs e)
     {
+        var (wall, room) = GetSelectedWallAndRoom();
+        var circuitsForWall = availableCircuits
+            .Where(circuit =>
+                string.Equals(circuit.RoomName, room.Name, StringComparison.Ordinal) &&
+                string.Equals(circuit.WallName, wall.Name, StringComparison.Ordinal))
+            .ToList();
+
+        var confirm = await DisplayAlertAsync(
+            "Conferma sync circuiti",
+            $"Stai per sovrascrivere i circuiti gia' presenti sul dispositivo per la parete \"{wall.Name}\".\n\nCircuiti inviati: {circuitsForWall.Count}\n\nVuoi continuare?",
+            "Si, sovrascrivi",
+            "Annulla");
+
+        if (!confirm)
+        {
+            Esp32StatusLabel.Text = "Sync circuiti annullata.";
+            return;
+        }
+
         await RunEsp32ActionAsync(async settings =>
         {
-            var (wall, room) = GetSelectedWallAndRoom();
             var payload = app!.Esp32PayloadBuilderService.BuildCircuitsPayload(wall, room, availableCircuits);
             var response = await app.Esp32ApiClient.PostCircuitsAsync(settings, payload);
             return response.Success

@@ -15,7 +15,7 @@ public sealed class GymSetupEditorStateService : IGymSetupEditorStateService
             var wall = viewModel.SelectedWall;
             return new WallEditorState
             {
-                ModeText = $"Modifica parete selezionata: {wall.Name}",
+                ModeText = $"Stai modificando la parete: {wall.Name}",
                 RoomNameText = viewModel.SelectedRoom?.Name ?? viewModel.SuggestedNextRoomName,
                 WallNameText = wall.Name,
                 WallWidthText = ToEditorText(wall.Width),
@@ -25,7 +25,7 @@ public sealed class GymSetupEditorStateService : IGymSetupEditorStateService
 
         return new WallEditorState
         {
-            ModeText = "Nuova parete",
+            ModeText = "Stai creando una nuova parete",
             RoomNameText = viewModel.SuggestedNextRoomName,
             WallNameText = viewModel.SuggestedNextWallName
         };
@@ -40,7 +40,7 @@ public sealed class GymSetupEditorStateService : IGymSetupEditorStateService
             var panel = viewModel.SelectedPanel;
             return new PanelEditorState
             {
-                ModeText = $"Modifica pannello selezionato: {panel.Name}",
+                ModeText = $"Stai modificando il pannello: {panel.Name}",
                 PanelNameText = panel.Name,
                 PanelXText = ToEditorText(panel.X),
                 PanelYText = ToEditorText(panel.Y),
@@ -55,7 +55,7 @@ public sealed class GymSetupEditorStateService : IGymSetupEditorStateService
 
         return new PanelEditorState
         {
-            ModeText = "Inserimento nuovo pannello",
+            ModeText = "Stai creando un nuovo pannello",
             PanelNameText = viewModel.SuggestedNextPanelName
         };
     }
