@@ -1,10 +1,12 @@
 using SQLite;
-using WallPanelPlanner.Persistence.Entities;
+using RuoteLab.Persistence.Entities;
 
-namespace WallPanelPlanner.Persistence;
+namespace RuoteLab.Persistence;
 
 public sealed class SqliteDatabaseFactory : ISqliteDatabaseFactory
 {
+    private const string CurrentDatabaseFileName = "ruotelab.db3";
+    private const string LegacyDatabaseFileName = "kkkk-konki-kingkong.db3";
     private readonly SemaphoreSlim semaphore = new(1, 1);
     private SQLiteAsyncConnection? connection;
 
@@ -23,7 +25,7 @@ public sealed class SqliteDatabaseFactory : ISqliteDatabaseFactory
                 return connection;
             }
 
-            var dbPath = System.IO.Path.Combine(FileSystem.Current.AppDataDirectory, "kkkk-konki-kingkong.db3");
+            var dbPath = EnsureDatabasePath();
             connection = new SQLiteAsyncConnection(dbPath, SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.Create | SQLiteOpenFlags.SharedCache);
 
             await connection.CreateTableAsync<RoomEntity>();
@@ -32,8 +34,23 @@ public sealed class SqliteDatabaseFactory : ISqliteDatabaseFactory
             await connection.CreateTableAsync<WallHoleEntity>();
             await connection.CreateTableAsync<CircuitEntity>();
             await connection.CreateTableAsync<CircuitMovementEntity>();
+            await connection.CreateTableAsync<WorkoutEntity>();
+            await connection.CreateTableAsync<WorkoutStepEntity>();
             await EnsureColumnAsync("walls", "RoomName", "TEXT NOT NULL DEFAULT 'Sala Arrampicata'");
             await EnsureColumnAsync("circuits", "RoomName", "TEXT NOT NULL DEFAULT 'Sala Arrampicata'");
+            await EnsureColumnAsync("circuits", "CircuitId", "TEXT NOT NULL DEFAULT ''");
+            await EnsureColumnAsync("circuits", "SuggestNextHoldEnabled", "INTEGER NOT NULL DEFAULT 0");
+            await EnsureColumnAsync("circuits", "PresetName", "TEXT NOT NULL DEFAULT 'default'");
+            await EnsureColumnAsync("circuits", "Effect", "TEXT NOT NULL DEFAULT 'steady'");
+            await EnsureColumnAsync("circuits", "DefaultBrightness", "INTEGER NOT NULL DEFAULT 96");
+            await EnsureColumnAsync("circuits", "DimmedBrightness", "INTEGER NOT NULL DEFAULT 48");
+            await EnsureColumnAsync("circuits", "RightHandColor", "TEXT NOT NULL DEFAULT '#C44536'");
+            await EnsureColumnAsync("circuits", "LeftHandColor", "TEXT NOT NULL DEFAULT '#247BA0'");
+            await EnsureColumnAsync("circuits", "StartColor", "TEXT NOT NULL DEFAULT '#FFFF00'");
+            await EnsureColumnAsync("circuits", "TopColor", "TEXT NOT NULL DEFAULT '#FF0000'");
+            await EnsureColumnAsync("circuits", "BlinkCount", "INTEGER NOT NULL DEFAULT 3");
+            await EnsureColumnAsync("circuits", "BlinkPeriodMs", "INTEGER NOT NULL DEFAULT 250");
+            await EnsureColumnAsync("circuits", "HoldDurationMs", "INTEGER NOT NULL DEFAULT 2500");
             await EnsureColumnAsync("panels", "ImagePath", "TEXT NULL");
             await EnsureColumnAsync("panels", "ImageOffsetX", "REAL NOT NULL DEFAULT 0");
             await EnsureColumnAsync("panels", "ImageOffsetY", "REAL NOT NULL DEFAULT 0");
@@ -43,9 +60,12 @@ public sealed class SqliteDatabaseFactory : ISqliteDatabaseFactory
             await EnsureColumnAsync("panels", "ImageCropTop", "REAL NOT NULL DEFAULT 0");
             await EnsureColumnAsync("panels", "ImageCropRight", "REAL NOT NULL DEFAULT 0");
             await EnsureColumnAsync("panels", "ImageCropBottom", "REAL NOT NULL DEFAULT 0");
+            await EnsureColumnAsync("panels", "LedRoutingAxis", "INTEGER NOT NULL DEFAULT 0");
+            await EnsureColumnAsync("panels", "LedStartDirection", "INTEGER NOT NULL DEFAULT 0");
             await EnsureColumnAsync("wall_holes", "HasHold", "INTEGER NOT NULL DEFAULT 0");
             await EnsureColumnAsync("wall_holes", "HoldSize", "INTEGER NOT NULL DEFAULT 2");
             await EnsureColumnAsync("wall_holes", "HoldType", "INTEGER NOT NULL DEFAULT 0");
+            await EnsureColumnAsync("wall_holes", "HasEstimatedHoldMetadata", "INTEGER NOT NULL DEFAULT 1");
             await EnsureColumnAsync("wall_holes", "PointId", "TEXT NOT NULL DEFAULT ''");
             await EnsureColumnAsync("wall_holes", "LedIndex", "INTEGER NOT NULL DEFAULT 0");
             await EnsureColumnAsync("wall_holes", "IsEnabled", "INTEGER NOT NULL DEFAULT 1");
@@ -69,6 +89,8 @@ public sealed class SqliteDatabaseFactory : ISqliteDatabaseFactory
             {
                 transaction.DeleteAll<CircuitMovementEntity>();
                 transaction.DeleteAll<CircuitEntity>();
+                transaction.DeleteAll<WorkoutStepEntity>();
+                transaction.DeleteAll<WorkoutEntity>();
                 transaction.DeleteAll<WallHoleEntity>();
                 transaction.DeleteAll<PanelEntity>();
                 transaction.DeleteAll<WallEntity>();
@@ -131,6 +153,23 @@ public sealed class SqliteDatabaseFactory : ISqliteDatabaseFactory
         {
             Name = defaultRoomName
         });
+    }
+
+    private static string EnsureDatabasePath()
+    {
+        var currentPath = System.IO.Path.Combine(FileSystem.Current.AppDataDirectory, CurrentDatabaseFileName);
+        if (System.IO.File.Exists(currentPath))
+        {
+            return currentPath;
+        }
+
+        var legacyPath = System.IO.Path.Combine(FileSystem.Current.AppDataDirectory, LegacyDatabaseFileName);
+        if (System.IO.File.Exists(legacyPath))
+        {
+            System.IO.File.Copy(legacyPath, currentPath, overwrite: false);
+        }
+
+        return currentPath;
     }
 
     private sealed class PragmaColumnInfo

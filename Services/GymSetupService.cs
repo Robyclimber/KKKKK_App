@@ -1,6 +1,6 @@
-using WallPanelPlanner.Models;
+using RuoteLab.Models;
 
-namespace WallPanelPlanner.Services;
+namespace RuoteLab.Services;
 
 public sealed class GymSetupService : IGymSetupService
 {
@@ -68,6 +68,8 @@ public sealed class GymSetupService : IGymSetupService
             throw new InvalidOperationException("Controlla i valori del pannello e dei fori.");
         }
 
+        ValidateLedRouting(input.LedRoutingAxis, input.LedStartDirection);
+
         var fallbackNumber = currentPanel is null ? wall.Panels.Count + 1 : wall.Panels.IndexOf(currentPanel) + 1;
         var panel = new PanelDefinition
         {
@@ -80,6 +82,8 @@ public sealed class GymSetupService : IGymSetupService
             VerticalSpacing = input.VerticalSpacing,
             EdgeOffsetX = input.EdgeOffsetX,
             EdgeOffsetY = input.EdgeOffsetY,
+            LedRoutingAxis = input.LedRoutingAxis,
+            LedStartDirection = input.LedStartDirection,
             ImagePath = currentPanel?.ImagePath,
             ImageOffsetX = currentPanel?.ImageOffsetX ?? 0d,
             ImageOffsetY = currentPanel?.ImageOffsetY ?? 0d,
@@ -102,6 +106,21 @@ public sealed class GymSetupService : IGymSetupService
         }
 
         return panel;
+    }
+
+    private static void ValidateLedRouting(LedRoutingAxis axis, LedStartDirection direction)
+    {
+        var isValid = axis switch
+        {
+            LedRoutingAxis.Vertical => direction is LedStartDirection.BottomToTop or LedStartDirection.TopToBottom,
+            LedRoutingAxis.Horizontal => direction is LedStartDirection.LeftToRight or LedStartDirection.RightToLeft,
+            _ => false
+        };
+
+        if (!isValid)
+        {
+            throw new InvalidOperationException("La direzione iniziale LED non e' coerente con l'asse scelto.");
+        }
     }
 
     public void SetPanelImage(PanelDefinition panel, string imagePath)

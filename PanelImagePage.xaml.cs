@@ -1,8 +1,8 @@
 using System.Globalization;
-using WallPanelPlanner.Services;
-using WallPanelPlanner.ViewModels;
+using RuoteLab.Services;
+using RuoteLab.ViewModels;
 
-namespace WallPanelPlanner;
+namespace RuoteLab;
 
 public partial class PanelImagePage : ContentPage
 {

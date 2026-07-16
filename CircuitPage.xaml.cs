@@ -1,24 +1,41 @@
 using Microsoft.Maui.Controls.Shapes;
 using Microsoft.Maui.Layouts;
-using WallPanelPlanner.Drawing;
-using WallPanelPlanner.Models;
-using WallPanelPlanner.ViewModels;
+using System.Globalization;
+using RuoteLab.Drawing;
+using RuoteLab.Models;
+using RuoteLab.Services;
+using RuoteLab.ViewModels;
 
-namespace WallPanelPlanner;
+namespace RuoteLab;
 
 public partial class CircuitPage : ContentPage
 {
-    private readonly Services.ICircuitPageStateService pageStateService;
+    private enum CircuitColorTarget
+    {
+        RightHand,
+        LeftHand,
+        Start,
+        Top
+    }
+
+    private readonly ICircuitPageStateService pageStateService;
+    private readonly INextHoldSuggestionService nextHoldSuggestionService;
     private readonly CircuitEditorViewModel viewModel;
     private readonly CircuitEditorDrawable previewDrawable = new();
     private double previewZoom = 1d;
     private double previewZoomStart = 1d;
     private double basePreviewWidth = 320d;
     private double basePreviewHeight = 320d;
-    private CircuitInteractionMode interactionMode = CircuitInteractionMode.RightHand;
+    private CircuitInteractionMode interactionMode = CircuitInteractionMode.Select;
     private HandSide specialModeHand = HandSide.Right;
     private WallHoleDefinition? highlightedHole;
+    private WallHoleDefinition? currentLeftFootStateHole;
+    private WallHoleDefinition? currentRightFootStateHole;
+    private NextHoldSuggestionResult? lastSuggestionResult;
     private bool isRefreshing;
+    private bool isCircuitGlobalsExpanded = true;
+    private CircuitColorTarget activeCircuitColorTarget = CircuitColorTarget.RightHand;
+    private bool isUpdatingCircuitColorControls;
 
     public CircuitPage()
     {
@@ -28,12 +45,15 @@ public partial class CircuitPage : ContentPage
 
             var app = (App)Application.Current!;
             pageStateService = app.CircuitPageStateService;
+            nextHoldSuggestionService = app.NextHoldSuggestionService;
             viewModel = app.CircuitEditorViewModel;
             CircuitPreviewCanvas.Drawable = previewDrawable;
             CircuitRoomPicker.ItemsSource = viewModel.GetAvailableRooms().ToList();
             CircuitWallPicker.ItemsSource = viewModel.GetWallsForSelectedRoom().ToList();
+            CircuitDifficultyPicker.ItemsSource = ClimbingGradeScale.OrderedGrades.ToList();
 
             CircuitNameEntry.Text = viewModel.SuggestedCircuitName;
+            ApplyCircuitGlobalsEditorExpansion();
             SyncView();
         }
         catch (Exception ex)
@@ -42,6 +62,7 @@ public partial class CircuitPage : ContentPage
             var wallRepository = new Services.SqliteWallRepository(databaseFactory);
             var roomRepository = new Services.SqliteRoomRepository(databaseFactory);
             pageStateService = new Services.CircuitPageStateService();
+            nextHoldSuggestionService = new Services.NextHoldSuggestionService();
             viewModel = new ViewModels.CircuitEditorViewModel(
                 new Services.CircuitEditingService(),
                 new ViewModels.GymSetupViewModel(
@@ -50,6 +71,7 @@ public partial class CircuitPage : ContentPage
                     wallRepository,
                     roomRepository),
                 new Services.SqliteCircuitRepository(databaseFactory));
+            CircuitDifficultyPicker.ItemsSource = ClimbingGradeScale.OrderedGrades.ToList();
             Title = "Errore Circuiti";
             Content = BuildErrorView("Errore inizializzazione CircuitPage", ex);
         }
@@ -81,6 +103,12 @@ public partial class CircuitPage : ContentPage
         {
             isRefreshing = false;
         }
+    }
+
+    private void OnSelectModeClicked(object? sender, EventArgs e)
+    {
+        interactionMode = CircuitInteractionMode.Select;
+        UpdateInteractionButtons();
     }
 
     private void OnRightHandModeClicked(object? sender, EventArgs e)
@@ -121,8 +149,10 @@ public partial class CircuitPage : ContentPage
         {
             await viewModel.CreateCircuitAsync(
                 CircuitNameEntry.Text,
-                CircuitDifficultyEntry.Text,
+                GetSelectedDifficulty(),
                 CircuitInclinationEntry.Text,
+                SuggestNextHoldEnabledSwitch.IsToggled,
+                ReadCircuitGlobalsFromEditor(),
                 CircuitWallPicker.SelectedItem as WallDefinition);
             LoadCircuitIntoEditor(viewModel.SelectedCircuit);
             SyncView();
@@ -137,7 +167,12 @@ public partial class CircuitPage : ContentPage
     {
         try
         {
-            await viewModel.UpdateSelectedCircuitAsync(CircuitNameEntry.Text, CircuitDifficultyEntry.Text, CircuitInclinationEntry.Text);
+            await viewModel.UpdateSelectedCircuitAsync(
+                CircuitNameEntry.Text,
+                GetSelectedDifficulty(),
+                CircuitInclinationEntry.Text,
+                SuggestNextHoldEnabledSwitch.IsToggled,
+                ReadCircuitGlobalsFromEditor());
             SyncView();
         }
         catch (InvalidOperationException ex)
@@ -175,6 +210,14 @@ public partial class CircuitPage : ContentPage
         SyncView();
     }
 
+    private void OnCircuitDifficultyChanged(object? sender, EventArgs e)
+    {
+        if (viewModel.SelectedCircuit is not null)
+        {
+            viewModel.SelectedCircuit.Difficulty = GetSelectedDifficulty();
+        }
+    }
+
     private void OnPreviewViewportSizeChanged(object? sender, EventArgs e)
     {
         if (PreviewViewport.Width <= 0 || PreviewViewport.Height <= 0)
@@ -206,6 +249,9 @@ public partial class CircuitPage : ContentPage
     {
         switch (interactionMode)
         {
+            case CircuitInteractionMode.Select:
+                HighlightHoleOnly(e);
+                break;
             case CircuitInteractionMode.LeftHand:
                 ToggleHoleForHand(e, HandSide.Left, MovementRole.Normal);
                 break;
@@ -226,11 +272,23 @@ public partial class CircuitPage : ContentPage
 
     private void OnPreviewDoubleTappedForLeftHand(object? sender, TappedEventArgs e)
     {
+        if (interactionMode == CircuitInteractionMode.Select)
+        {
+            HighlightHoleOnly(e);
+            return;
+        }
+
         ToggleHoleForHand(e, HandSide.Left, MovementRole.Normal);
     }
 
     private void OnPreviewTripleTappedToRemove(object? sender, TappedEventArgs e)
     {
+        if (interactionMode == CircuitInteractionMode.Select)
+        {
+            HighlightHoleOnly(e);
+            return;
+        }
+
         RemoveHole(e);
     }
 
@@ -305,8 +363,11 @@ public partial class CircuitPage : ContentPage
         previewDrawable.Wall = viewModel.CurrentWall;
         previewDrawable.Circuit = viewModel.SelectedCircuit;
         previewDrawable.HighlightedHole = highlightedHole;
+        previewDrawable.SelectedHoles = GetCurrentStateHoles();
+        previewDrawable.SuggestedHole = ResolveSuggestedHole();
         SelectedHoleInfoLabel.Text = BuildSelectedHoleInfoText();
         UpdateHighlightedHoleActions();
+        UpdateSuggestionUi();
         RefreshRoomAndWallPickers(pageState);
 
         RebuildCircuitsList();
@@ -394,8 +455,11 @@ public partial class CircuitPage : ContentPage
         }
 
         CircuitNameEntry.Text = circuit.Name;
-        CircuitDifficultyEntry.Text = circuit.Difficulty;
+        SelectDifficulty(circuit.Difficulty);
         CircuitInclinationEntry.Text = circuit.Inclination;
+        SuggestNextHoldEnabledSwitch.IsToggled = circuit.SuggestNextHoldEnabled;
+        ApplyCircuitGlobalsToEditor(circuit.Globals);
+        ClearSuggestionState();
         viewModel.SetSelectedRoom(viewModel.GetRoomNameForCircuit(circuit));
         RefreshRoomAndWallPickers();
         CircuitWallPicker.SelectedItem = viewModel.AvailableWalls
@@ -409,8 +473,11 @@ public partial class CircuitPage : ContentPage
         viewModel.StartNewCircuitDraft();
         highlightedHole = null;
         CircuitNameEntry.Text = viewModel.SuggestedCircuitName;
-        CircuitDifficultyEntry.Text = string.Empty;
+        CircuitDifficultyPicker.SelectedItem = null;
         CircuitInclinationEntry.Text = string.Empty;
+        SuggestNextHoldEnabledSwitch.IsToggled = false;
+        ApplyCircuitGlobalsToEditor(((App)Application.Current!).AppSettingsService.Load().CircuitDefaults);
+        ClearSuggestionState();
         RefreshRoomAndWallPickers();
         CircuitWallPicker.SelectedItem = viewModel.GetWallsForSelectedRoom().FirstOrDefault();
     }
@@ -441,6 +508,235 @@ public partial class CircuitPage : ContentPage
         CircuitPreviewLayer.HeightRequest = CircuitPreviewCanvas.HeightRequest;
         UpdateWallImageOverlay();
         CircuitPreviewCanvas.Invalidate();
+    }
+
+    private void OnPickCircuitRightHandColorClicked(object? sender, EventArgs e)
+    {
+        SetActiveCircuitColorTarget(CircuitColorTarget.RightHand);
+    }
+
+    private void OnPickCircuitLeftHandColorClicked(object? sender, EventArgs e)
+    {
+        SetActiveCircuitColorTarget(CircuitColorTarget.LeftHand);
+    }
+
+    private void OnPickCircuitStartColorClicked(object? sender, EventArgs e)
+    {
+        SetActiveCircuitColorTarget(CircuitColorTarget.Start);
+    }
+
+    private void OnPickCircuitTopColorClicked(object? sender, EventArgs e)
+    {
+        SetActiveCircuitColorTarget(CircuitColorTarget.Top);
+    }
+
+    private void OnCircuitColorSliderChanged(object? sender, ValueChangedEventArgs e)
+    {
+        if (isUpdatingCircuitColorControls)
+        {
+            return;
+        }
+
+        var color = Color.FromRgb((byte)CircuitRedSlider.Value, (byte)CircuitGreenSlider.Value, (byte)CircuitBlueSlider.Value);
+        var hex = ToHexColor(color);
+        ApplyCircuitColorToTarget(activeCircuitColorTarget, hex);
+        UpdateCircuitColorPickerTexts(color);
+    }
+
+    private void OnToggleGlobalsClicked(object? sender, EventArgs e)
+    {
+        isCircuitGlobalsExpanded = !isCircuitGlobalsExpanded;
+        ApplyCircuitGlobalsEditorExpansion();
+    }
+
+    private void OnApplyAppDefaultsToCircuitClicked(object? sender, EventArgs e)
+    {
+        var defaults = ((App)Application.Current!).AppSettingsService.Load().CircuitDefaults;
+        ApplyCircuitGlobalsToEditor(defaults);
+    }
+
+    private CircuitGlobalsDefinition ReadCircuitGlobalsFromEditor()
+    {
+        return new CircuitGlobalsDefinition
+        {
+            PresetName = ReadRequiredText(CircuitPresetNameEntry.Text, "Inserisci un preset name valido."),
+            Effect = ReadRequiredText(CircuitEffectEntry.Text, "Inserisci un effect valido."),
+            DefaultBrightness = ParseRangeInt(CircuitDefaultBrightnessEntry.Text, 0, 255, "Default brightness deve essere tra 0 e 255."),
+            DimmedBrightness = ParseRangeInt(CircuitDimmedBrightnessEntry.Text, 0, 255, "Dimmed brightness deve essere tra 0 e 255."),
+            RightHandColor = ParseHexColor(CircuitRightHandColorValueLabel.Text, "Il colore mano destra deve essere in formato #RRGGBB."),
+            LeftHandColor = ParseHexColor(CircuitLeftHandColorValueLabel.Text, "Il colore mano sinistra deve essere in formato #RRGGBB."),
+            StartColor = ParseHexColor(CircuitStartColorValueLabel.Text, "Il colore start deve essere in formato #RRGGBB."),
+            TopColor = ParseHexColor(CircuitTopColorValueLabel.Text, "Il colore top deve essere in formato #RRGGBB."),
+            BlinkCount = ParseRangeInt(CircuitBlinkCountEntry.Text, 0, 20, "Blink count deve essere tra 0 e 20."),
+            BlinkPeriodMs = ParseRangeInt(CircuitBlinkPeriodMsEntry.Text, 50, 5000, "Blink period deve essere tra 50 e 5000 ms."),
+            HoldDurationMs = ParseRangeInt(CircuitHoldDurationMsEntry.Text, 100, 30000, "Hold duration deve essere tra 100 e 30000 ms.")
+        };
+    }
+
+    private void ApplyCircuitGlobalsToEditor(CircuitGlobalsDefinition globals)
+    {
+        CircuitPresetNameEntry.Text = globals.PresetName;
+        CircuitEffectEntry.Text = globals.Effect;
+        CircuitDefaultBrightnessEntry.Text = globals.DefaultBrightness.ToString(CultureInfo.InvariantCulture);
+        CircuitDimmedBrightnessEntry.Text = globals.DimmedBrightness.ToString(CultureInfo.InvariantCulture);
+        CircuitRightHandColorValueLabel.Text = globals.RightHandColor;
+        CircuitLeftHandColorValueLabel.Text = globals.LeftHandColor;
+        CircuitStartColorValueLabel.Text = globals.StartColor;
+        CircuitTopColorValueLabel.Text = globals.TopColor;
+        CircuitBlinkCountEntry.Text = globals.BlinkCount.ToString(CultureInfo.InvariantCulture);
+        CircuitBlinkPeriodMsEntry.Text = globals.BlinkPeriodMs.ToString(CultureInfo.InvariantCulture);
+        CircuitHoldDurationMsEntry.Text = globals.HoldDurationMs.ToString(CultureInfo.InvariantCulture);
+        RefreshCircuitColorPreviews();
+        SetActiveCircuitColorTarget(activeCircuitColorTarget);
+    }
+
+    private void RefreshCircuitColorPreviews()
+    {
+        ApplyColorPreview(CircuitRightHandColorPreview, CircuitRightHandColorValueLabel.Text);
+        ApplyColorPreview(CircuitLeftHandColorPreview, CircuitLeftHandColorValueLabel.Text);
+        ApplyColorPreview(CircuitStartColorPreview, CircuitStartColorValueLabel.Text);
+        ApplyColorPreview(CircuitTopColorPreview, CircuitTopColorValueLabel.Text);
+    }
+
+    private void ApplyCircuitGlobalsEditorExpansion()
+    {
+        CircuitGlobalsEditorHost.IsVisible = isCircuitGlobalsExpanded;
+        ToggleGlobalsButton.Text = isCircuitGlobalsExpanded ? "Nascondi" : "Mostra";
+    }
+
+    private void SetActiveCircuitColorTarget(CircuitColorTarget target)
+    {
+        activeCircuitColorTarget = target;
+        CircuitColorPickerTargetLabel.Text = target switch
+        {
+            CircuitColorTarget.RightHand => "Stai modificando: mano destra",
+            CircuitColorTarget.LeftHand => "Stai modificando: mano sinistra",
+            CircuitColorTarget.Start => "Stai modificando: start",
+            CircuitColorTarget.Top => "Stai modificando: top",
+            _ => "Seleziona un colore da modificare."
+        };
+
+        var hex = GetCircuitColorValueForTarget(target);
+        if (!TryParseColor(hex, out var color))
+        {
+            color = Color.FromArgb("#3A3120");
+        }
+
+        isUpdatingCircuitColorControls = true;
+        CircuitRedSlider.Value = Math.Round(color.Red * 255d);
+        CircuitGreenSlider.Value = Math.Round(color.Green * 255d);
+        CircuitBlueSlider.Value = Math.Round(color.Blue * 255d);
+        isUpdatingCircuitColorControls = false;
+        UpdateCircuitColorPickerTexts(color);
+    }
+
+    private string GetCircuitColorValueForTarget(CircuitColorTarget target)
+    {
+        return target switch
+        {
+            CircuitColorTarget.RightHand => CircuitRightHandColorValueLabel.Text ?? "#C44536",
+            CircuitColorTarget.LeftHand => CircuitLeftHandColorValueLabel.Text ?? "#247BA0",
+            CircuitColorTarget.Start => CircuitStartColorValueLabel.Text ?? "#FFFF00",
+            CircuitColorTarget.Top => CircuitTopColorValueLabel.Text ?? "#FF0000",
+            _ => "#3A3120"
+        };
+    }
+
+    private void ApplyCircuitColorToTarget(CircuitColorTarget target, string hex)
+    {
+        switch (target)
+        {
+            case CircuitColorTarget.RightHand:
+                CircuitRightHandColorValueLabel.Text = hex;
+                break;
+            case CircuitColorTarget.LeftHand:
+                CircuitLeftHandColorValueLabel.Text = hex;
+                break;
+            case CircuitColorTarget.Start:
+                CircuitStartColorValueLabel.Text = hex;
+                break;
+            case CircuitColorTarget.Top:
+                CircuitTopColorValueLabel.Text = hex;
+                break;
+        }
+
+        RefreshCircuitColorPreviews();
+    }
+
+    private void UpdateCircuitColorPickerTexts(Color color)
+    {
+        CircuitRedValueLabel.Text = $"Rosso: {(int)Math.Round(color.Red * 255d)}";
+        CircuitGreenValueLabel.Text = $"Verde: {(int)Math.Round(color.Green * 255d)}";
+        CircuitBlueValueLabel.Text = $"Blu: {(int)Math.Round(color.Blue * 255d)}";
+        CircuitColorPickerPreview.Color = color;
+    }
+
+    private static void ApplyColorPreview(BoxView preview, string? text)
+    {
+        preview.Color = TryParseColor(text, out var color)
+            ? color
+            : Color.FromArgb("#3A3120");
+    }
+
+    private static string ReadRequiredText(string? text, string errorMessage)
+    {
+        var value = text?.Trim();
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            return value;
+        }
+
+        throw new InvalidOperationException(errorMessage);
+    }
+
+    private static int ParseRangeInt(string? text, int min, int max, string errorMessage)
+    {
+        if (int.TryParse(text?.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var value) &&
+            value >= min &&
+            value <= max)
+        {
+            return value;
+        }
+
+        throw new InvalidOperationException(errorMessage);
+    }
+
+    private static string ParseHexColor(string? text, string errorMessage)
+    {
+        var value = text?.Trim().ToUpperInvariant();
+        if (TryParseColor(value, out _) && value is not null && value.Length == 7)
+        {
+            return value;
+        }
+
+        throw new InvalidOperationException(errorMessage);
+    }
+
+    private static bool TryParseColor(string? text, out Color color)
+    {
+        color = Colors.Transparent;
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return false;
+        }
+
+        try
+        {
+            color = Color.FromArgb(text.Trim());
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static string ToHexColor(Color color)
+    {
+        var red = (byte)Math.Round(color.Red * 255d);
+        var green = (byte)Math.Round(color.Green * 255d);
+        var blue = (byte)Math.Round(color.Blue * 255d);
+        return $"#{red:X2}{green:X2}{blue:X2}";
     }
 
     private void UpdatePreviewBaseScale()
@@ -535,14 +831,98 @@ public partial class CircuitPage : ContentPage
         return previewDrawable.FindNearestHole(position.Value);
     }
 
+    private void HighlightHoleOnly(TappedEventArgs e)
+    {
+        var hole = FindTappedHole(e);
+        if (hole is null)
+        {
+            return;
+        }
+
+        highlightedHole = hole;
+        SyncView();
+    }
+
     private void UpdateInteractionButtons()
     {
+        SetModeVisual(SelectModeButton, interactionMode == CircuitInteractionMode.Select);
         SetModeVisual(RightHandModeButton, interactionMode == CircuitInteractionMode.RightHand);
         SetModeVisual(LeftHandModeButton, interactionMode == CircuitInteractionMode.LeftHand);
         SetModeVisual(StartModeButton, interactionMode == CircuitInteractionMode.Start);
         SetModeVisual(TopModeButton, interactionMode == CircuitInteractionMode.Top);
         SetModeVisual(RemoveModeButton, interactionMode == CircuitInteractionMode.Remove);
         InteractionHintLabel.Text = pageStateService.Build(viewModel, interactionMode, specialModeHand, CircuitWallPicker.SelectedItem as WallDefinition).InteractionHintText;
+    }
+
+    private async void OnAssignCurrentLeftFootClicked(object? sender, EventArgs e)
+    {
+        await AssignHighlightedHoleToCurrentStateAsync(CurrentStateTarget.LeftFoot);
+    }
+
+    private async void OnAssignCurrentRightFootClicked(object? sender, EventArgs e)
+    {
+        await AssignHighlightedHoleToCurrentStateAsync(CurrentStateTarget.RightFoot);
+    }
+
+    private void OnClearCurrentStateClicked(object? sender, EventArgs e)
+    {
+        ClearSuggestionState();
+        SyncView();
+    }
+
+    private async void OnSuggestNextHoldClicked(object? sender, EventArgs e)
+    {
+        try
+        {
+            var wall = viewModel.CurrentWall ?? CircuitWallPicker.SelectedItem as WallDefinition;
+            if (wall is null)
+            {
+                await DisplayAlertAsync("Suggerimento", "Seleziona una parete valida.", "OK");
+                return;
+            }
+
+            var currentLeftHandStateHole = ResolveCurrentHandStateHole(HandSide.Left);
+            var currentRightHandStateHole = ResolveCurrentHandStateHole(HandSide.Right);
+            if (currentLeftHandStateHole is null || currentRightHandStateHole is null)
+            {
+                await DisplayAlertAsync("Suggerimento", "Servono almeno le ultime posizioni di mano SX e mano DX nel circuito.", "OK");
+                return;
+            }
+
+            var movingHand = DetermineNextMovingHand();
+            var circuit = BuildSuggestionCircuitContext(wall);
+            var request = new NextHoldSuggestionRequest
+            {
+                Wall = wall,
+                Circuit = circuit,
+                MovingHand = movingHand,
+                CurrentLeftHandHoleNumber = currentLeftHandStateHole.Value.Number,
+                CurrentRightHandHoleNumber = currentRightHandStateHole.Value.Number,
+                CurrentLeftFootHoleNumber = currentLeftFootStateHole?.Number,
+                CurrentRightFootHoleNumber = currentRightFootStateHole?.Number,
+                MaxSuggestions = 3
+            };
+
+            lastSuggestionResult = nextHoldSuggestionService.SuggestNextHold(request);
+            SyncView();
+        }
+        catch (InvalidOperationException ex)
+        {
+            await DisplayAlertAsync("Suggerimento", ex.Message, "OK");
+        }
+    }
+
+    private async void OnApplySuggestedHoldClicked(object? sender, EventArgs e)
+    {
+        var suggestedHole = ResolveSuggestedHole();
+        if (suggestedHole is null)
+        {
+            await DisplayAlertAsync("Suggerimento", "Calcola prima una presa suggerita.", "OK");
+            return;
+        }
+
+        highlightedHole = suggestedHole;
+        await ApplyActionToHighlightedHoleAsync(DetermineNextMovingHand(), MovementRole.Normal);
     }
 
     private static void SetModeVisual(Button button, bool isActive)
@@ -622,6 +1002,7 @@ public partial class CircuitPage : ContentPage
                     TextColor = Color.FromArgb("#D8A72D"),
                     FontSize = 12
                 },
+                BuildMovementMetadataLabel(movement),
                 new Label
                 {
                     Text = $"{GetMovementRoleText(movement.Role)} {GetHandShortLabel(movement.Hand)} - Sequenza {movement.Sequence:00}",
@@ -743,7 +1124,7 @@ public partial class CircuitPage : ContentPage
 
         if (movements is null || movements.Count == 0)
         {
-            return $"Foro {hole.Number} - pannello {hole.PanelName} - X {hole.AbsoluteX:0.#} mm - Y {hole.AbsoluteY:0.#} mm";
+            return $"Foro {hole.Number} - {hole.HoldSummary} - pannello {hole.PanelName} - X {hole.AbsoluteX:0.#} mm - Y {hole.AbsoluteY:0.#} mm";
         }
 
         var states = string.Join(" | ", movements.Select(movement =>
@@ -759,7 +1140,7 @@ public partial class CircuitPage : ContentPage
             return $"{roleLabel} {handLabel} seq {movement.Sequence:00}";
         }));
 
-        return $"Foro {hole.Number} - {states} - pannello {hole.PanelName}";
+        return $"Foro {hole.Number} - {hole.HoldSummary} - {states} - pannello {hole.PanelName}";
     }
 
     private bool HasMovementForHand(WallHoleDefinition hole, HandSide hand)
@@ -1012,6 +1393,230 @@ public partial class CircuitPage : ContentPage
     private static string BuildMovementHeadline(CircuitMovementDefinition movement)
     {
         return $"{GetMovementRoleText(movement.Role)} {GetHandShortLabel(movement.Hand)} - Foro {movement.HoleNumber}";
+    }
+
+    private View BuildMovementMetadataLabel(CircuitMovementDefinition movement)
+    {
+        var wall = viewModel.CurrentWall;
+        if (wall is null || !string.Equals(wall.Name, movement.WallName, StringComparison.Ordinal))
+        {
+            return new Label
+            {
+                Text = "Metadata presa non disponibili",
+                TextColor = Color.FromArgb("#B9AA79"),
+                FontSize = 11
+            };
+        }
+
+        var hole = wall.GetOrderedHoles().FirstOrDefault(item => item.Number == movement.HoleNumber);
+        if (hole.Number == 0)
+        {
+            return new Label
+            {
+                Text = "Presa non trovata sulla parete",
+                TextColor = Color.FromArgb("#B9AA79"),
+                FontSize = 11
+            };
+        }
+
+        return new Label
+        {
+            Text = hole.HasEstimatedHoldMetadata
+                ? $"Presa: {hole.HoldSummary}"
+                : $"Presa: {hole.HoldSummary}",
+            TextColor = hole.HasEstimatedHoldMetadata ? Color.FromArgb("#F2C94C") : Color.FromArgb("#7ED6A1"),
+            FontSize = 11
+        };
+    }
+
+    private async Task AssignHighlightedHoleToCurrentStateAsync(CurrentStateTarget target)
+    {
+        if (highlightedHole is not WallHoleDefinition hole || hole.Number <= 0)
+        {
+            return;
+        }
+
+        var suggestedHole = ResolveSuggestedHole();
+        var isSuggestedHole = suggestedHole.HasValue && suggestedHole.Value.Number == hole.Number;
+        var isFootTarget = target is CurrentStateTarget.LeftFoot or CurrentStateTarget.RightFoot;
+        if (isSuggestedHole && isFootTarget)
+        {
+            await DisplayAlertAsync("Suggerimento", "La presa suggerita e' trattata come prossima presa mano. I piedi al momento servono solo come stato di supporto.", "OK");
+            return;
+        }
+
+        switch (target)
+        {
+            case CurrentStateTarget.LeftFoot:
+                currentLeftFootStateHole = hole;
+                break;
+            case CurrentStateTarget.RightFoot:
+                currentRightFootStateHole = hole;
+                break;
+        }
+
+        lastSuggestionResult = null;
+        SyncView();
+    }
+
+    private void UpdateSuggestionUi()
+    {
+        var currentLeftHandStateHole = ResolveCurrentHandStateHole(HandSide.Left);
+        var currentRightHandStateHole = ResolveCurrentHandStateHole(HandSide.Right);
+        CurrentClimberStateLabel.Text =
+            $"Mani: SX {FormatHoleLabel(currentLeftHandStateHole)}, DX {FormatHoleLabel(currentRightHandStateHole)} | " +
+            $"Piedi: SX {FormatHoleLabel(currentLeftFootStateHole)}, DX {FormatHoleLabel(currentRightFootStateHole)}";
+
+        SuggestionModeInfoLabel.Text = viewModel.SelectedCircuit?.SuggestNextHoldEnabled == true || SuggestNextHoldEnabledSwitch.IsToggled
+            ? $"Circuito pronto al suggerimento. Mano prevista: {(DetermineNextMovingHand() == HandSide.Right ? "DX" : "SX")}."
+            : "Attiva 'Suggerisci prossima presa' nel circuito per abilitare il motore.";
+
+        SuggestNextHoldButton.IsEnabled =
+            (viewModel.SelectedCircuit is not null || CircuitWallPicker.SelectedItem is WallDefinition) &&
+            currentLeftHandStateHole is not null &&
+            currentRightHandStateHole is not null;
+        ApplySuggestedHoldButton.IsEnabled = lastSuggestionResult?.SuggestedHoleNumber is not null && viewModel.SelectedCircuit is not null;
+
+        var suggestedHole = ResolveSuggestedHole();
+        SuggestionResultLabel.Text = lastSuggestionResult is null || suggestedHole is null
+            ? "Nessun suggerimento calcolato."
+            : $"Suggerita presa foro {suggestedHole.Value.Number} con mano {(DetermineNextMovingHand() == HandSide.Right ? "DX" : "SX")} | {lastSuggestionResult.PrimaryReason}. {lastSuggestionResult.SecondaryReason}. Baricentro: affidabilita {lastSuggestionResult.CenterConfidenceLabel}.";
+    }
+
+    private IReadOnlyList<WallHoleDefinition> GetCurrentStateHoles()
+    {
+        return new[]
+        {
+            ResolveCurrentHandStateHole(HandSide.Left),
+            ResolveCurrentHandStateHole(HandSide.Right),
+            currentLeftFootStateHole,
+            currentRightFootStateHole
+        }
+        .Where(hole => hole.HasValue && hole.Value.Number > 0)
+        .Select(hole => hole!.Value)
+        .ToList();
+    }
+
+    private WallHoleDefinition? ResolveSuggestedHole()
+    {
+        if (lastSuggestionResult?.SuggestedHoleNumber is null || viewModel.CurrentWall is null)
+        {
+            return null;
+        }
+
+        var suggested = viewModel.CurrentWall.GetOrderedHoles()
+            .FirstOrDefault(hole => hole.Number == lastSuggestionResult.SuggestedHoleNumber.Value);
+        return suggested.Number == 0 ? null : suggested;
+    }
+
+    private void ClearSuggestionState()
+    {
+        currentLeftFootStateHole = null;
+        currentRightFootStateHole = null;
+        lastSuggestionResult = null;
+    }
+
+    private CircuitDefinition BuildSuggestionCircuitContext(WallDefinition wall)
+    {
+        if (viewModel.SelectedCircuit is not null)
+        {
+            viewModel.SelectedCircuit.Difficulty = GetSelectedDifficulty();
+            viewModel.SelectedCircuit.Inclination = CircuitInclinationEntry.Text?.Trim() ?? string.Empty;
+            viewModel.SelectedCircuit.SuggestNextHoldEnabled = SuggestNextHoldEnabledSwitch.IsToggled;
+            return viewModel.SelectedCircuit;
+        }
+
+        return new CircuitDefinition
+        {
+            Name = CircuitNameEntry.Text?.Trim() ?? "Circuito bozza",
+            Difficulty = GetSelectedDifficulty(),
+            Inclination = CircuitInclinationEntry.Text?.Trim() ?? string.Empty,
+            SuggestNextHoldEnabled = SuggestNextHoldEnabledSwitch.IsToggled,
+            RoomName = wall.RoomName,
+            WallName = wall.Name
+        };
+    }
+
+    private string GetSelectedDifficulty()
+    {
+        return ClimbingGradeScale.NormalizeOrEmpty(CircuitDifficultyPicker.SelectedItem as string);
+    }
+
+    private void SelectDifficulty(string? difficulty)
+    {
+        var normalized = ClimbingGradeScale.NormalizeOrEmpty(difficulty);
+        CircuitDifficultyPicker.SelectedItem = string.IsNullOrWhiteSpace(normalized) ? null : normalized;
+    }
+
+    private HandSide DetermineNextMovingHand()
+    {
+        var circuit = viewModel.SelectedCircuit;
+        if (circuit is null)
+        {
+            return HandSide.Right;
+        }
+
+        var lastNormalMovement = circuit.Movements
+            .Where(movement => movement.Role == MovementRole.Normal)
+            .OrderBy(movement => movement.Sequence)
+            .LastOrDefault();
+
+        return lastNormalMovement is null || lastNormalMovement.Hand == HandSide.Left
+            ? HandSide.Right
+            : HandSide.Left;
+    }
+
+    private static string FormatHoleLabel(WallHoleDefinition? hole)
+    {
+        return hole is null ? "-" : hole.Value.Number.ToString(CultureInfo.InvariantCulture);
+    }
+
+    private static WallHoleDefinition? ResolveHoleFromCircuit(CircuitDefinition circuit, IReadOnlyList<WallHoleDefinition> holes, HandSide hand, MovementRole role)
+    {
+        var movement = circuit.Movements
+            .Where(item => item.Hand == hand && item.Role == role)
+            .OrderBy(item => item.Sequence)
+            .FirstOrDefault();
+        if (movement is null)
+        {
+            return null;
+        }
+
+        var hole = holes.FirstOrDefault(item => item.Number == movement.HoleNumber);
+        return hole.Number == 0 ? null : hole;
+    }
+
+    private WallHoleDefinition? ResolveCurrentHandStateHole(HandSide hand)
+    {
+        var circuit = viewModel.SelectedCircuit;
+        var wall = viewModel.CurrentWall;
+        if (circuit is null || wall is null)
+        {
+            return null;
+        }
+
+        var holes = wall.GetOrderedHoles();
+        var lastHandMovement = circuit.Movements
+            .Where(item => item.Hand == hand && item.Role != MovementRole.Top)
+            .OrderBy(item => item.Sequence)
+            .LastOrDefault();
+
+        if (lastHandMovement is not null)
+        {
+            var lastHole = holes.FirstOrDefault(item => item.Number == lastHandMovement.HoleNumber);
+            if (lastHole.Number > 0)
+            {
+                return lastHole;
+            }
+        }
+
+        return ResolveHoleFromCircuit(circuit, holes, hand, MovementRole.Start);
+    }
+
+    private enum CurrentStateTarget
+    {
+        LeftFoot,
+        RightFoot
     }
 
     private static string GetMovementRoleText(MovementRole role)

@@ -1,8 +1,8 @@
-using WallPanelPlanner.Models;
-using WallPanelPlanner.ViewModels;
+using RuoteLab.Models;
+using RuoteLab.ViewModels;
 using Microsoft.Maui.Layouts;
 
-namespace WallPanelPlanner;
+namespace RuoteLab;
 
 public partial class PanelCropEditorPage : ContentPage
 {

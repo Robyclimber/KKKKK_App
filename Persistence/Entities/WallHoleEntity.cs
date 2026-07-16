@@ -1,6 +1,6 @@
 using SQLite;
 
-namespace WallPanelPlanner.Persistence.Entities;
+namespace RuoteLab.Persistence.Entities;
 
 [Table("wall_holes")]
 public sealed class WallHoleEntity
@@ -36,4 +36,6 @@ public sealed class WallHoleEntity
     public int HoldSize { get; set; }
 
     public int HoldType { get; set; }
+
+    public bool HasEstimatedHoldMetadata { get; set; } = true;
 }

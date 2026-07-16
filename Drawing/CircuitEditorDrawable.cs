@@ -1,7 +1,7 @@
 using Microsoft.Maui.Graphics;
-using WallPanelPlanner.Models;
+using RuoteLab.Models;
 
-namespace WallPanelPlanner.Drawing;
+namespace RuoteLab.Drawing;
 
 public sealed class CircuitEditorDrawable : IDrawable
 {
@@ -12,6 +12,10 @@ public sealed class CircuitEditorDrawable : IDrawable
     public CircuitDefinition? Circuit { get; set; }
 
     public WallHoleDefinition? HighlightedHole { get; set; }
+
+    public IReadOnlyList<WallHoleDefinition> SelectedHoles { get; set; } = Array.Empty<WallHoleDefinition>();
+
+    public WallHoleDefinition? SuggestedHole { get; set; }
 
     public float PixelsPerMillimeter { get; set; } = 0.1f;
 
@@ -89,6 +93,36 @@ public sealed class CircuitEditorDrawable : IDrawable
             canvas.StrokeColor = Color.FromArgb("#F2C94C");
             canvas.StrokeSize = 2f;
             canvas.DrawCircle(holeX, holeY, Math.Max(7.5f, scale * 4.5f));
+        }
+
+        if (SelectedHoles.Count > 0)
+        {
+            foreach (var selectedHole in SelectedHoles.Where(hole => hole.Number > 0))
+            {
+                var holeX = originX + (float)selectedHole.AbsoluteX * scale;
+                var holeY = originY + (float)selectedHole.AbsoluteY * scale;
+
+                canvas.FillColor = Color.FromArgb("#00BFFF").WithAlpha(0.22f);
+                canvas.FillCircle(holeX, holeY, Math.Max(10f, scale * 5.8f));
+                canvas.StrokeColor = Color.FromArgb("#7FDBFF");
+                canvas.StrokeSize = 3f;
+                canvas.DrawCircle(holeX, holeY, Math.Max(8f, scale * 4.8f));
+            }
+        }
+
+        if (SuggestedHole is WallHoleDefinition suggestedHole && suggestedHole.Number > 0)
+        {
+            var holeX = originX + (float)suggestedHole.AbsoluteX * scale;
+            var holeY = originY + (float)suggestedHole.AbsoluteY * scale;
+
+            canvas.FillColor = Color.FromArgb("#39FF88").WithAlpha(0.24f);
+            canvas.FillCircle(holeX, holeY, Math.Max(12f, scale * 6.2f));
+            canvas.StrokeColor = Color.FromArgb("#A6FFC8");
+            canvas.StrokeSize = 4f;
+            canvas.DrawCircle(holeX, holeY, Math.Max(9f, scale * 5.2f));
+            canvas.StrokeColor = Color.FromArgb("#39FF88");
+            canvas.StrokeSize = 2f;
+            canvas.DrawCircle(holeX, holeY, Math.Max(14f, scale * 7.4f));
         }
 
         if (Circuit is not null)

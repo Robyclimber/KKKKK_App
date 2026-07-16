@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="RuoteLab.SettingsPage"
+             Title="Settings">
+    <ScrollView>
+        <VerticalStackLayout Padding="20,16,20,32" Spacing="18">
+            <VerticalStackLayout Spacing="4">
+                <Label Text="Settings"
+                       FontSize="30"
+                       TextColor="{StaticResource WarmGold}"
+                       FontFamily="OpenSansSemibold"
+                       CharacterSpacing="6"
+                       LineBreakMode="NoWrap" />
+                <Label Text="Impostazioni globali dell'app organizzate per sezioni."
+                       TextColor="{StaticResource MutedText}" />
+            </VerticalStackLayout>
+
+            <Border BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Circuiti"
+                           FontSize="20"
+                           TextColor="{StaticResource WarmGold}"
+                           FontFamily="OpenSansSemibold" />
+                    <Label Text="Questi valori diventano i default dei nuovi circuiti. I circuiti gia' creati non vengono modificati."
+                           TextColor="{StaticResource MutedText}" />
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Nome preset" TextColor="{StaticResource MutedText}" FontSize="13" />
+                            <Entry x:Name="PresetNameEntry" Placeholder="default" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <Label Text="Effetto" TextColor="{StaticResource MutedText}" FontSize="13" />
+                            <Entry x:Name="EffectEntry" Placeholder="steady" />
+                        </VerticalStackLayout>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Luminosita base" TextColor="{StaticResource MutedText}" FontSize="13" />
+                            <Entry x:Name="DefaultBrightnessEntry" Keyboard="Numeric" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <Label Text="Luminosita attenuata" TextColor="{StaticResource MutedText}" FontSize="13" />
+                            <Entry x:Name="DimmedBrightnessEntry" Keyboard="Numeric" />
+                        </VerticalStackLayout>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Colore mano destra" TextColor="{StaticResource MutedText}" FontSize="13" />
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                <BoxView x:Name="RightHandColorPreview" WidthRequest="28" HeightRequest="28" CornerRadius="8" VerticalOptions="Center" />
+                                <Label x:Name="RightHandColorValueLabel" Grid.Column="1" VerticalOptions="Center" />
+                                <Button Grid.Column="2" Text="Scegli" Clicked="OnPickRightHandColorClicked" />
+                            </Grid>
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <Label Text="Colore mano sinistra" TextColor="{StaticResource MutedText}" FontSize="13" />
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                <BoxView x:Name="LeftHandColorPreview" WidthRequest="28" HeightRequest="28" CornerRadius="8" VerticalOptions="Center" />
+                                <Label x:Name="LeftHandColorValueLabel" Grid.Column="1" VerticalOptions="Center" />
+                                <Button Grid.Column="2" Text="Scegli" Clicked="OnPickLeftHandColorClicked" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Colore start" TextColor="{StaticResource MutedText}" FontSize="13" />
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                <BoxView x:Name="StartColorPreview" WidthRequest="28" HeightRequest="28" CornerRadius="8" VerticalOptions="Center" />
+                                <Label x:Name="StartColorValueLabel" Grid.Column="1" VerticalOptions="Center" />
+                                <Button Grid.Column="2" Text="Scegli" Clicked="OnPickStartColorClicked" />
+                            </Grid>
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <Label Text="Colore top" TextColor="{StaticResource MutedText}" FontSize="13" />
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                <BoxView x:Name="TopColorPreview" WidthRequest="28" HeightRequest="28" CornerRadius="8" VerticalOptions="Center" />
+                                <Label x:Name="TopColorValueLabel" Grid.Column="1" VerticalOptions="Center" />
+                                <Button Grid.Column="2" Text="Scegli" Clicked="OnPickTopColorClicked" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Grid>
+
+                    <Border BackgroundColor="{StaticResource PanelBlack}"
+                            Stroke="{StaticResource WarmGoldMuted}"
+                            StrokeShape="RoundRectangle 14"
+                            Padding="12">
+                        <VerticalStackLayout Spacing="10">
+                            <Label Text="Selettore colore"
+                                   FontSize="15"
+                                   TextColor="{StaticResource WarmGold}"
+                                   FontFamily="OpenSansSemibold" />
+                            <Label x:Name="ColorPickerTargetLabel"
+                                   Text="Seleziona un colore da modificare."
+                                   TextColor="{StaticResource MutedText}"
+                                   FontSize="12" />
+                            <BoxView x:Name="ColorPickerPreview"
+                                     HeightRequest="32"
+                                     CornerRadius="10" />
+                            <VerticalStackLayout Spacing="4">
+                                <Label x:Name="RedValueLabel" Text="Rosso: 0" TextColor="{StaticResource MutedText}" FontSize="12" />
+                                <Slider x:Name="RedSlider" Minimum="0" Maximum="255" ValueChanged="OnColorSliderChanged" />
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Spacing="4">
+                                <Label x:Name="GreenValueLabel" Text="Verde: 0" TextColor="{StaticResource MutedText}" FontSize="12" />
+                                <Slider x:Name="GreenSlider" Minimum="0" Maximum="255" ValueChanged="OnColorSliderChanged" />
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Spacing="4">
+                                <Label x:Name="BlueValueLabel" Text="Blu: 0" TextColor="{StaticResource MutedText}" FontSize="12" />
+                                <Slider x:Name="BlueSlider" Minimum="0" Maximum="255" ValueChanged="OnColorSliderChanged" />
+                            </VerticalStackLayout>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Numero blink" TextColor="{StaticResource MutedText}" FontSize="13" />
+                            <Entry x:Name="BlinkCountEntry" Keyboard="Numeric" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <Label Text="Periodo blink ms" TextColor="{StaticResource MutedText}" FontSize="13" />
+                            <Entry x:Name="BlinkPeriodMsEntry" Keyboard="Numeric" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="2" Spacing="4">
+                            <Label Text="Durata hold ms" TextColor="{StaticResource MutedText}" FontSize="13" />
+                            <Entry x:Name="HoldDurationMsEntry" Keyboard="Numeric" />
+                        </VerticalStackLayout>
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="ESP32"
+                           FontSize="20"
+                           TextColor="{StaticResource WarmGold}"
+                           FontFamily="OpenSansSemibold" />
+                    <Label Text="Impostazioni globali di connessione e limiti operativi del controller."
+                           TextColor="{StaticResource MutedText}" />
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Base URL dispositivo" TextColor="{StaticResource MutedText}" FontSize="13" />
+                        <Entry x:Name="Esp32BaseUrlEntry" Placeholder="http://192.168.1.50" />
+                    </VerticalStackLayout>
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Controller ID" TextColor="{StaticResource MutedText}" FontSize="13" />
+                            <Entry x:Name="Esp32ControllerIdEntry" Placeholder="esp32-sala-1" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <Label Text="LED parete" TextColor="{StaticResource MutedText}" FontSize="13" />
+                            <Entry x:Name="Esp32WallLedCountEntry" Keyboard="Numeric" />
+                        </VerticalStackLayout>
+                    </Grid>
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Brightness limit" TextColor="{StaticResource MutedText}" FontSize="13" />
+                        <Entry x:Name="Esp32BrightnessLimitEntry" Keyboard="Numeric" />
+                    </VerticalStackLayout>
+                    <Label Text="Utility ESP32 resta la pagina tecnica per health, status, sync e test."
+                           TextColor="{StaticResource WarmText}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Palestra"
+                           FontSize="20"
+                           TextColor="{StaticResource WarmGold}"
+                           FontFamily="OpenSansSemibold" />
+                    <Label Text="Spazio riservato a preferenze globali della palestra."
+                           TextColor="{StaticResource MutedText}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Allenamento"
+                           FontSize="20"
+                           TextColor="{StaticResource WarmGold}"
+                           FontFamily="OpenSansSemibold" />
+                    <Label Text="Sezione predisposta per le future opzioni della modalita allenamento."
+                           TextColor="{StaticResource MutedText}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Avanzate"
+                           FontSize="20"
+                           TextColor="{StaticResource WarmGold}"
+                           FontFamily="OpenSansSemibold" />
+                    <Label Text="Qui potranno finire diagnostica, reset cache e strumenti tecnici futuri."
+                           TextColor="{StaticResource MutedText}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Button Text="Salva impostazioni"
+                    Style="{StaticResource PrimaryActionButtonStyle}"
+                    Clicked="OnSaveClicked" />
+
+            <Label x:Name="StatusLabel"
+                   Text="Nessuna modifica salvata."
+                   TextColor="{StaticResource MutedText}"
+                   FontSize="12" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

@@ -1,9 +1,9 @@
 using SQLite;
-using WallPanelPlanner.Models;
-using WallPanelPlanner.Persistence;
-using WallPanelPlanner.Persistence.Entities;
+using RuoteLab.Models;
+using RuoteLab.Persistence;
+using RuoteLab.Persistence.Entities;
 
-namespace WallPanelPlanner.Services;
+namespace RuoteLab.Services;
 
 public sealed class SqliteWallRepository : IWallRepository
 {
@@ -66,6 +66,8 @@ public sealed class SqliteWallRepository : IWallRepository
                 VerticalSpacing = panel.VerticalSpacing,
                 EdgeOffsetX = panel.EdgeOffsetX,
                 EdgeOffsetY = panel.EdgeOffsetY,
+                LedRoutingAxis = (int)panel.LedRoutingAxis,
+                LedStartDirection = (int)panel.LedStartDirection,
                 ImagePath = panel.ImagePath,
                 ImageOffsetX = panel.ImageOffsetX,
                 ImageOffsetY = panel.ImageOffsetY,
@@ -100,7 +102,8 @@ public sealed class SqliteWallRepository : IWallRepository
                 IsEnabled = hole.IsEnabled,
                 HasHold = hole.HasHold,
                 HoldSize = (int)hole.HoldSize,
-                HoldType = (int)hole.HoldType
+                HoldType = (int)hole.HoldType,
+                HasEstimatedHoldMetadata = hole.HasEstimatedHoldMetadata
             });
         }
 
@@ -145,6 +148,12 @@ public sealed class SqliteWallRepository : IWallRepository
                     VerticalSpacing = panelEntity.VerticalSpacing,
                     EdgeOffsetX = panelEntity.EdgeOffsetX,
                     EdgeOffsetY = panelEntity.EdgeOffsetY,
+                    LedRoutingAxis = Enum.IsDefined(typeof(LedRoutingAxis), panelEntity.LedRoutingAxis)
+                        ? (LedRoutingAxis)panelEntity.LedRoutingAxis
+                        : LedRoutingAxis.Vertical,
+                    LedStartDirection = Enum.IsDefined(typeof(LedStartDirection), panelEntity.LedStartDirection)
+                        ? (LedStartDirection)panelEntity.LedStartDirection
+                        : LedStartDirection.BottomToTop,
                     ImagePath = panelEntity.ImagePath,
                     ImageOffsetX = panelEntity.ImageOffsetX,
                     ImageOffsetY = panelEntity.ImageOffsetY,
@@ -193,7 +202,8 @@ public sealed class SqliteWallRepository : IWallRepository
                         IsEnabled = generatedHole.IsEnabled,
                         HasHold = generatedHole.HasHold,
                         HoldSize = (int)generatedHole.HoldSize,
-                        HoldType = (int)generatedHole.HoldType
+                        HoldType = (int)generatedHole.HoldType,
+                        HasEstimatedHoldMetadata = generatedHole.HasEstimatedHoldMetadata
                     });
                 }
             }
@@ -215,7 +225,8 @@ public sealed class SqliteWallRepository : IWallRepository
                         holeEntity.IsEnabled,
                         holeEntity.HasHold,
                         (HoldSize)holeEntity.HoldSize,
-                        (HoldType)holeEntity.HoldType));
+                        (HoldType)holeEntity.HoldType,
+                        holeEntity.HasEstimatedHoldMetadata));
                 }
             }
 

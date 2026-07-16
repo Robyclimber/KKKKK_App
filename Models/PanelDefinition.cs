@@ -1,6 +1,6 @@
 using System.Collections.ObjectModel;
 
-namespace WallPanelPlanner.Models;
+namespace RuoteLab.Models;
 
 public sealed class PanelDefinition
 {
@@ -21,6 +21,10 @@ public sealed class PanelDefinition
     public double EdgeOffsetX { get; init; }
 
     public double EdgeOffsetY { get; init; }
+
+    public LedRoutingAxis LedRoutingAxis { get; init; } = LedRoutingAxis.Vertical;
+
+    public LedStartDirection LedStartDirection { get; init; } = LedStartDirection.BottomToTop;
 
     public string? ImagePath { get; set; }
 
@@ -53,7 +57,7 @@ public sealed class PanelDefinition
     public double EffectiveImageCropHeightFactor => Math.Max(0.001d, 1d - EffectiveImageCropTop - EffectiveImageCropBottom);
 
     public string Summary =>
-        $"{Name} - Pos({X:0.#}, {Y:0.#}) mm - {Width:0.#} x {Height:0.#} mm - Fori: {HoleCount}";
+        $"{Name} - Pos({X:0.#}, {Y:0.#}) mm - {Width:0.#} x {Height:0.#} mm - Fori: {HoleCount} - LED {GetRoutingSummary()}";
 
     public int HoleCount => GetOrderedHoles().Count;
 
@@ -95,19 +99,86 @@ public sealed class PanelDefinition
         var holes = new List<HoleDefinition>();
         var holeNumber = 1;
 
-        for (var columnIndex = 0; columnIndex < xColumns.Count; columnIndex++)
-        {
-            var ySequence = columnIndex % 2 == 0
-                ? yRows
-                : yRows.AsEnumerable().Reverse();
+        ValidateLedRouting();
 
-            foreach (var y in ySequence)
+        if (LedRoutingAxis == LedRoutingAxis.Vertical)
+        {
+            for (var columnIndex = 0; columnIndex < xColumns.Count; columnIndex++)
             {
-                holes.Add(new HoleDefinition(holeNumber++, xColumns[columnIndex], y));
+                var isEvenGroup = columnIndex % 2 == 0;
+                var useBottomToTop = LedStartDirection == LedStartDirection.BottomToTop
+                    ? isEvenGroup
+                    : !isEvenGroup;
+                var ySequence = useBottomToTop
+                    ? yRows.AsEnumerable().Reverse()
+                    : yRows.AsEnumerable();
+
+                foreach (var y in ySequence)
+                {
+                    holes.Add(new HoleDefinition(holeNumber++, xColumns[columnIndex], y));
+                }
+            }
+        }
+        else
+        {
+            for (var rowIndex = 0; rowIndex < yRows.Count; rowIndex++)
+            {
+                var isEvenGroup = rowIndex % 2 == 0;
+                var useLeftToRight = LedStartDirection == LedStartDirection.LeftToRight
+                    ? isEvenGroup
+                    : !isEvenGroup;
+                var xSequence = useLeftToRight
+                    ? xColumns.AsEnumerable()
+                    : xColumns.AsEnumerable().Reverse();
+
+                foreach (var x in xSequence)
+                {
+                    holes.Add(new HoleDefinition(holeNumber++, x, yRows[rowIndex]));
+                }
             }
         }
 
         return new ReadOnlyCollection<HoleDefinition>(holes);
+    }
+
+    private void ValidateLedRouting()
+    {
+        var isValid = LedRoutingAxis switch
+        {
+            LedRoutingAxis.Vertical => LedStartDirection is LedStartDirection.BottomToTop or LedStartDirection.TopToBottom,
+            LedRoutingAxis.Horizontal => LedStartDirection is LedStartDirection.LeftToRight or LedStartDirection.RightToLeft,
+            _ => false
+        };
+
+        if (!isValid)
+        {
+            throw new InvalidOperationException("La direzione iniziale LED non e' coerente con l'asse scelto.");
+        }
+    }
+
+    private string GetRoutingSummary()
+    {
+        return $"{GetAxisLabel(LedRoutingAxis)} {GetDirectionLabel(LedStartDirection)}";
+    }
+
+    public static string GetAxisLabel(LedRoutingAxis axis)
+    {
+        return axis switch
+        {
+            LedRoutingAxis.Horizontal => "Orizzontale",
+            _ => "Verticale"
+        };
+    }
+
+    public static string GetDirectionLabel(LedStartDirection direction)
+    {
+        return direction switch
+        {
+            LedStartDirection.TopToBottom => "alto -> basso",
+            LedStartDirection.LeftToRight => "sx -> dx",
+            LedStartDirection.RightToLeft => "dx -> sx",
+            _ => "basso -> alto"
+        };
     }
 
     private static double ClampCrop(double value)

@@ -1,10 +1,11 @@
-namespace WallPanelPlanner.Models;
+namespace RuoteLab.Models;
 
 public enum CircuitInteractionMode
 {
-    RightHand = 0,
-    LeftHand = 1,
-    Start = 2,
-    Top = 3,
-    Remove = 4
+    Select = 0,
+    RightHand = 1,
+    LeftHand = 2,
+    Start = 3,
+    Top = 4,
+    Remove = 5
 }

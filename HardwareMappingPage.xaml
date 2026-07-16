@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="WallPanelPlanner.HardwareMappingPage"
+             x:Class="RuoteLab.HardwareMappingPage"
              Title="Mapping hardware della parete">
     <ScrollView>
         <VerticalStackLayout Padding="20,16,20,24" Spacing="18">
             <VerticalStackLayout Spacing="4">
-                <Label Text="KKKK KonKiKingKong"
-                       FontSize="30"
+                <Label Text="RuoteLab"
+                       FontSize="28"
                        TextColor="{StaticResource WarmGold}"
                        FontFamily="OpenSansSemibold"
-                       CharacterSpacing="8"
+                       CharacterSpacing="2"
                        LineBreakMode="NoWrap" />
                 <Label Text="Configura il mapping hardware della parete: fori, pointId e LED."
                        TextColor="{StaticResource MutedText}" />
@@ -42,12 +42,12 @@
             <Border BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
                 <VerticalStackLayout Spacing="12">
                     <Label Text="Mapping hardware della parete" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
-                    <Label Text="Default automatico: foro 1 = LED 1. Qui puoi correggere il cablaggio reale della parete per ESP32."
+                    <Label Text="Puoi assegnare i LED automaticamente in base al routing dei pannelli, poi rifinire manualmente il cablaggio reale della parete per ESP32."
                            TextColor="{StaticResource MutedText}"
                            FontSize="12" />
                     <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-                        <Button Text="Rinumera LED automaticamente"
-                                Clicked="OnAutoRenumberHoleLedsClicked" />
+                        <Button Text="Auto-mapping LED dai pannelli"
+                                Clicked="OnAutoMapHoleLedsClicked" />
                         <HorizontalStackLayout Grid.Column="1"
                                                Spacing="8"
                                                VerticalOptions="Center">

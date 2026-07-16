@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="RuoteLab.CircuitRunnerPage"
+             Title="Accendi la Parete">
+    <ScrollView>
+        <VerticalStackLayout Padding="20,16,20,24" Spacing="18">
+            <VerticalStackLayout Spacing="4">
+                <Label Text="Accendi la Parete"
+                       FontSize="30"
+                       TextColor="{StaticResource WarmGold}"
+                       FontFamily="OpenSansSemibold"
+                       CharacterSpacing="4"
+                       LineBreakMode="NoWrap" />
+                <Label x:Name="RunnerSummaryLabel"
+                       Text="Scegli sala, parete e circuito da mostrare o avviare."
+                       TextColor="{StaticResource MutedText}" />
+            </VerticalStackLayout>
+
+            <Border BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Selezione" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Sala" FontSize="13" TextColor="{StaticResource MutedText}" />
+                        <Picker x:Name="RoomPicker"
+                                Title="Seleziona una sala"
+                                SelectedIndexChanged="OnRoomChanged" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Parete" FontSize="13" TextColor="{StaticResource MutedText}" />
+                        <Picker x:Name="WallPicker"
+                                Title="Seleziona una parete"
+                                ItemDisplayBinding="{Binding DisplayLabel}"
+                                SelectedIndexChanged="OnWallChanged" />
+                    </VerticalStackLayout>
+                    <Label x:Name="SelectedCircuitLabel"
+                           Text="Nessun circuito selezionato."
+                           FontSize="12"
+                           TextColor="{StaticResource MutedText}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
+                        <Label Text="Mappa parete" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" VerticalOptions="Center" />
+                        <Button Grid.Column="1" Text="-" Clicked="OnZoomOutClicked" Padding="10,4" />
+                        <Button Grid.Column="2" Text="Reset" Clicked="OnZoomResetClicked" Padding="10,4" />
+                        <Button Grid.Column="3" Text="+" Clicked="OnZoomInClicked" Padding="10,4" />
+                    </Grid>
+                    <Grid x:Name="PreviewViewport" HeightRequest="420" SizeChanged="OnPreviewViewportSizeChanged">
+                        <ScrollView Orientation="Both">
+                            <AbsoluteLayout x:Name="CircuitPreviewLayer">
+                                <GraphicsView x:Name="CircuitPreviewCanvas"
+                                              AbsoluteLayout.LayoutBounds="0,0,1,1"
+                                              AbsoluteLayout.LayoutFlags="All" />
+                                <AbsoluteLayout x:Name="CircuitPanelImagesHost"
+                                                InputTransparent="True"
+                                                AbsoluteLayout.LayoutBounds="0,0,1,1"
+                                                AbsoluteLayout.LayoutFlags="All" />
+                            </AbsoluteLayout>
+                        </ScrollView>
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Circuiti parete" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
+                    <Label x:Name="CircuitsEmptyLabel"
+                           Text="Nessun circuito disponibile per la parete selezionata."
+                           TextColor="{StaticResource MutedText}" />
+                    <VerticalStackLayout x:Name="CircuitsHost" Spacing="10" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Comandi ESP32" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
+                        <Button x:Name="VisualizeCircuitButton" Text="Visualizza" Clicked="OnVisualizeCircuitClicked" />
+                        <Button x:Name="StartCircuitButton" Grid.Column="1" Text="Avvia" Clicked="OnStartCircuitClicked" />
+                        <Button x:Name="StopCircuitButton" Grid.Column="2" Text="Stop / Spegni" Clicked="OnStopCircuitClicked" BackgroundColor="{StaticResource Danger}" TextColor="White" />
+                    </Grid>
+                    <Label x:Name="Esp32StatusLabel"
+                           Text="Nessuna azione eseguita."
+                           TextColor="{StaticResource MutedText}" />
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

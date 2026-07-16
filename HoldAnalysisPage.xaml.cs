@@ -1,9 +1,9 @@
 using Microsoft.Maui.Controls.Shapes;
-using WallPanelPlanner.Models;
-using WallPanelPlanner.Services;
-using WallPanelPlanner.ViewModels;
+using RuoteLab.Models;
+using RuoteLab.Services;
+using RuoteLab.ViewModels;
 
-namespace WallPanelPlanner;
+namespace RuoteLab;
 
 public partial class HoldAnalysisPage : ContentPage
 {
@@ -87,6 +87,15 @@ public partial class HoldAnalysisPage : ContentPage
             TextColor = Color.FromArgb("#B9AA79")
         };
 
+        var metadataLabel = new Label
+        {
+            Text = hole.HasHold
+                ? $"Stato presa: {hole.HoldSummary}"
+                : "Stato presa: Foro vuoto",
+            FontSize = 11,
+            TextColor = hole.HasEstimatedHoldMetadata ? Color.FromArgb("#F2C94C") : Color.FromArgb("#7ED6A1")
+        };
+
         var applySuggestionButton = new Button
         {
             Text = "Applica suggerimento",
@@ -166,6 +175,7 @@ public partial class HoldAnalysisPage : ContentPage
                     FontSize = 12,
                     TextColor = Color.FromArgb("#D8A72D")
                 },
+                metadataLabel,
                 suggestionLabel,
                 new HorizontalStackLayout
                 {

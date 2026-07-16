@@ -1,8 +1,8 @@
 using System.Collections.ObjectModel;
-using WallPanelPlanner.Models;
-using WallPanelPlanner.Services;
+using RuoteLab.Models;
+using RuoteLab.Services;
 
-namespace WallPanelPlanner.ViewModels;
+namespace RuoteLab.ViewModels;
 
 public class GymSetupViewModel
 {
@@ -10,6 +10,7 @@ public class GymSetupViewModel
     private readonly IWallConfigurationStorageService storageService;
     private readonly IWallRepository wallRepository;
     private readonly IRoomRepository roomRepository;
+    private bool isLoaded;
 
     public GymSetupViewModel(
         IGymSetupService gymSetupService,
@@ -243,6 +244,17 @@ public class GymSetupViewModel
         SelectedRoom = Rooms.OrderBy(room => room.Name).FirstOrDefault();
         SelectedWall = GetWallsForSelectedRoom().FirstOrDefault();
         SelectedPanel = null;
+        isLoaded = true;
+    }
+
+    public Task EnsureLoadedAsync(CancellationToken cancellationToken = default)
+    {
+        if (isLoaded)
+        {
+            return Task.CompletedTask;
+        }
+
+        return LoadWallsAsync(cancellationToken);
     }
 
     public void SetSelectedPanelImage(string imagePath)

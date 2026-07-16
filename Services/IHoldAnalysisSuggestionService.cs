@@ -1,6 +1,6 @@
-using WallPanelPlanner.Models;
+using RuoteLab.Models;
 
-namespace WallPanelPlanner.Services;
+namespace RuoteLab.Services;
 
 public interface IHoldAnalysisSuggestionService
 {

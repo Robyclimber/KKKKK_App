@@ -1,6 +1,6 @@
 using SQLite;
 
-namespace WallPanelPlanner.Persistence.Entities;
+namespace RuoteLab.Persistence.Entities;
 
 [Table("panels")]
 public sealed class PanelEntity
@@ -28,6 +28,10 @@ public sealed class PanelEntity
     public double EdgeOffsetX { get; set; }
 
     public double EdgeOffsetY { get; set; }
+
+    public int LedRoutingAxis { get; set; }
+
+    public int LedStartDirection { get; set; }
 
     public string? ImagePath { get; set; }
 
