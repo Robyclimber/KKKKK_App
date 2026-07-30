@@ -1,6 +1,6 @@
-using WallPanelPlanner.Models;
+using RuoteLab.Models;
 
-namespace WallPanelPlanner.Services;
+namespace RuoteLab.Services;
 
 public sealed class HoldAnalysisSuggestionService : IHoldAnalysisSuggestionService
 {
@@ -291,17 +291,16 @@ public sealed class HoldAnalysisSuggestionService : IHoldAnalysisSuggestionServi
 
         var sourceWidth = Math.Max(1d, pixelSize.Value.Width);
         var sourceHeight = Math.Max(1d, pixelSize.Value.Height);
-        var cropLeftPx = sourceWidth * panel.EffectiveImageCropLeft;
-        var cropTopPx = sourceHeight * panel.EffectiveImageCropTop;
-        var cropWidthPx = sourceWidth * panel.EffectiveImageCropWidthFactor;
-        var cropHeightPx = sourceHeight * panel.EffectiveImageCropHeightFactor;
         var imageScale = Math.Max(0.2d, panel.ImageScale);
         var overlayWidth = Math.Max(1d, panel.Width * imageScale);
         var overlayHeight = Math.Max(1d, panel.Height * imageScale);
         var holeOverlayX = hole.RelativeX - panel.ImageOffsetX;
         var holeOverlayY = hole.RelativeY - panel.ImageOffsetY;
-        var sourceHoleX = cropLeftPx + ((holeOverlayX / overlayWidth) * cropWidthPx);
-        var sourceHoleY = cropTopPx + ((holeOverlayY / overlayHeight) * cropHeightPx);
+        var sourcePoint = panel.MapPanelPointToImageSource(holeOverlayX / overlayWidth, holeOverlayY / overlayHeight, sourceWidth, sourceHeight);
+        var sourceHoleX = sourcePoint.X;
+        var sourceHoleY = sourcePoint.Y;
+        var cropWidthPx = sourceWidth * panel.EffectiveImageCropWidthFactor;
+        var cropHeightPx = sourceHeight * panel.EffectiveImageCropHeightFactor;
 
         const double cropWindowMillimeters = 220d;
         var cropScaleX = cropWidthPx / overlayWidth;

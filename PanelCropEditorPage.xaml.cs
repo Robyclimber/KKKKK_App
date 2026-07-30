@@ -1,8 +1,8 @@
-using WallPanelPlanner.Models;
-using WallPanelPlanner.ViewModels;
+using RuoteLab.Models;
+using RuoteLab.ViewModels;
 using Microsoft.Maui.Layouts;
 
-namespace WallPanelPlanner;
+namespace RuoteLab;
 
 public partial class PanelCropEditorPage : ContentPage
 {
@@ -20,6 +20,15 @@ public partial class PanelCropEditorPage : ContentPage
         BottomRight
     }
 
+    private enum PerspectiveDragMode
+    {
+        None,
+        TopLeft,
+        TopRight,
+        BottomLeft,
+        BottomRight
+    }
+
     private readonly GymSetupViewModel viewModel;
     private Rect imageBounds;
     private CropDragMode dragMode;
@@ -27,6 +36,11 @@ public partial class PanelCropEditorPage : ContentPage
     private double startTop;
     private double startRight;
     private double startBottom;
+    private PerspectiveDragMode perspectiveDragMode;
+    private Point startPerspectiveTopLeft;
+    private Point startPerspectiveTopRight;
+    private Point startPerspectiveBottomLeft;
+    private Point startPerspectiveBottomRight;
 
     public PanelCropEditorPage()
     {
@@ -98,6 +112,10 @@ public partial class PanelCropEditorPage : ContentPage
         UpdateHandle(HandleTopRight, selectionRect.Right, selectionRect.Top);
         UpdateHandle(HandleBottomLeft, selectionRect.Left, selectionRect.Bottom);
         UpdateHandle(HandleBottomRight, selectionRect.Right, selectionRect.Bottom);
+        UpdatePerspectiveHandle(PerspectiveHandleTopLeft, selectionRect, panel.EffectivePerspectiveTopLeft);
+        UpdatePerspectiveHandle(PerspectiveHandleTopRight, selectionRect, panel.EffectivePerspectiveTopRight);
+        UpdatePerspectiveHandle(PerspectiveHandleBottomLeft, selectionRect, panel.EffectivePerspectiveBottomLeft);
+        UpdatePerspectiveHandle(PerspectiveHandleBottomRight, selectionRect, panel.EffectivePerspectiveBottomRight);
         UpdateMasks(imageBounds, selectionRect);
     }
 
@@ -110,6 +128,10 @@ public partial class PanelCropEditorPage : ContentPage
     private void OnTopRightPanUpdated(object? sender, PanUpdatedEventArgs e) => HandlePan(CropDragMode.TopRight, e);
     private void OnBottomLeftPanUpdated(object? sender, PanUpdatedEventArgs e) => HandlePan(CropDragMode.BottomLeft, e);
     private void OnBottomRightPanUpdated(object? sender, PanUpdatedEventArgs e) => HandlePan(CropDragMode.BottomRight, e);
+    private void OnPerspectiveTopLeftPanUpdated(object? sender, PanUpdatedEventArgs e) => HandlePerspectivePan(PerspectiveDragMode.TopLeft, e);
+    private void OnPerspectiveTopRightPanUpdated(object? sender, PanUpdatedEventArgs e) => HandlePerspectivePan(PerspectiveDragMode.TopRight, e);
+    private void OnPerspectiveBottomLeftPanUpdated(object? sender, PanUpdatedEventArgs e) => HandlePerspectivePan(PerspectiveDragMode.BottomLeft, e);
+    private void OnPerspectiveBottomRightPanUpdated(object? sender, PanUpdatedEventArgs e) => HandlePerspectivePan(PerspectiveDragMode.BottomRight, e);
 
     private void HandlePan(CropDragMode mode, PanUpdatedEventArgs e)
     {
@@ -136,6 +158,46 @@ public partial class PanelCropEditorPage : ContentPage
             case GestureStatus.Completed:
             case GestureStatus.Canceled:
                 dragMode = CropDragMode.None;
+                break;
+        }
+    }
+
+    private void HandlePerspectivePan(PerspectiveDragMode mode, PanUpdatedEventArgs e)
+    {
+        var panel = viewModel.SelectedPanel;
+        if (panel is null || imageBounds.Width <= 1 || imageBounds.Height <= 1)
+        {
+            return;
+        }
+
+        var selectionRect = new Rect(
+            imageBounds.X + (panel.EffectiveImageCropLeft * imageBounds.Width),
+            imageBounds.Y + (panel.EffectiveImageCropTop * imageBounds.Height),
+            panel.EffectiveImageCropWidthFactor * imageBounds.Width,
+            panel.EffectiveImageCropHeightFactor * imageBounds.Height);
+
+        if (selectionRect.Width <= 1 || selectionRect.Height <= 1)
+        {
+            return;
+        }
+
+        switch (e.StatusType)
+        {
+            case GestureStatus.Started:
+                perspectiveDragMode = mode;
+                startPerspectiveTopLeft = panel.EffectivePerspectiveTopLeft;
+                startPerspectiveTopRight = panel.EffectivePerspectiveTopRight;
+                startPerspectiveBottomLeft = panel.EffectivePerspectiveBottomLeft;
+                startPerspectiveBottomRight = panel.EffectivePerspectiveBottomRight;
+                break;
+
+            case GestureStatus.Running:
+                ApplyPerspectiveDrag(e.TotalX / selectionRect.Width, e.TotalY / selectionRect.Height);
+                break;
+
+            case GestureStatus.Completed:
+            case GestureStatus.Canceled:
+                perspectiveDragMode = PerspectiveDragMode.None;
                 break;
         }
     }
@@ -206,6 +268,47 @@ public partial class PanelCropEditorPage : ContentPage
         }
     }
 
+    private void ApplyPerspectiveDrag(double dxRatio, double dyRatio)
+    {
+        var panel = viewModel.SelectedPanel;
+        if (panel is null)
+        {
+            return;
+        }
+
+        var topLeft = startPerspectiveTopLeft;
+        var topRight = startPerspectiveTopRight;
+        var bottomLeft = startPerspectiveBottomLeft;
+        var bottomRight = startPerspectiveBottomRight;
+
+        switch (perspectiveDragMode)
+        {
+            case PerspectiveDragMode.TopLeft:
+                topLeft = new Point(ClampUnit(startPerspectiveTopLeft.X + dxRatio), ClampUnit(startPerspectiveTopLeft.Y + dyRatio));
+                break;
+            case PerspectiveDragMode.TopRight:
+                topRight = new Point(ClampUnit(startPerspectiveTopRight.X + dxRatio), ClampUnit(startPerspectiveTopRight.Y + dyRatio));
+                break;
+            case PerspectiveDragMode.BottomLeft:
+                bottomLeft = new Point(ClampUnit(startPerspectiveBottomLeft.X + dxRatio), ClampUnit(startPerspectiveBottomLeft.Y + dyRatio));
+                break;
+            case PerspectiveDragMode.BottomRight:
+                bottomRight = new Point(ClampUnit(startPerspectiveBottomRight.X + dxRatio), ClampUnit(startPerspectiveBottomRight.Y + dyRatio));
+                break;
+        }
+
+        viewModel.UpdateSelectedPanelImagePerspective(
+            topLeft.X,
+            topLeft.Y,
+            topRight.X,
+            topRight.Y,
+            bottomLeft.X,
+            bottomLeft.Y,
+            bottomRight.X,
+            bottomRight.Y);
+        RefreshView();
+    }
+
     private void OnResetClicked(object? sender, EventArgs e)
     {
         if (viewModel.SelectedPanel is null)
@@ -214,6 +317,17 @@ public partial class PanelCropEditorPage : ContentPage
         }
 
         viewModel.UpdateSelectedPanelImageCrop(0d, 0d, 0d, 0d);
+        RefreshView();
+    }
+
+    private void OnResetPerspectiveClicked(object? sender, EventArgs e)
+    {
+        if (viewModel.SelectedPanel is null)
+        {
+            return;
+        }
+
+        viewModel.UpdateSelectedPanelImagePerspective(0d, 0d, 1d, 0d, 0d, 1d, 1d, 1d);
         RefreshView();
     }
 
@@ -229,6 +343,15 @@ public partial class PanelCropEditorPage : ContentPage
         var height = handle.HeightRequest > 0 ? handle.HeightRequest : 28d;
         AbsoluteLayout.SetLayoutBounds(handle, new Rect(centerX - (width / 2d), centerY - (height / 2d), width, height));
         AbsoluteLayout.SetLayoutFlags(handle, AbsoluteLayoutFlags.None);
+    }
+
+    private static void UpdatePerspectiveHandle(VisualElement handle, Rect selectionRect, Point normalizedPoint)
+    {
+        var marginX = Math.Min(18d, selectionRect.Width * 0.12d);
+        var marginY = Math.Min(18d, selectionRect.Height * 0.12d);
+        var centerX = selectionRect.Left + marginX + (normalizedPoint.X * Math.Max(0d, selectionRect.Width - (marginX * 2d)));
+        var centerY = selectionRect.Top + marginY + (normalizedPoint.Y * Math.Max(0d, selectionRect.Height - (marginY * 2d)));
+        UpdateHandle(handle, centerX, centerY);
     }
 
     private void UpdateMasks(Rect imageRect, Rect selectionRect)
@@ -286,5 +409,10 @@ public partial class PanelCropEditorPage : ContentPage
         }
 #endif
         return null;
+    }
+
+    private static double ClampUnit(double value)
+    {
+        return Math.Clamp(value, 0d, 1d);
     }
 }

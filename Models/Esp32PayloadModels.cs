@@ -1,4 +1,4 @@
-namespace WallPanelPlanner.Models;
+namespace RuoteLab.Models;
 
 public sealed class Esp32WallConfigPayload
 {
@@ -116,4 +116,142 @@ public sealed class Esp32CircuitStepPayload
 public sealed class Esp32CircuitCommandRequest
 {
     public string CircuitId { get; init; } = string.Empty;
+}
+
+public sealed class Esp32RestFeedbackStartRequest
+{
+    public string WallId { get; init; } = string.Empty;
+
+    public string WallName { get; init; } = string.Empty;
+
+    public int DurationSeconds { get; init; }
+
+    public string BlinkColor { get; init; } = "#FF0000";
+
+    public int BlinkPeriodMs { get; init; } = 500;
+}
+
+public sealed class Esp32RestFeedbackCompleteRequest
+{
+    public string WallId { get; init; } = string.Empty;
+
+    public string WallName { get; init; } = string.Empty;
+
+    public string CompletedColor { get; init; } = "#00FF00";
+
+    public int HoldSeconds { get; init; } = 3;
+}
+
+public sealed class Esp32ResistanceFeedbackStartRequest
+{
+    public string WallId { get; init; } = string.Empty;
+
+    public string WallName { get; init; } = string.Empty;
+
+    public int DurationSeconds { get; init; }
+
+    public string ActiveColor { get; init; } = "#FF8C00";
+
+    public string ActiveMode { get; init; } = "steady";
+
+    public int BlinkPeriodMs { get; init; } = 1000;
+}
+
+public sealed class Esp32ResistanceFeedbackCompleteRequest
+{
+    public string WallId { get; init; } = string.Empty;
+
+    public string WallName { get; init; } = string.Empty;
+
+    public string CompletedColor { get; init; } = "#00FF00";
+
+    public int HoldSeconds { get; init; } = 3;
+}
+
+public sealed class Esp32HangFeedbackStartRequest
+{
+    public string WallId { get; init; } = string.Empty;
+
+    public string WallName { get; init; } = string.Empty;
+
+    public int DurationSeconds { get; init; }
+
+    public List<int> TargetHoleNumbers { get; init; } = new();
+
+    public string ActiveColor { get; init; } = "#00BFFF";
+}
+
+public sealed class Esp32HangFeedbackCompleteRequest
+{
+    public string WallId { get; init; } = string.Empty;
+
+    public string WallName { get; init; } = string.Empty;
+
+    public List<int> TargetHoleNumbers { get; init; } = new();
+
+    public string CompletedColor { get; init; } = "#00FF00";
+
+    public int HoldSeconds { get; init; } = 3;
+}
+
+public sealed class Esp32EditorialCircuitsPayload
+{
+    public string WallId { get; init; } = string.Empty;
+
+    public bool ReplaceAll { get; init; } = true;
+
+    public List<Esp32EditorialCircuitPayload> Circuits { get; init; } = new();
+}
+
+public sealed class Esp32EditorialCircuitPayload
+{
+    public string CircuitId { get; init; } = string.Empty;
+
+    public string Name { get; init; } = string.Empty;
+
+    public string WallId { get; init; } = string.Empty;
+
+    public string Difficulty { get; init; } = string.Empty;
+
+    public string Inclination { get; init; } = string.Empty;
+
+    public Esp32EditorialCircuitGlobalsPayload Globals { get; init; } = new();
+
+    public List<Esp32EditorialCircuitMovementPayload> Movements { get; init; } = new();
+}
+
+public sealed class Esp32EditorialCircuitGlobalsPayload
+{
+    public string PresetName { get; init; } = "default";
+
+    public string Effect { get; init; } = "steady";
+
+    public int DefaultBrightness { get; init; } = 96;
+
+    public int DimmedBrightness { get; init; } = 48;
+
+    public string RightHandColor { get; init; } = "#C44536";
+
+    public string LeftHandColor { get; init; } = "#247BA0";
+
+    public string StartColor { get; init; } = "#FFFF00";
+
+    public string TopColor { get; init; } = "#FF0000";
+
+    public int BlinkCount { get; init; } = 3;
+
+    public int BlinkPeriodMs { get; init; } = 250;
+
+    public int HoldDurationMs { get; init; } = 2500;
+}
+
+public sealed class Esp32EditorialCircuitMovementPayload
+{
+    public int P { get; init; }
+
+    public int H { get; init; }
+
+    public int R { get; init; }
+
+    public int S { get; init; }
 }

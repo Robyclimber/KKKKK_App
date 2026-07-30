@@ -1,4 +1,4 @@
-namespace WallPanelPlanner.Models;
+namespace RuoteLab.Models;
 
 public enum HomeWorkflowState
 {

@@ -1,6 +1,6 @@
 using SQLite;
 
-namespace WallPanelPlanner.Persistence.Entities;
+namespace RuoteLab.Persistence.Entities;
 
 [Table("circuit_movements")]
 public sealed class CircuitMovementEntity

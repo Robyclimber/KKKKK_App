@@ -1,8 +1,8 @@
 using System.Globalization;
 using Microsoft.Maui.Controls.Shapes;
-using WallPanelPlanner.Models;
+using RuoteLab.Models;
 
-namespace WallPanelPlanner;
+namespace RuoteLab;
 
 public partial class WallsPage : ContentPage
 {
@@ -27,7 +27,7 @@ public partial class WallsPage : ContentPage
         try
         {
             isRefreshing = true;
-            await app.GymSetupViewModel.LoadWallsAsync();
+            await app.GymSetupViewModel.EnsureLoadedAsync();
             SyncView();
         }
         finally
@@ -51,6 +51,7 @@ public partial class WallsPage : ContentPage
             WallWidthEntry.Text = string.Empty;
             WallHeightEntry.Text = string.Empty;
             SyncView();
+            await Shell.Current.GoToAsync("gym-setup-page");
         }
         catch (InvalidOperationException ex)
         {

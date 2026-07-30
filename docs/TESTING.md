@@ -59,16 +59,33 @@ Verifica:
 1. apri `Circuiti`
 2. seleziona la sala
 3. crea un circuito
-4. imposta due start
-5. aggiungi movimenti
-6. imposta top
-7. salva
+4. scegli i colori globali con il picker del circuito
+5. imposta due start
+6. aggiungi movimenti
+7. imposta top
+8. salva
 
 Verifica:
 
 - colori corretti per DX, SX, Start, Top
+- il picker aggiorna anteprima e valore colore senza input testuale manuale
 - sequenza unificata dei movimenti
 - miniature immagine coerenti
+
+## 5B. Settings circuito
+
+1. apri `Settings`
+2. vai alla sezione `Circuiti`
+3. cambia i quattro colori usando il picker
+4. salva
+5. torna in `Circuiti`
+6. crea un nuovo circuito
+
+Verifica:
+
+- i nuovi default colore arrivano nel nuovo circuito
+- i circuiti gia esistenti non vengono modificati automaticamente
+- il picker di `Settings` aggiorna anteprima e valore coerentemente
 
 ## 6. Utility ESP32
 
@@ -82,9 +99,91 @@ Verifica:
 - i payload partano
 - nessun crash UI
 
-## 7. Regressioni importanti da controllare
+## 7. Esegui Circuiti
+
+Prerequisiti:
+
+- esiste almeno una sala con una parete salvata
+- la parete ha mapping hardware valido
+- esiste almeno un circuito associato alla parete
+- l'ESP32 e' raggiungibile via `Base URL`
+
+### Caso A. Visualizzazione circuito con sync automatico
+
+1. apri `Esegui Circuiti`
+2. seleziona `Sala`
+3. seleziona `Parete`
+4. seleziona un circuito della parete
+5. premi `Visualizza`
+
+Verifica:
+
+- nella mappa app compare il circuito corretto
+- se la config parete non era presente su ESP32, viene inviata prima del comando
+- se il catalogo circuiti non era presente o non coerente, viene sincronizzato prima del comando
+- sull'ESP32 si accendono tutti i LED del circuito con i colori corretti
+- il comando non avvia la sequenza dinamica
+
+### Caso B. Avvio circuito con sync automatico
+
+1. con lo stesso circuito selezionato
+2. premi `Avvia`
+
+Verifica:
+
+- se necessario, l'app sincronizza prima parete e circuiti
+- la sequenza del circuito parte davvero su ESP32
+- i LED seguono l'ordine dei `steps`
+- lo stato ESP32 passa a circuito attivo
+
+### Caso C. Stop / Spegni
+
+1. con circuito visualizzato o avviato
+2. premi `Stop / Spegni`
+
+Verifica:
+
+- i LED si spengono
+- il runtime torna in stato `Idle`
+- non ci sono eccezioni UI
+
+### Caso D. Cambio parete
+
+1. seleziona una parete con circuiti
+2. poi cambia sala o parete
+
+Verifica:
+
+- la lista circuiti si aggiorna solo con i circuiti della nuova parete
+- il circuito precedentemente selezionato non resta agganciato se non appartiene alla nuova parete
+- la preview grafica mostra la nuova parete
+
+### Caso E. Parete senza circuiti
+
+1. seleziona una parete senza circuiti
+
+Verifica:
+
+- la lista mostra stato vuoto
+- `Visualizza` e `Avvia` restano disabilitati
+- `Stop / Spegni` resta disponibile
+
+### Caso F. ESP32 non raggiungibile
+
+1. imposta un `Base URL` errato oppure spegni il device
+2. premi `Visualizza` oppure `Avvia`
+
+Verifica:
+
+- la pagina mostra un messaggio di errore chiaro
+- non si blocca la UI
+- al tentativo successivo la pagina resta usabile
+
+## 8. Regressioni importanti da controllare
 
 - `Configura palestra` deve restare fluida
 - i click sui bottoni non devono causare eccezioni
 - le immagini devono essere legate al pannello, non alla parete
 - i crop dei fori devono usare il pannello giusto
+- `Esegui Circuiti` non deve alterare i dati dei circuiti locali
+- `Visualizza` e `Avvia` devono restare semanticamente distinti
