@@ -1,7 +1,7 @@
-using ObjCRuntime;
+﻿using ObjCRuntime;
 using UIKit;
 
-namespace RuoteLab;
+namespace WallPanelPlanner;
 
 public class Program
 {

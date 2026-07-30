@@ -1,8 +1,8 @@
 using System.Globalization;
-using RuoteLab.Models;
-using RuoteLab.Services;
+using WallPanelPlanner.Models;
+using WallPanelPlanner.Services;
 
-namespace RuoteLab;
+namespace WallPanelPlanner;
 
 public partial class UtilityPage : ContentPage
 {
@@ -185,43 +185,6 @@ public partial class UtilityPage : ContentPage
         });
     }
 
-    private async void OnSyncEditorialCircuitsClicked(object? sender, EventArgs e)
-    {
-        var (wall, room) = GetSelectedWallAndRoom();
-        var circuitsForWall = availableCircuits
-            .Where(circuit =>
-                string.Equals(circuit.RoomName, room.Name, StringComparison.Ordinal) &&
-                string.Equals(circuit.WallName, wall.Name, StringComparison.Ordinal))
-            .ToList();
-
-        await RunEsp32ActionAsync(async settings =>
-        {
-            var payload = BuildEditorialCircuitsPayload(wall, circuitsForWall);
-            var response = await app!.Esp32ApiClient.PostEditorialCircuitsAsync(settings, payload);
-            return response.Success
-                ? $"Circuiti editoriali sincronizzati - wallId {payload.WallId} - circuiti {payload.Circuits.Count}"
-                : $"Sync editoriale KO - {response.ErrorCode} - {response.Message}";
-        });
-    }
-
-    private async void OnImportEditorialCircuitsClicked(object? sender, EventArgs e)
-    {
-        await RunEsp32ActionAsync(async settings =>
-        {
-            var response = await app!.Esp32ApiClient.GetEditorialCircuitsAsync(settings);
-            if (!response.Success)
-            {
-                return $"Import KO - {response.ErrorCode} - {response.Message}";
-            }
-
-            var importedCount = await ImportEditorialCircuitsAsync(response.Data);
-            await app.CircuitEditorViewModel.LoadCircuitsAsync();
-            availableCircuits = await app.CircuitRepository.GetAllAsync();
-            RefreshCircuitPicker();
-            return $"Import OK - circuiti importati o aggiornati: {importedCount}";
-        });
-    }
-
     private async void OnShowCircuitClicked(object? sender, EventArgs e)
     {
         await RunEsp32ActionAsync(async settings =>
@@ -334,139 +297,6 @@ public partial class UtilityPage : ContentPage
             WallLedCount = ParsePositiveInt(Esp32WallLedCountEntry.Text, "Inserisci un numero LED valido."),
             BrightnessLimit = ParseRangeInt(Esp32BrightnessLimitEntry.Text, 0, 255, "Inserisci un brightness limit tra 0 e 255.")
         };
-    }
-
-    private Esp32EditorialCircuitsPayload BuildEditorialCircuitsPayload(WallDefinition wall, IReadOnlyList<CircuitDefinition> circuits)
-    {
-        var wallId = Esp32PayloadBuilderService.BuildWallId(wall);
-        return new Esp32EditorialCircuitsPayload
-        {
-            WallId = wallId,
-            ReplaceAll = true,
-            Circuits = circuits.Select(circuit => new Esp32EditorialCircuitPayload
-            {
-                CircuitId = Esp32PayloadBuilderService.BuildCircuitId(circuit),
-                Name = circuit.Name,
-                WallId = wallId,
-                Difficulty = circuit.Difficulty,
-                Inclination = circuit.Inclination,
-                Globals = new Esp32EditorialCircuitGlobalsPayload
-                {
-                    PresetName = circuit.Globals.PresetName,
-                    Effect = circuit.Globals.Effect,
-                    DefaultBrightness = circuit.Globals.DefaultBrightness,
-                    DimmedBrightness = circuit.Globals.DimmedBrightness,
-                    RightHandColor = circuit.Globals.RightHandColor,
-                    LeftHandColor = circuit.Globals.LeftHandColor,
-                    StartColor = circuit.Globals.StartColor,
-                    TopColor = circuit.Globals.TopColor,
-                    BlinkCount = circuit.Globals.BlinkCount,
-                    BlinkPeriodMs = circuit.Globals.BlinkPeriodMs,
-                    HoldDurationMs = circuit.Globals.HoldDurationMs
-                },
-                Movements = circuit.Movements
-                    .OrderBy(movement => movement.Sequence)
-                    .Select(movement => new Esp32EditorialCircuitMovementPayload
-                    {
-                        P = movement.HoleNumber,
-                        H = movement.Hand == HandSide.Left ? 0 : 1,
-                        R = movement.Role switch
-                        {
-                            MovementRole.Start => 1,
-                            MovementRole.Top => 2,
-                            _ => 0
-                        },
-                        S = movement.Sequence
-                    })
-                    .ToList()
-            }).ToList()
-        };
-    }
-
-    private async Task<int> ImportEditorialCircuitsAsync(Esp32EditorialCircuitsCatalogData? data)
-    {
-        if (data is null || string.IsNullOrWhiteSpace(data.WallId))
-        {
-            throw new InvalidOperationException("Catalogo circuiti editoriali non valido.");
-        }
-
-        var wall = app!.GymSetupViewModel.Walls.FirstOrDefault(candidate =>
-            string.Equals(Esp32PayloadBuilderService.BuildWallId(candidate), data.WallId, StringComparison.Ordinal));
-        if (wall is null)
-        {
-            throw new InvalidOperationException($"Nessuna parete locale corrisponde a wallId {data.WallId}.");
-        }
-
-        var existingCircuits = (await app.CircuitRepository.GetAllAsync()).ToList();
-        var importedCount = 0;
-
-        foreach (var remoteCircuit in data.Circuits)
-        {
-            if (string.IsNullOrWhiteSpace(remoteCircuit.CircuitId))
-            {
-                continue;
-            }
-
-            var localCircuit = existingCircuits.FirstOrDefault(circuit =>
-                string.Equals(Esp32PayloadBuilderService.BuildCircuitId(circuit), remoteCircuit.CircuitId, StringComparison.Ordinal));
-
-            localCircuit ??= new CircuitDefinition
-            {
-                CircuitId = remoteCircuit.CircuitId,
-                RoomName = wall.RoomName,
-                WallName = wall.Name,
-                Name = remoteCircuit.Name
-            };
-
-            localCircuit.CircuitId = remoteCircuit.CircuitId;
-            localCircuit.RoomName = wall.RoomName;
-            localCircuit.WallName = wall.Name;
-            localCircuit.Name = remoteCircuit.Name;
-            localCircuit.Difficulty = remoteCircuit.Difficulty;
-            localCircuit.Inclination = remoteCircuit.Inclination;
-            localCircuit.Globals = new CircuitGlobalsDefinition
-            {
-                PresetName = remoteCircuit.Globals.PresetName,
-                Effect = remoteCircuit.Globals.Effect,
-                DefaultBrightness = remoteCircuit.Globals.DefaultBrightness,
-                DimmedBrightness = remoteCircuit.Globals.DimmedBrightness,
-                RightHandColor = remoteCircuit.Globals.RightHandColor,
-                LeftHandColor = remoteCircuit.Globals.LeftHandColor,
-                StartColor = remoteCircuit.Globals.StartColor,
-                TopColor = remoteCircuit.Globals.TopColor,
-                BlinkCount = remoteCircuit.Globals.BlinkCount,
-                BlinkPeriodMs = remoteCircuit.Globals.BlinkPeriodMs,
-                HoldDurationMs = remoteCircuit.Globals.HoldDurationMs
-            };
-
-            localCircuit.Movements.Clear();
-            foreach (var movement in remoteCircuit.Movements.OrderBy(movement => movement.S))
-            {
-                localCircuit.Movements.Add(new CircuitMovementDefinition
-                {
-                    WallName = wall.Name,
-                    HoleNumber = movement.P,
-                    Hand = movement.H == 0 ? HandSide.Left : HandSide.Right,
-                    Role = movement.R switch
-                    {
-                        1 => MovementRole.Start,
-                        2 => MovementRole.Top,
-                        _ => MovementRole.Normal
-                    },
-                    Sequence = movement.S
-                });
-            }
-
-            await app.CircuitRepository.SaveAsync(localCircuit);
-            if (localCircuit.Id > 0 && !existingCircuits.Any(circuit => circuit.Id == localCircuit.Id))
-            {
-                existingCircuits.Add(localCircuit);
-            }
-
-            importedCount++;
-        }
-
-        return importedCount;
     }
 
     private static int ParsePositiveInt(string? text, string errorMessage)

@@ -1,6 +1,6 @@
-using RuoteLab.Models;
+using WallPanelPlanner.Models;
 
-namespace RuoteLab.Services;
+namespace WallPanelPlanner.Services;
 
 public interface IGymSetupService
 {
@@ -17,15 +17,4 @@ public interface IGymSetupService
     void UpdatePanelImageAlignment(PanelDefinition panel, double offsetX, double offsetY, double scale, double opacity);
 
     void UpdatePanelImageCrop(PanelDefinition panel, double cropLeft, double cropTop, double cropRight, double cropBottom);
-
-    void UpdatePanelImagePerspective(
-        PanelDefinition panel,
-        double topLeftX,
-        double topLeftY,
-        double topRightX,
-        double topRightY,
-        double bottomLeftX,
-        double bottomLeftY,
-        double bottomRightX,
-        double bottomRightY);
 }

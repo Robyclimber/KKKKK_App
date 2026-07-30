@@ -1,12 +1,12 @@
-using RuoteLab.Models;
+using WallPanelPlanner.Models;
 
-namespace RuoteLab.Services;
+namespace WallPanelPlanner.Services;
 
 public interface ICircuitEditingService
 {
-    CircuitDefinition CreateCircuit(string? name, string? difficulty, string? inclination, bool suggestNextHoldEnabled, CircuitGlobalsDefinition? globals, WallDefinition wall, string fallbackName);
+    CircuitDefinition CreateCircuit(string? name, string? difficulty, string? inclination, WallDefinition wall, string fallbackName);
 
-    void UpdateCircuitMetadata(CircuitDefinition circuit, string? name, string? difficulty, string? inclination, bool suggestNextHoldEnabled, CircuitGlobalsDefinition? globals);
+    void UpdateCircuitMetadata(CircuitDefinition circuit, string? name, string? difficulty, string? inclination);
 
     void ToggleMovement(CircuitDefinition circuit, string wallName, WallHoleDefinition hole, HandSide hand, MovementRole role);
 

@@ -1,9 +1,9 @@
 using SQLite;
-using RuoteLab.Models;
-using RuoteLab.Persistence;
-using RuoteLab.Persistence.Entities;
+using WallPanelPlanner.Models;
+using WallPanelPlanner.Persistence;
+using WallPanelPlanner.Persistence.Entities;
 
-namespace RuoteLab.Services;
+namespace WallPanelPlanner.Services;
 
 public sealed class SqliteRoomRepository : IRoomRepository
 {

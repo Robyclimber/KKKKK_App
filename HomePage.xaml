@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="RuoteLab.HomePage"
+             x:Class="WallPanelPlanner.HomePage"
              Title="Home">
     <ScrollView>
         <VerticalStackLayout Padding="24" Spacing="18">
             <VerticalStackLayout Spacing="6">
-                <Label Text="RuoteLab"
-                       FontSize="30"
+                <Label Text="KKKK KonKiKingKong"
+                       FontSize="34"
                        FontFamily="OpenSansSemibold"
-                       CharacterSpacing="2"
+                       CharacterSpacing="8"
                        LineBreakMode="NoWrap"
                        TextColor="{StaticResource WarmGold}" />
                 <Label Text="Configurazione palestra, circuiti e allenamento."

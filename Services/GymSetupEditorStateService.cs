@@ -1,8 +1,8 @@
 using System.Globalization;
-using RuoteLab.Models;
-using RuoteLab.ViewModels;
+using WallPanelPlanner.Models;
+using WallPanelPlanner.ViewModels;
 
-namespace RuoteLab.Services;
+namespace WallPanelPlanner.Services;
 
 public sealed class GymSetupEditorStateService : IGymSetupEditorStateService
 {
@@ -49,18 +49,14 @@ public sealed class GymSetupEditorStateService : IGymSetupEditorStateService
                 HoleOffsetText = ToEditorText(panel.EdgeOffsetX),
                 HoleOffsetYText = ToEditorText(panel.EdgeOffsetY),
                 HoleHorizontalText = ToEditorText(panel.HorizontalSpacing),
-                HoleVerticalText = ToEditorText(panel.VerticalSpacing),
-                LedRoutingAxis = panel.LedRoutingAxis,
-                LedStartDirection = panel.LedStartDirection
+                HoleVerticalText = ToEditorText(panel.VerticalSpacing)
             };
         }
 
         return new PanelEditorState
         {
             ModeText = "Stai creando un nuovo pannello",
-            PanelNameText = viewModel.SuggestedNextPanelName,
-            LedRoutingAxis = LedRoutingAxis.Vertical,
-            LedStartDirection = LedStartDirection.BottomToTop
+            PanelNameText = viewModel.SuggestedNextPanelName
         };
     }
 

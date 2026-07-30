@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Shell
-    x:Class="RuoteLab.AppShell"
+    x:Class="WallPanelPlanner.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:local="clr-namespace:RuoteLab"
-    Title="RuoteLab"
+    xmlns:local="clr-namespace:WallPanelPlanner"
+    Title="KKKK KonKiKingKong"
     FlyoutBehavior="Flyout"
     FlyoutBackgroundColor="{StaticResource OffBlack}">
 
@@ -42,32 +42,11 @@
             Route="circuit-page" />
     </FlyoutItem>
 
-    <FlyoutItem Title="Accendi la Parete" Route="esegui-circuiti">
-        <ShellContent
-            Title="Accendi la Parete"
-            ContentTemplate="{DataTemplate local:CircuitRunnerPage}"
-            Route="circuit-runner-page" />
-    </FlyoutItem>
-
-    <FlyoutItem Title="Allenamento" Route="allenamento">
-        <ShellContent
-            Title="Allenamento"
-            ContentTemplate="{DataTemplate local:TrainingPage}"
-            Route="training-page" />
-    </FlyoutItem>
-
     <FlyoutItem Title="Utility ESP32" Route="utility">
         <ShellContent
             Title="Utility ESP32"
             ContentTemplate="{DataTemplate local:UtilityPage}"
             Route="utility-page" />
-    </FlyoutItem>
-
-    <FlyoutItem Title="Settings" Route="settings">
-        <ShellContent
-            Title="Settings"
-            ContentTemplate="{DataTemplate local:SettingsPage}"
-            Route="settings-page" />
     </FlyoutItem>
 
 </Shell>

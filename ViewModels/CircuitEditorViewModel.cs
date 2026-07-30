@@ -1,8 +1,8 @@
 using System.Collections.ObjectModel;
-using RuoteLab.Models;
-using RuoteLab.Services;
+using WallPanelPlanner.Models;
+using WallPanelPlanner.Services;
 
-namespace RuoteLab.ViewModels;
+namespace WallPanelPlanner.ViewModels;
 
 public sealed class CircuitEditorViewModel
 {
@@ -98,14 +98,14 @@ public sealed class CircuitEditorViewModel
         }
     }
 
-    public async Task CreateCircuitAsync(string? name, string? difficulty, string? inclination, bool suggestNextHoldEnabled, CircuitGlobalsDefinition? globals, WallDefinition? wall, CancellationToken cancellationToken = default)
+    public async Task CreateCircuitAsync(string? name, string? difficulty, string? inclination, WallDefinition? wall, CancellationToken cancellationToken = default)
     {
         if (wall is null)
         {
             throw new InvalidOperationException("Crea prima almeno una parete nella Sala Arrampicata.");
         }
 
-        var circuit = circuitEditingService.CreateCircuit(name, difficulty, inclination, suggestNextHoldEnabled, globals, wall, SuggestedCircuitName);
+        var circuit = circuitEditingService.CreateCircuit(name, difficulty, inclination, wall, SuggestedCircuitName);
 
         Circuits.Add(circuit);
         SelectedCircuit = circuit;
@@ -129,14 +129,14 @@ public sealed class CircuitEditorViewModel
         }
     }
 
-    public async Task UpdateSelectedCircuitAsync(string? name, string? difficulty, string? inclination, bool suggestNextHoldEnabled, CircuitGlobalsDefinition? globals, CancellationToken cancellationToken = default)
+    public async Task UpdateSelectedCircuitAsync(string? name, string? difficulty, string? inclination, CancellationToken cancellationToken = default)
     {
         if (SelectedCircuit is null)
         {
             throw new InvalidOperationException("Seleziona un circuito da aggiornare.");
         }
 
-        circuitEditingService.UpdateCircuitMetadata(SelectedCircuit, name, difficulty, inclination, suggestNextHoldEnabled, globals);
+        circuitEditingService.UpdateCircuitMetadata(SelectedCircuit, name, difficulty, inclination);
         await circuitRepository.SaveAsync(SelectedCircuit, cancellationToken);
     }
 
@@ -205,7 +205,7 @@ public sealed class CircuitEditorViewModel
 
     public async Task LoadCircuitsAsync(CancellationToken cancellationToken = default)
     {
-        await roomViewModel.EnsureLoadedAsync(cancellationToken);
+        await roomViewModel.LoadWallsAsync(cancellationToken);
 
         Circuits.Clear();
         var savedCircuits = await circuitRepository.GetAllAsync(cancellationToken);

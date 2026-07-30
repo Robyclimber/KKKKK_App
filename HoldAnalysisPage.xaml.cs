@@ -1,9 +1,9 @@
 using Microsoft.Maui.Controls.Shapes;
-using RuoteLab.Models;
-using RuoteLab.Services;
-using RuoteLab.ViewModels;
+using WallPanelPlanner.Models;
+using WallPanelPlanner.Services;
+using WallPanelPlanner.ViewModels;
 
-namespace RuoteLab;
+namespace WallPanelPlanner;
 
 public partial class HoldAnalysisPage : ContentPage
 {
@@ -87,15 +87,6 @@ public partial class HoldAnalysisPage : ContentPage
             TextColor = Color.FromArgb("#B9AA79")
         };
 
-        var metadataLabel = new Label
-        {
-            Text = hole.HasHold
-                ? $"Stato presa: {hole.HoldSummary}"
-                : "Stato presa: Foro vuoto",
-            FontSize = 11,
-            TextColor = hole.HasEstimatedHoldMetadata ? Color.FromArgb("#F2C94C") : Color.FromArgb("#7ED6A1")
-        };
-
         var applySuggestionButton = new Button
         {
             Text = "Applica suggerimento",
@@ -175,7 +166,6 @@ public partial class HoldAnalysisPage : ContentPage
                     FontSize = 12,
                     TextColor = Color.FromArgb("#D8A72D")
                 },
-                metadataLabel,
                 suggestionLabel,
                 new HorizontalStackLayout
                 {
@@ -284,16 +274,17 @@ public partial class HoldAnalysisPage : ContentPage
 
         var sourceWidth = Math.Max(1d, pixelSize.Value.Width);
         var sourceHeight = Math.Max(1d, pixelSize.Value.Height);
+        var cropLeftPx = sourceWidth * panel.EffectiveImageCropLeft;
+        var cropTopPx = sourceHeight * panel.EffectiveImageCropTop;
+        var cropWidthPx = sourceWidth * panel.EffectiveImageCropWidthFactor;
+        var cropHeightPx = sourceHeight * panel.EffectiveImageCropHeightFactor;
         var imageScale = Math.Max(0.2d, panel.ImageScale);
         var overlayWidth = Math.Max(1d, panel.Width * imageScale);
         var overlayHeight = Math.Max(1d, panel.Height * imageScale);
-        var cropWidthPx = sourceWidth * panel.EffectiveImageCropWidthFactor;
-        var cropHeightPx = sourceHeight * panel.EffectiveImageCropHeightFactor;
         var holeOverlayX = hole.RelativeX - panel.ImageOffsetX;
         var holeOverlayY = hole.RelativeY - panel.ImageOffsetY;
-        var sourcePoint = panel.MapPanelPointToImageSource(holeOverlayX / overlayWidth, holeOverlayY / overlayHeight, sourceWidth, sourceHeight);
-        var sourceHoleX = sourcePoint.X;
-        var sourceHoleY = sourcePoint.Y;
+        var sourceHoleX = cropLeftPx + ((holeOverlayX / overlayWidth) * cropWidthPx);
+        var sourceHoleY = cropTopPx + ((holeOverlayY / overlayHeight) * cropHeightPx);
 
 #if ANDROID
         try

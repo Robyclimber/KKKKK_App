@@ -1,4 +1,4 @@
-namespace RuoteLab;
+﻿namespace WallPanelPlanner;
 
 public partial class AppShell : Shell
 {

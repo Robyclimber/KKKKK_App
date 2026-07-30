@@ -1,7 +1,7 @@
-using RuoteLab.Models;
-using RuoteLab.ViewModels;
+using WallPanelPlanner.Models;
+using WallPanelPlanner.ViewModels;
 
-namespace RuoteLab.Services;
+namespace WallPanelPlanner.Services;
 
 public interface IGymSetupPageStateService
 {

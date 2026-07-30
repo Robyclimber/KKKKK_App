@@ -1,8 +1,8 @@
 using System.Collections.ObjectModel;
-using RuoteLab.Models;
-using RuoteLab.Services;
+using WallPanelPlanner.Models;
+using WallPanelPlanner.Services;
 
-namespace RuoteLab.ViewModels;
+namespace WallPanelPlanner.ViewModels;
 
 public class GymSetupViewModel
 {
@@ -10,7 +10,6 @@ public class GymSetupViewModel
     private readonly IWallConfigurationStorageService storageService;
     private readonly IWallRepository wallRepository;
     private readonly IRoomRepository roomRepository;
-    private bool isLoaded;
 
     public GymSetupViewModel(
         IGymSetupService gymSetupService,
@@ -244,17 +243,6 @@ public class GymSetupViewModel
         SelectedRoom = Rooms.OrderBy(room => room.Name).FirstOrDefault();
         SelectedWall = GetWallsForSelectedRoom().FirstOrDefault();
         SelectedPanel = null;
-        isLoaded = true;
-    }
-
-    public Task EnsureLoadedAsync(CancellationToken cancellationToken = default)
-    {
-        if (isLoaded)
-        {
-            return Task.CompletedTask;
-        }
-
-        return LoadWallsAsync(cancellationToken);
     }
 
     public void SetSelectedPanelImage(string imagePath)
@@ -279,29 +267,6 @@ public class GymSetupViewModel
     {
         EnsurePanelSelected();
         gymSetupService.UpdatePanelImageCrop(SelectedPanel!, cropLeft, cropTop, cropRight, cropBottom);
-    }
-
-    public void UpdateSelectedPanelImagePerspective(
-        double topLeftX,
-        double topLeftY,
-        double topRightX,
-        double topRightY,
-        double bottomLeftX,
-        double bottomLeftY,
-        double bottomRightX,
-        double bottomRightY)
-    {
-        EnsurePanelSelected();
-        gymSetupService.UpdatePanelImagePerspective(
-            SelectedPanel!,
-            topLeftX,
-            topLeftY,
-            topRightX,
-            topRightY,
-            bottomLeftX,
-            bottomLeftY,
-            bottomRightX,
-            bottomRightY);
     }
 
     public void UpdateHoleHardware(int holeNumber, string? pointId, int ledIndex, bool isEnabled)

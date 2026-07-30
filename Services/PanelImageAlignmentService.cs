@@ -1,6 +1,6 @@
-using RuoteLab.Models;
+using WallPanelPlanner.Models;
 
-namespace RuoteLab.Services;
+namespace WallPanelPlanner.Services;
 
 public sealed class PanelImageAlignmentService : IPanelImageAlignmentService
 {

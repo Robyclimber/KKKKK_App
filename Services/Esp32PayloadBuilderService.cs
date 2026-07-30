@@ -1,7 +1,7 @@
 using System.Text;
-using RuoteLab.Models;
+using WallPanelPlanner.Models;
 
-namespace RuoteLab.Services;
+namespace WallPanelPlanner.Services;
 
 public sealed class Esp32PayloadBuilderService : IEsp32PayloadBuilderService
 {
@@ -88,16 +88,16 @@ public sealed class Esp32PayloadBuilderService : IEsp32PayloadBuilderService
             Inclination = circuit.Inclination,
             Style = new Esp32VisualStylePayload
             {
-                DefaultColor = string.IsNullOrWhiteSpace(circuit.Globals.RightHandColor) ? "#C44536" : circuit.Globals.RightHandColor,
-                Brightness = Math.Clamp(circuit.Globals.DefaultBrightness, 0, 255),
-                Effect = string.IsNullOrWhiteSpace(circuit.Globals.Effect) ? "steady" : circuit.Globals.Effect
+                DefaultColor = "#00FF00",
+                Brightness = 96,
+                Effect = "steady"
             },
             Items = orderedMovements
                 .Select(movement => new Esp32CircuitItemPayload
                 {
                     PointId = ResolvePointId(wallId, movement.HoleNumber, pointsByNumber),
                     Role = BuildRole(movement),
-                    Color = BuildItemColor(movement, circuit.Globals),
+                    Color = BuildItemColor(movement),
                     Effect = movement.Role == MovementRole.Top ? "pulse" : "steady",
                     Enabled = true
                 })
@@ -107,12 +107,12 @@ public sealed class Esp32PayloadBuilderService : IEsp32PayloadBuilderService
                 {
                     PointId = ResolvePointId(wallId, movement.HoleNumber, pointsByNumber),
                     OrderIndex = index,
-                    BlinkCount = movement.Role == MovementRole.Start ? Math.Max(1, circuit.Globals.BlinkCount) : movement.Role == MovementRole.Top ? Math.Max(1, circuit.Globals.BlinkCount) : 1,
-                    BlinkPeriodMs = Math.Max(1, circuit.Globals.BlinkPeriodMs),
-                    HighlightBrightness = Math.Clamp(circuit.Globals.DefaultBrightness, 0, 255),
-                    HoldDurationMs = Math.Max(100, circuit.Globals.HoldDurationMs),
-                    DimmedBrightness = Math.Clamp(circuit.Globals.DimmedBrightness, 0, 255),
-                    HighlightColor = BuildItemColor(movement, circuit.Globals),
+                    BlinkCount = movement.Role == MovementRole.Start ? 3 : movement.Role == MovementRole.Top ? 4 : 1,
+                    BlinkPeriodMs = movement.Role == MovementRole.Top ? 220 : 280,
+                    HighlightBrightness = 242,
+                    HoldDurationMs = movement.Role == MovementRole.Top ? 3500 : 2500,
+                    DimmedBrightness = 96,
+                    HighlightColor = BuildItemColor(movement),
                     DimmedColor = BuildDimmedColor(movement),
                     AutoAdvance = true,
                     Enabled = pointsByNumber.ContainsKey(movement.HoleNumber)
@@ -143,18 +143,11 @@ public sealed class Esp32PayloadBuilderService : IEsp32PayloadBuilderService
 
     private static string BuildItemColor(CircuitMovementDefinition movement)
     {
-        return BuildItemColor(movement, null);
-    }
-
-    private static string BuildItemColor(CircuitMovementDefinition movement, CircuitGlobalsDefinition? globals)
-    {
         return movement.Role switch
         {
-            MovementRole.Start => string.IsNullOrWhiteSpace(globals?.StartColor) ? "#FFFF00" : globals!.StartColor,
-            MovementRole.Top => string.IsNullOrWhiteSpace(globals?.TopColor) ? "#FF0000" : globals!.TopColor,
-            _ => movement.Hand == HandSide.Right
-                ? string.IsNullOrWhiteSpace(globals?.RightHandColor) ? "#C44536" : globals!.RightHandColor
-                : string.IsNullOrWhiteSpace(globals?.LeftHandColor) ? "#247BA0" : globals!.LeftHandColor
+            MovementRole.Start => "#FFFF00",
+            MovementRole.Top => "#FF0000",
+            _ => movement.Hand == HandSide.Right ? "#C44536" : "#247BA0"
         };
     }
 
@@ -180,9 +173,7 @@ public sealed class Esp32PayloadBuilderService : IEsp32PayloadBuilderService
 
     public static string BuildCircuitId(CircuitDefinition circuit)
     {
-        return string.IsNullOrWhiteSpace(circuit.CircuitId)
-            ? $"circuit-{circuit.Id}-{Slugify(circuit.Name)}"
-            : circuit.CircuitId;
+        return $"circuit-{circuit.Id}-{Slugify(circuit.Name)}";
     }
 
     public static string BuildPointId(string wallId, int holeNumber)

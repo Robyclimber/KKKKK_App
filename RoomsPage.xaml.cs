@@ -1,7 +1,7 @@
 using Microsoft.Maui.Controls.Shapes;
-using RuoteLab.Models;
+using WallPanelPlanner.Models;
 
-namespace RuoteLab;
+namespace WallPanelPlanner;
 
 public partial class RoomsPage : ContentPage
 {
@@ -26,7 +26,7 @@ public partial class RoomsPage : ContentPage
         try
         {
             isRefreshing = true;
-            await app.GymSetupViewModel.EnsureLoadedAsync();
+            await app.GymSetupViewModel.LoadWallsAsync();
             SyncView();
         }
         finally

@@ -1,10 +1,8 @@
 using System.Globalization;
-using Shapes = Microsoft.Maui.Controls.Shapes;
-using RuoteLab.Services;
-using RuoteLab.Ui;
-using RuoteLab.ViewModels;
+using WallPanelPlanner.Services;
+using WallPanelPlanner.ViewModels;
 
-namespace RuoteLab;
+namespace WallPanelPlanner;
 
 public partial class PanelImagePage : ContentPage
 {
@@ -13,7 +11,6 @@ public partial class PanelImagePage : ContentPage
     private readonly IWallImageService wallImageService;
     private readonly IPanelImageAlignmentService panelImageAlignmentService;
     private bool isAdvancedVisible;
-    private bool isUpdatingPreviewTransform;
 
     public PanelImagePage()
     {
@@ -66,20 +63,16 @@ public partial class PanelImagePage : ContentPage
         ImageCropRightEntry.Text = ToPercentEditorText(panel?.ImageCropRight ?? 0d);
         ImageCropBottomEntry.Text = ToPercentEditorText(panel?.ImageCropBottom ?? 0d);
 
-        var hasImage = panel is not null && !string.IsNullOrWhiteSpace(panel.ImagePath) && File.Exists(panel.ImagePath);
-        ImagePreviewWarpHost.IsVisible = hasImage;
-        ImagePreviewEmptyLabel.IsVisible = !hasImage;
+        ImagePreview.Source = panel is not null && !string.IsNullOrWhiteSpace(panel.ImagePath) && File.Exists(panel.ImagePath)
+            ? ImageSource.FromFile(panel.ImagePath)
+            : null;
+        ImagePreview.IsVisible = ImagePreview.Source is not null;
+        ImagePreviewEmptyLabel.IsVisible = ImagePreview.Source is null;
 
         AdvancedSection.IsVisible = isAdvancedVisible;
         ToggleAdvancedButton.Text = isAdvancedVisible ? "Nascondi controlli avanzati" : "Mostra controlli avanzati";
 
         UpdateMeters();
-        ApplyImagePreviewTransform();
-    }
-
-    private void OnImagePreviewHostSizeChanged(object? sender, EventArgs e)
-    {
-        ApplyImagePreviewTransform();
     }
 
     private async void OnLoadImageClicked(object? sender, EventArgs e)
@@ -243,93 +236,6 @@ public partial class PanelImagePage : ContentPage
     {
         ImageScaleValueLabel.Text = $"Scala attuale: {ImageScaleSlider.Value:0.00}";
         ImageOpacityValueLabel.Text = $"Opacita attuale: {Math.Round(ImageOpacitySlider.Value * 100d):0}%";
-    }
-
-    private void ApplyImagePreviewTransform()
-    {
-        if (isUpdatingPreviewTransform)
-        {
-            return;
-        }
-
-        isUpdatingPreviewTransform = true;
-        try
-        {
-            var panel = viewModel.SelectedPanel;
-            if (panel is null ||
-                string.IsNullOrWhiteSpace(panel.ImagePath) ||
-                !File.Exists(panel.ImagePath) ||
-                ImagePreviewHost.Width <= 1 ||
-                ImagePreviewHost.Height <= 1)
-            {
-                ImagePreviewWarpHost.Children.Clear();
-                ImagePreviewHost.Clip = null;
-                return;
-            }
-
-            var imageBounds = GetImageBounds(panel.ImagePath, ImagePreviewHost.Width, ImagePreviewHost.Height);
-            var cropWidthFactor = panel.EffectiveImageCropWidthFactor;
-            var cropHeightFactor = panel.EffectiveImageCropHeightFactor;
-            var previewWidth = imageBounds.Width / cropWidthFactor;
-            var previewHeight = imageBounds.Height / cropHeightFactor;
-            var previewX = imageBounds.X - (panel.EffectiveImageCropLeft * previewWidth);
-            var previewY = imageBounds.Y - (panel.EffectiveImageCropTop * previewHeight);
-
-            PerspectiveImageLayoutHelper.Render(
-                ImagePreviewWarpHost,
-                panel.ImagePath!,
-                panel.ImageOpacity <= 0 ? 0.55d : panel.ImageOpacity,
-                new Rect(previewX, previewY, previewWidth, previewHeight),
-                new Rect(0d, 0d, ImagePreviewHost.Width, ImagePreviewHost.Height),
-                panel);
-            ImagePreviewHost.Clip = new Shapes.RectangleGeometry(new Rect(0d, 0d, ImagePreviewHost.Width, ImagePreviewHost.Height));
-        }
-        finally
-        {
-            isUpdatingPreviewTransform = false;
-        }
-    }
-
-    private static Rect GetImageBounds(string imagePath, double viewportWidth, double viewportHeight)
-    {
-        var pixelSize = TryGetImagePixelSize(imagePath);
-        if (pixelSize is null || pixelSize.Value.Width <= 0 || pixelSize.Value.Height <= 0)
-        {
-            return new Rect(0d, 0d, viewportWidth, viewportHeight);
-        }
-
-        var sourceAspect = pixelSize.Value.Width / pixelSize.Value.Height;
-        var viewportAspect = viewportWidth / Math.Max(1d, viewportHeight);
-
-        if (sourceAspect >= viewportAspect)
-        {
-            var width = viewportWidth;
-            var height = width / sourceAspect;
-            return new Rect(0d, (viewportHeight - height) / 2d, width, height);
-        }
-
-        var fittedHeight = viewportHeight;
-        var fittedWidth = fittedHeight * sourceAspect;
-        return new Rect((viewportWidth - fittedWidth) / 2d, 0d, fittedWidth, fittedHeight);
-    }
-
-    private static Size? TryGetImagePixelSize(string imagePath)
-    {
-#if ANDROID
-        try
-        {
-            var options = new Android.Graphics.BitmapFactory.Options { InJustDecodeBounds = true };
-            Android.Graphics.BitmapFactory.DecodeFile(imagePath, options);
-            if (options.OutWidth > 0 && options.OutHeight > 0)
-            {
-                return new Size(options.OutWidth, options.OutHeight);
-            }
-        }
-        catch
-        {
-        }
-#endif
-        return null;
     }
 
     private void EnsurePanelSelected()

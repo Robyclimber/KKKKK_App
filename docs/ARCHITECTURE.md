@@ -25,14 +25,10 @@
   appartiene a una sala e contiene pannelli, fori e mapping hardware
 - `Pannello`
   elemento geometrico della parete; ogni pannello puo' avere la sua immagine
-- `Routing LED pannello`
-  asse e verso iniziale del cablaggio LED del pannello; la serpentina e' implicita
 - `Immagine pannello`
   foto associata al pannello selezionato
 - `Mapping hardware della parete`
   relazione `foro -> pointId -> ledIndex` della parete selezionata
-- `Circuito editoriale`
-  circuito persistito come `CircuitId + globali + movimenti`
 
 ### Sala
 
@@ -49,7 +45,6 @@
 
 - ha geometria propria
 - genera i fori locali
-- definisce il routing LED locale del pannello
 - puo' avere una propria immagine con offset/scala/opacita
 - non contiene il mapping hardware
 
@@ -66,9 +61,6 @@
 - appartiene a una sala
 - e' legato a una parete
 - contiene una sequenza di movimenti
-- contiene parametri globali di resa LED
-- eredita i default iniziali da `Settings`, poi mantiene i suoi override persistiti
-- puo' essere esportato/importato in forma editoriale verso ESP32
 
 ## Persistenza
 
@@ -103,8 +95,6 @@ Nota:
   costruzione payload verso firmware
 - `Esp32ApiClient`
   chiamate HTTP al controller
-- `AppSettingsService`
-  persistenza preferenze globali applicative e default dei circuiti
 
 ## Pagine UI
 
@@ -115,15 +105,11 @@ Nota:
 - `HardwareMappingPage`
   mapping hardware della parete
 - `CircuitPage`
-  editor circuiti con picker colore dedicati per i globali del singolo circuito
-- `CircuitRunnerPage`
-  esecuzione circuiti, preview e comandi verso ESP32
-- `SettingsPage`
-  gestione parametri globali app, controller ESP32 e default dei nuovi circuiti
+  editor circuiti
 - `HoldAnalysisPage`
   analisi/suggerimento prese
 - `UtilityPage`
-  utility, pannello tecnico ESP32 e import/export editoriale circuiti
+  utility e pannello tecnico ESP32
 
 ## Principi attuali
 
@@ -131,5 +117,3 @@ Nota:
 - spostare le aree tecniche in pagine dedicate
 - salvare tutto il necessario su DB
 - separare il piu possibile dominio, persistenza e UI
-- mantenere separati circuito editoriale, payload runtime LED e routing LED pannello
-- usare `Settings` come punto unico per i default globali dei nuovi circuiti

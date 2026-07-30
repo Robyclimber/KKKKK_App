@@ -1,9 +1,9 @@
-namespace RuoteLab;
+namespace WallPanelPlanner;
 
 public partial class HomePage : ContentPage
 {
     private App? app;
-    private RuoteLab.Models.HomeWorkflowState currentState = RuoteLab.Models.HomeWorkflowState.SetupPalestra;
+    private WallPanelPlanner.Models.HomeWorkflowState currentState = WallPanelPlanner.Models.HomeWorkflowState.SetupPalestra;
     private bool isRefreshing;
 
     public HomePage()
@@ -54,8 +54,8 @@ public partial class HomePage : ContentPage
     {
         switch (currentState)
         {
-            case RuoteLab.Models.HomeWorkflowState.PrimiCircuiti:
-            case RuoteLab.Models.HomeWorkflowState.Operativo:
+            case WallPanelPlanner.Models.HomeWorkflowState.PrimiCircuiti:
+            case WallPanelPlanner.Models.HomeWorkflowState.Operativo:
                 await Shell.Current.GoToAsync("//circuiti");
                 break;
             default:
@@ -66,7 +66,7 @@ public partial class HomePage : ContentPage
 
     private async void OnTrainingClicked(object? sender, EventArgs e)
     {
-        await Shell.Current.GoToAsync("//allenamento");
+        await DisplayAlertAsync("Allenamento", "L'area allenamento resta in standby per il momento.", "OK");
     }
 
     private async Task RefreshHomeStateAsync()
@@ -85,16 +85,16 @@ public partial class HomePage : ContentPage
         ApplyStateToView(currentState);
     }
 
-    private void ApplyStateToView(RuoteLab.Models.HomeWorkflowState state)
+    private void ApplyStateToView(WallPanelPlanner.Models.HomeWorkflowState state)
     {
         switch (state)
         {
-            case RuoteLab.Models.HomeWorkflowState.PrimiCircuiti:
+            case WallPanelPlanner.Models.HomeWorkflowState.PrimiCircuiti:
                 NextStepTitleLabel.Text = "Prossimo passo";
                 NextStepMessageLabel.Text = "La palestra e' configurata. Ora crea il tuo primo circuito.";
                 PrimaryActionButton.Text = "Vai ai circuiti";
                 break;
-            case RuoteLab.Models.HomeWorkflowState.Operativo:
+            case WallPanelPlanner.Models.HomeWorkflowState.Operativo:
                 NextStepTitleLabel.Text = "Sistema pronto";
                 NextStepMessageLabel.Text = "La palestra e i circuiti sono disponibili. Puoi continuare a gestire i circuiti.";
                 PrimaryActionButton.Text = "Vai ai circuiti";

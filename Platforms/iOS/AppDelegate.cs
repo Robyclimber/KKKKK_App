@@ -1,6 +1,6 @@
-using Foundation;
+﻿using Foundation;
 
-namespace RuoteLab;
+namespace WallPanelPlanner;
 
 [Register("AppDelegate")]
 public class AppDelegate : MauiUIApplicationDelegate

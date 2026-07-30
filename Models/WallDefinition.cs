@@ -1,6 +1,6 @@
 using System.Collections.ObjectModel;
 
-namespace RuoteLab.Models;
+namespace WallPanelPlanner.Models;
 
 public sealed class WallDefinition
 {
@@ -124,8 +124,7 @@ public sealed class WallDefinition
         {
             HasHold = true,
             HoldSize = holdSize,
-            HoldType = holdType,
-            HasEstimatedHoldMetadata = false
+            HoldType = holdType
         });
     }
 
@@ -140,8 +139,7 @@ public sealed class WallDefinition
 
         ReplaceHoleMetadata(targetHole with
         {
-            HasHold = false,
-            HasEstimatedHoldMetadata = true
+            HasHold = false
         });
     }
 
@@ -169,45 +167,6 @@ public sealed class WallDefinition
             LedIndex = ledIndex,
             IsEnabled = isEnabled
         });
-
-        ValidateHardwareMappings();
-    }
-
-    public void AutoAssignLedIndicesByPanelRouting()
-    {
-        if (HoleLayout.Count == 0)
-        {
-            RegenerateHoleLayoutFromPanels();
-        }
-
-        var orderedHoles = GetOrderedHoles();
-        var holesByKey = orderedHoles.ToDictionary(
-            hole => BuildHoleMetadataKey(hole.PanelName, hole.RelativeX, hole.RelativeY),
-            hole => hole);
-
-        var nextLedIndex = 1;
-        foreach (var panel in Panels
-                     .OrderBy(panel => panel.Y)
-                     .ThenBy(panel => panel.X)
-                     .ThenBy(panel => panel.Name, StringComparer.Ordinal))
-        {
-            foreach (var panelHole in panel.GetOrderedHoles())
-            {
-                var metadataKey = BuildHoleMetadataKey(panel.Name, panelHole.X, panelHole.Y);
-                if (!holesByKey.TryGetValue(metadataKey, out var wallHole))
-                {
-                    continue;
-                }
-
-                ReplaceHoleMetadata(wallHole with
-                {
-                    PointId = string.IsNullOrWhiteSpace(wallHole.PointId)
-                        ? BuildDefaultPointId(Name, wallHole.Number)
-                        : wallHole.PointId,
-                    LedIndex = nextLedIndex++
-                });
-            }
-        }
 
         ValidateHardwareMappings();
     }
@@ -268,8 +227,7 @@ public sealed class WallDefinition
                 true,
                 false,
                 HoldSize.M,
-                HoldType.Jug,
-                true)))
+                HoldType.Jug)))
             .ToList();
     }
 

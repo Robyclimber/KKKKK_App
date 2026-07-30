@@ -1,9 +1,9 @@
 using SQLite;
-using RuoteLab.Models;
-using RuoteLab.Persistence;
-using RuoteLab.Persistence.Entities;
+using WallPanelPlanner.Models;
+using WallPanelPlanner.Persistence;
+using WallPanelPlanner.Persistence.Entities;
 
-namespace RuoteLab.Services;
+namespace WallPanelPlanner.Services;
 
 public sealed class SqliteWallRepository : IWallRepository
 {
@@ -66,8 +66,6 @@ public sealed class SqliteWallRepository : IWallRepository
                 VerticalSpacing = panel.VerticalSpacing,
                 EdgeOffsetX = panel.EdgeOffsetX,
                 EdgeOffsetY = panel.EdgeOffsetY,
-                LedRoutingAxis = (int)panel.LedRoutingAxis,
-                LedStartDirection = (int)panel.LedStartDirection,
                 ImagePath = panel.ImagePath,
                 ImageOffsetX = panel.ImageOffsetX,
                 ImageOffsetY = panel.ImageOffsetY,
@@ -76,15 +74,7 @@ public sealed class SqliteWallRepository : IWallRepository
                 ImageCropLeft = panel.ImageCropLeft,
                 ImageCropTop = panel.ImageCropTop,
                 ImageCropRight = panel.ImageCropRight,
-                ImageCropBottom = panel.ImageCropBottom,
-                ImagePerspectiveTopLeftX = panel.ImagePerspectiveTopLeftX,
-                ImagePerspectiveTopLeftY = panel.ImagePerspectiveTopLeftY,
-                ImagePerspectiveTopRightX = panel.ImagePerspectiveTopRightX,
-                ImagePerspectiveTopRightY = panel.ImagePerspectiveTopRightY,
-                ImagePerspectiveBottomLeftX = panel.ImagePerspectiveBottomLeftX,
-                ImagePerspectiveBottomLeftY = panel.ImagePerspectiveBottomLeftY,
-                ImagePerspectiveBottomRightX = panel.ImagePerspectiveBottomRightX,
-                ImagePerspectiveBottomRightY = panel.ImagePerspectiveBottomRightY
+                ImageCropBottom = panel.ImageCropBottom
             });
         }
 
@@ -110,8 +100,7 @@ public sealed class SqliteWallRepository : IWallRepository
                 IsEnabled = hole.IsEnabled,
                 HasHold = hole.HasHold,
                 HoldSize = (int)hole.HoldSize,
-                HoldType = (int)hole.HoldType,
-                HasEstimatedHoldMetadata = hole.HasEstimatedHoldMetadata
+                HoldType = (int)hole.HoldType
             });
         }
 
@@ -156,12 +145,6 @@ public sealed class SqliteWallRepository : IWallRepository
                     VerticalSpacing = panelEntity.VerticalSpacing,
                     EdgeOffsetX = panelEntity.EdgeOffsetX,
                     EdgeOffsetY = panelEntity.EdgeOffsetY,
-                    LedRoutingAxis = Enum.IsDefined(typeof(LedRoutingAxis), panelEntity.LedRoutingAxis)
-                        ? (LedRoutingAxis)panelEntity.LedRoutingAxis
-                        : LedRoutingAxis.Vertical,
-                    LedStartDirection = Enum.IsDefined(typeof(LedStartDirection), panelEntity.LedStartDirection)
-                        ? (LedStartDirection)panelEntity.LedStartDirection
-                        : LedStartDirection.BottomToTop,
                     ImagePath = panelEntity.ImagePath,
                     ImageOffsetX = panelEntity.ImageOffsetX,
                     ImageOffsetY = panelEntity.ImageOffsetY,
@@ -170,15 +153,7 @@ public sealed class SqliteWallRepository : IWallRepository
                     ImageCropLeft = panelEntity.ImageCropLeft,
                     ImageCropTop = panelEntity.ImageCropTop,
                     ImageCropRight = panelEntity.ImageCropRight,
-                    ImageCropBottom = panelEntity.ImageCropBottom,
-                    ImagePerspectiveTopLeftX = panelEntity.ImagePerspectiveTopLeftX,
-                    ImagePerspectiveTopLeftY = panelEntity.ImagePerspectiveTopLeftY,
-                    ImagePerspectiveTopRightX = panelEntity.ImagePerspectiveTopRightX <= 0 ? 1d : panelEntity.ImagePerspectiveTopRightX,
-                    ImagePerspectiveTopRightY = panelEntity.ImagePerspectiveTopRightY,
-                    ImagePerspectiveBottomLeftX = panelEntity.ImagePerspectiveBottomLeftX,
-                    ImagePerspectiveBottomLeftY = panelEntity.ImagePerspectiveBottomLeftY <= 0 ? 1d : panelEntity.ImagePerspectiveBottomLeftY,
-                    ImagePerspectiveBottomRightX = panelEntity.ImagePerspectiveBottomRightX <= 0 ? 1d : panelEntity.ImagePerspectiveBottomRightX,
-                    ImagePerspectiveBottomRightY = panelEntity.ImagePerspectiveBottomRightY <= 0 ? 1d : panelEntity.ImagePerspectiveBottomRightY
+                    ImageCropBottom = panelEntity.ImageCropBottom
                 });
             }
 
@@ -218,8 +193,7 @@ public sealed class SqliteWallRepository : IWallRepository
                         IsEnabled = generatedHole.IsEnabled,
                         HasHold = generatedHole.HasHold,
                         HoldSize = (int)generatedHole.HoldSize,
-                        HoldType = (int)generatedHole.HoldType,
-                        HasEstimatedHoldMetadata = generatedHole.HasEstimatedHoldMetadata
+                        HoldType = (int)generatedHole.HoldType
                     });
                 }
             }
@@ -241,8 +215,7 @@ public sealed class SqliteWallRepository : IWallRepository
                         holeEntity.IsEnabled,
                         holeEntity.HasHold,
                         (HoldSize)holeEntity.HoldSize,
-                        (HoldType)holeEntity.HoldType,
-                        holeEntity.HasEstimatedHoldMetadata));
+                        (HoldType)holeEntity.HoldType));
                 }
             }
 

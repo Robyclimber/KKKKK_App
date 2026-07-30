@@ -1,7 +1,7 @@
 using Microsoft.Maui.Graphics;
-using RuoteLab.Models;
+using WallPanelPlanner.Models;
 
-namespace RuoteLab.Drawing;
+namespace WallPanelPlanner.Drawing;
 
 public sealed class CircuitEditorDrawable : IDrawable
 {
@@ -12,10 +12,6 @@ public sealed class CircuitEditorDrawable : IDrawable
     public CircuitDefinition? Circuit { get; set; }
 
     public WallHoleDefinition? HighlightedHole { get; set; }
-
-    public IReadOnlyList<WallHoleDefinition> SelectedHoles { get; set; } = Array.Empty<WallHoleDefinition>();
-
-    public WallHoleDefinition? SuggestedHole { get; set; }
 
     public float PixelsPerMillimeter { get; set; } = 0.1f;
 
@@ -73,20 +69,11 @@ public sealed class CircuitEditorDrawable : IDrawable
             canvas.FillColor = Color.FromArgb("#F2C94C");
             canvas.FillCircle(holeX, holeY, Math.Max(2.5f, scale * 1.9f));
 
-            if (ZoomFactor >= 1.2f)
+            if (ZoomFactor >= 1.4f)
             {
                 canvas.FontColor = Color.FromArgb("#F2C94C");
-                canvas.FontSize = Math.Max(9f, scale * 4.2f);
-                var labelWidth = Math.Max(28f, scale * 14f);
-                var labelHeight = Math.Max(14f, scale * 6f);
-                canvas.DrawString(
-                    hole.Number.ToString(),
-                    holeX - (labelWidth / 2f),
-                    holeY - Math.Max(20f, scale * 9f),
-                    labelWidth,
-                    labelHeight,
-                    HorizontalAlignment.Center,
-                    VerticalAlignment.Center);
+                canvas.FontSize = Math.Max(8f, scale * 3f);
+                canvas.DrawString(hole.Number.ToString(), holeX + 4f, holeY - 8f, 24f, 12f, HorizontalAlignment.Left, VerticalAlignment.Center);
             }
         }
 
@@ -102,36 +89,6 @@ public sealed class CircuitEditorDrawable : IDrawable
             canvas.StrokeColor = Color.FromArgb("#F2C94C");
             canvas.StrokeSize = 2f;
             canvas.DrawCircle(holeX, holeY, Math.Max(7.5f, scale * 4.5f));
-        }
-
-        if (SelectedHoles.Count > 0)
-        {
-            foreach (var selectedHole in SelectedHoles.Where(hole => hole.Number > 0))
-            {
-                var holeX = originX + (float)selectedHole.AbsoluteX * scale;
-                var holeY = originY + (float)selectedHole.AbsoluteY * scale;
-
-                canvas.FillColor = Color.FromArgb("#00BFFF").WithAlpha(0.22f);
-                canvas.FillCircle(holeX, holeY, Math.Max(10f, scale * 5.8f));
-                canvas.StrokeColor = Color.FromArgb("#7FDBFF");
-                canvas.StrokeSize = 3f;
-                canvas.DrawCircle(holeX, holeY, Math.Max(8f, scale * 4.8f));
-            }
-        }
-
-        if (SuggestedHole is WallHoleDefinition suggestedHole && suggestedHole.Number > 0)
-        {
-            var holeX = originX + (float)suggestedHole.AbsoluteX * scale;
-            var holeY = originY + (float)suggestedHole.AbsoluteY * scale;
-
-            canvas.FillColor = Color.FromArgb("#39FF88").WithAlpha(0.24f);
-            canvas.FillCircle(holeX, holeY, Math.Max(12f, scale * 6.2f));
-            canvas.StrokeColor = Color.FromArgb("#A6FFC8");
-            canvas.StrokeSize = 4f;
-            canvas.DrawCircle(holeX, holeY, Math.Max(9f, scale * 5.2f));
-            canvas.StrokeColor = Color.FromArgb("#39FF88");
-            canvas.StrokeSize = 2f;
-            canvas.DrawCircle(holeX, holeY, Math.Max(14f, scale * 7.4f));
         }
 
         if (Circuit is not null)

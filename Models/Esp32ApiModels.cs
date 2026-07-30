@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace RuoteLab.Models;
+namespace WallPanelPlanner.Models;
 
 public sealed class Esp32ApiResponse<T>
 {
@@ -53,27 +53,6 @@ public sealed class Esp32StatusData
     public string LastCommand { get; init; } = string.Empty;
 
     public string? LastError { get; init; }
-}
-
-public sealed class Esp32CircuitsCatalogData
-{
-    public string? WallId { get; init; }
-
-    public List<Esp32CircuitCatalogItemData> Circuits { get; init; } = new();
-}
-
-public sealed class Esp32EditorialCircuitsCatalogData
-{
-    public string? WallId { get; init; }
-
-    public List<Esp32EditorialCircuitPayload> Circuits { get; init; } = new();
-}
-
-public sealed class Esp32CircuitCatalogItemData
-{
-    public string CircuitId { get; init; } = string.Empty;
-
-    public string Name { get; init; } = string.Empty;
 }
 
 public sealed class Esp32SimpleResultData

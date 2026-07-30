@@ -1,10 +1,10 @@
-using RuoteLab.Drawing;
-using RuoteLab.Persistence;
-using RuoteLab.Services;
-using RuoteLab.ViewModels;
+using WallPanelPlanner.Drawing;
+using WallPanelPlanner.Persistence;
+using WallPanelPlanner.Services;
+using WallPanelPlanner.ViewModels;
 using SQLitePCL;
 
-namespace RuoteLab;
+namespace WallPanelPlanner;
 
 public partial class App : Application
 {
@@ -17,15 +17,12 @@ public partial class App : Application
         RoomRepository = new SqliteRoomRepository(SqliteDatabaseFactory);
         WallRepository = new SqliteWallRepository(SqliteDatabaseFactory);
         CircuitRepository = new SqliteCircuitRepository(SqliteDatabaseFactory);
-        WorkoutRepository = new SqliteWorkoutRepository(SqliteDatabaseFactory);
         HomeStateService = new HomeStateService(RoomRepository, WallRepository, CircuitRepository);
         GymSetupService = new GymSetupService();
         GymSetupEditorStateService = new GymSetupEditorStateService();
         GymSetupPageStateService = new GymSetupPageStateService(GymSetupEditorStateService);
         HoldAnalysisSuggestionService = new HoldAnalysisSuggestionService();
-        NextHoldSuggestionService = new NextHoldSuggestionService();
-        AppSettingsService = new AppSettingsService();
-        CircuitEditingService = new CircuitEditingService(AppSettingsService);
+        CircuitEditingService = new CircuitEditingService();
         CircuitPageStateService = new CircuitPageStateService();
         WallConfigurationStorageService = new WallConfigurationStorageService(WallRepository);
         WallImageService = new WallImageService();
@@ -33,19 +30,6 @@ public partial class App : Application
         Esp32SettingsService = new Esp32SettingsService();
         Esp32PayloadBuilderService = new Esp32PayloadBuilderService();
         Esp32ApiClient = new Esp32ApiClient();
-        RestExecutionService = new RestExecutionService(Esp32ApiClient, Esp32SettingsService);
-        ResistanceExecutionService = new ResistanceExecutionService(Esp32ApiClient, Esp32SettingsService);
-        HangExecutionService = new HangExecutionService(Esp32ApiClient, Esp32SettingsService);
-        WorkoutExecutionService = new WorkoutExecutionService(
-            RestExecutionService,
-            ResistanceExecutionService,
-            HangExecutionService,
-            Esp32ApiClient,
-            Esp32SettingsService,
-            Esp32PayloadBuilderService,
-            CircuitRepository,
-            RoomRepository,
-            WallRepository);
         GymSetupViewModel = new GymSetupViewModel(GymSetupService, WallConfigurationStorageService, WallRepository, RoomRepository);
         CircuitEditorViewModel = new CircuitEditorViewModel(CircuitEditingService, GymSetupViewModel, CircuitRepository);
         LayoutPreviewDrawable = new LayoutPreviewDrawable();
@@ -59,8 +43,6 @@ public partial class App : Application
 
     public ICircuitRepository CircuitRepository { get; }
 
-    public IWorkoutRepository WorkoutRepository { get; }
-
     public IHomeStateService HomeStateService { get; }
 
     public IGymSetupService GymSetupService { get; }
@@ -70,10 +52,6 @@ public partial class App : Application
     public IGymSetupPageStateService GymSetupPageStateService { get; }
 
     public IHoldAnalysisSuggestionService HoldAnalysisSuggestionService { get; }
-
-    public INextHoldSuggestionService NextHoldSuggestionService { get; }
-
-    public IAppSettingsService AppSettingsService { get; }
 
     public ICircuitEditingService CircuitEditingService { get; }
 
@@ -90,14 +68,6 @@ public partial class App : Application
     public IEsp32PayloadBuilderService Esp32PayloadBuilderService { get; }
 
     public IEsp32ApiClient Esp32ApiClient { get; }
-
-    public IRestExecutionService RestExecutionService { get; }
-
-    public IResistanceExecutionService ResistanceExecutionService { get; }
-
-    public IHangExecutionService HangExecutionService { get; }
-
-    public IWorkoutExecutionService WorkoutExecutionService { get; }
 
     public GymSetupViewModel GymSetupViewModel { get; }
 

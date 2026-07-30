@@ -2,9 +2,9 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using RuoteLab.Models;
+using WallPanelPlanner.Models;
 
-namespace RuoteLab.Services;
+namespace WallPanelPlanner.Services;
 
 public sealed class Esp32ApiClient : IEsp32ApiClient
 {
@@ -24,16 +24,6 @@ public sealed class Esp32ApiClient : IEsp32ApiClient
         return SendAsync<Esp32StatusData>(settings, HttpMethod.Get, "status", null, cancellationToken);
     }
 
-    public Task<Esp32ApiResponse<Esp32CircuitsCatalogData>> GetCircuitsAsync(Esp32DeviceSettings settings, CancellationToken cancellationToken = default)
-    {
-        return SendAsync<Esp32CircuitsCatalogData>(settings, HttpMethod.Get, "circuits", null, cancellationToken);
-    }
-
-    public Task<Esp32ApiResponse<Esp32EditorialCircuitsCatalogData>> GetEditorialCircuitsAsync(Esp32DeviceSettings settings, CancellationToken cancellationToken = default)
-    {
-        return SendAsync<Esp32EditorialCircuitsCatalogData>(settings, HttpMethod.Get, "circuits/editorial", null, cancellationToken);
-    }
-
     public Task<Esp32ApiResponse<Esp32SimpleResultData>> PostConfigAsync(Esp32DeviceSettings settings, Esp32WallConfigPayload payload, CancellationToken cancellationToken = default)
     {
         return SendAsync<Esp32SimpleResultData>(settings, HttpMethod.Post, "config", payload, cancellationToken);
@@ -42,27 +32,6 @@ public sealed class Esp32ApiClient : IEsp32ApiClient
     public Task<Esp32ApiResponse<Esp32SimpleResultData>> PostCircuitsAsync(Esp32DeviceSettings settings, Esp32CircuitsPayload payload, CancellationToken cancellationToken = default)
     {
         return SendAsync<Esp32SimpleResultData>(settings, HttpMethod.Post, "circuits", payload, cancellationToken);
-    }
-
-    public Task<Esp32ApiResponse<Esp32SimpleResultData>> PostEditorialCircuitsAsync(Esp32DeviceSettings settings, Esp32EditorialCircuitsPayload payload, CancellationToken cancellationToken = default)
-    {
-        return SendAsync<Esp32SimpleResultData>(settings, HttpMethod.Post, "circuits/editorial", payload, cancellationToken);
-    }
-
-    public Task<Esp32ApiResponse<Esp32SimpleResultData>> VisualizeCircuitAsync(Esp32DeviceSettings settings, string circuitId, CancellationToken cancellationToken = default)
-    {
-        return SendAsync<Esp32SimpleResultData>(settings, HttpMethod.Post, "circuit/visualize", new Esp32CircuitCommandRequest
-        {
-            CircuitId = circuitId
-        }, cancellationToken);
-    }
-
-    public Task<Esp32ApiResponse<Esp32SimpleResultData>> StartCircuitAsync(Esp32DeviceSettings settings, string circuitId, CancellationToken cancellationToken = default)
-    {
-        return SendAsync<Esp32SimpleResultData>(settings, HttpMethod.Post, "circuit/start", new Esp32CircuitCommandRequest
-        {
-            CircuitId = circuitId
-        }, cancellationToken);
     }
 
     public Task<Esp32ApiResponse<Esp32SimpleResultData>> ShowCircuitAsync(Esp32DeviceSettings settings, string circuitId, CancellationToken cancellationToken = default)
@@ -91,51 +60,6 @@ public sealed class Esp32ApiClient : IEsp32ApiClient
     public Task<Esp32ApiResponse<Esp32SimpleResultData>> StartRandomSequenceTestAsync(Esp32DeviceSettings settings, CancellationToken cancellationToken = default)
     {
         return SendAsync<Esp32SimpleResultData>(settings, HttpMethod.Post, "test/random-sequence", new { }, cancellationToken);
-    }
-
-    public Task<Esp32ApiResponse<Esp32SimpleResultData>> StartRestFeedbackAsync(Esp32DeviceSettings settings, Esp32RestFeedbackStartRequest request, CancellationToken cancellationToken = default)
-    {
-        return SendAsync<Esp32SimpleResultData>(settings, HttpMethod.Post, "training/rest/start", request, cancellationToken);
-    }
-
-    public Task<Esp32ApiResponse<Esp32SimpleResultData>> CompleteRestFeedbackAsync(Esp32DeviceSettings settings, Esp32RestFeedbackCompleteRequest request, CancellationToken cancellationToken = default)
-    {
-        return SendAsync<Esp32SimpleResultData>(settings, HttpMethod.Post, "training/rest/complete", request, cancellationToken);
-    }
-
-    public Task<Esp32ApiResponse<Esp32SimpleResultData>> ClearRestFeedbackAsync(Esp32DeviceSettings settings, CancellationToken cancellationToken = default)
-    {
-        return SendAsync<Esp32SimpleResultData>(settings, HttpMethod.Post, "training/rest/clear", new { }, cancellationToken);
-    }
-
-    public Task<Esp32ApiResponse<Esp32SimpleResultData>> StartResistanceFeedbackAsync(Esp32DeviceSettings settings, Esp32ResistanceFeedbackStartRequest request, CancellationToken cancellationToken = default)
-    {
-        return SendAsync<Esp32SimpleResultData>(settings, HttpMethod.Post, "training/resistance/start", request, cancellationToken);
-    }
-
-    public Task<Esp32ApiResponse<Esp32SimpleResultData>> CompleteResistanceFeedbackAsync(Esp32DeviceSettings settings, Esp32ResistanceFeedbackCompleteRequest request, CancellationToken cancellationToken = default)
-    {
-        return SendAsync<Esp32SimpleResultData>(settings, HttpMethod.Post, "training/resistance/complete", request, cancellationToken);
-    }
-
-    public Task<Esp32ApiResponse<Esp32SimpleResultData>> ClearResistanceFeedbackAsync(Esp32DeviceSettings settings, CancellationToken cancellationToken = default)
-    {
-        return SendAsync<Esp32SimpleResultData>(settings, HttpMethod.Post, "training/resistance/clear", new { }, cancellationToken);
-    }
-
-    public Task<Esp32ApiResponse<Esp32SimpleResultData>> StartHangFeedbackAsync(Esp32DeviceSettings settings, Esp32HangFeedbackStartRequest request, CancellationToken cancellationToken = default)
-    {
-        return SendAsync<Esp32SimpleResultData>(settings, HttpMethod.Post, "training/hang/start", request, cancellationToken);
-    }
-
-    public Task<Esp32ApiResponse<Esp32SimpleResultData>> CompleteHangFeedbackAsync(Esp32DeviceSettings settings, Esp32HangFeedbackCompleteRequest request, CancellationToken cancellationToken = default)
-    {
-        return SendAsync<Esp32SimpleResultData>(settings, HttpMethod.Post, "training/hang/complete", request, cancellationToken);
-    }
-
-    public Task<Esp32ApiResponse<Esp32SimpleResultData>> ClearHangFeedbackAsync(Esp32DeviceSettings settings, CancellationToken cancellationToken = default)
-    {
-        return SendAsync<Esp32SimpleResultData>(settings, HttpMethod.Post, "training/hang/clear", new { }, cancellationToken);
     }
 
     private static async Task<Esp32ApiResponse<T>> SendAsync<T>(Esp32DeviceSettings settings, HttpMethod method, string relativePath, object? payload, CancellationToken cancellationToken)

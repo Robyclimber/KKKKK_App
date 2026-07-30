@@ -1,53 +1,30 @@
-using RuoteLab.Models;
+using WallPanelPlanner.Models;
 
-namespace RuoteLab.Services;
+namespace WallPanelPlanner.Services;
 
 public sealed class CircuitEditingService : ICircuitEditingService
 {
-    private readonly IAppSettingsService appSettingsService;
-
-    public CircuitEditingService()
-        : this(new AppSettingsService())
-    {
-    }
-
-    public CircuitEditingService(IAppSettingsService appSettingsService)
-    {
-        this.appSettingsService = appSettingsService;
-    }
-
-    public CircuitDefinition CreateCircuit(string? name, string? difficulty, string? inclination, bool suggestNextHoldEnabled, CircuitGlobalsDefinition? globals, WallDefinition wall, string fallbackName)
+    public CircuitDefinition CreateCircuit(string? name, string? difficulty, string? inclination, WallDefinition wall, string fallbackName)
     {
         ArgumentNullException.ThrowIfNull(wall);
 
-        var defaults = appSettingsService.Load().CircuitDefaults;
-        var effectiveGlobals = globals is null ? defaults : CloneGlobals(globals);
-
         return new CircuitDefinition
         {
-            CircuitId = Guid.NewGuid().ToString("N"),
             Name = string.IsNullOrWhiteSpace(name) ? fallbackName : name.Trim(),
             Difficulty = difficulty?.Trim() ?? string.Empty,
             Inclination = inclination?.Trim() ?? string.Empty,
-            SuggestNextHoldEnabled = suggestNextHoldEnabled,
             RoomName = wall.RoomName,
-            WallName = wall.Name,
-            Globals = CloneGlobals(effectiveGlobals)
+            WallName = wall.Name
         };
     }
 
-    public void UpdateCircuitMetadata(CircuitDefinition circuit, string? name, string? difficulty, string? inclination, bool suggestNextHoldEnabled, CircuitGlobalsDefinition? globals)
+    public void UpdateCircuitMetadata(CircuitDefinition circuit, string? name, string? difficulty, string? inclination)
     {
         ArgumentNullException.ThrowIfNull(circuit);
 
         circuit.Name = string.IsNullOrWhiteSpace(name) ? circuit.Name : name.Trim();
         circuit.Difficulty = difficulty?.Trim() ?? string.Empty;
         circuit.Inclination = inclination?.Trim() ?? string.Empty;
-        circuit.SuggestNextHoldEnabled = suggestNextHoldEnabled;
-        if (globals is not null)
-        {
-            circuit.Globals = CloneGlobals(globals);
-        }
     }
 
     public void ToggleMovement(CircuitDefinition circuit, string wallName, WallHoleDefinition hole, HandSide hand, MovementRole role)
@@ -142,24 +119,6 @@ public sealed class CircuitEditingService : ICircuitEditingService
             MovementRole.Normal => 1,
             MovementRole.Top => 2,
             _ => 1
-        };
-    }
-
-    private static CircuitGlobalsDefinition CloneGlobals(CircuitGlobalsDefinition source)
-    {
-        return new CircuitGlobalsDefinition
-        {
-            PresetName = source.PresetName,
-            Effect = source.Effect,
-            DefaultBrightness = source.DefaultBrightness,
-            DimmedBrightness = source.DimmedBrightness,
-            RightHandColor = source.RightHandColor,
-            LeftHandColor = source.LeftHandColor,
-            StartColor = source.StartColor,
-            TopColor = source.TopColor,
-            BlinkCount = source.BlinkCount,
-            BlinkPeriodMs = source.BlinkPeriodMs,
-            HoldDurationMs = source.HoldDurationMs
         };
     }
 }

@@ -1,11 +1,11 @@
 using System.Globalization;
 using Microsoft.Maui.Controls.Shapes;
 using Microsoft.Maui.Layouts;
-using RuoteLab.Drawing;
-using RuoteLab.Models;
-using RuoteLab.ViewModels;
+using WallPanelPlanner.Drawing;
+using WallPanelPlanner.Models;
+using WallPanelPlanner.ViewModels;
 
-namespace RuoteLab;
+namespace WallPanelPlanner;
 
 public partial class GymSetupPage : ContentPage
 {
@@ -30,8 +30,6 @@ public partial class GymSetupPage : ContentPage
     private bool isWallEditorExpanded;
     private bool isPanelEditorExpanded;
     private WorkspaceSection activeWorkspaceSection = WorkspaceSection.Setup;
-    private readonly IReadOnlyList<LedRoutingAxis> availableRoutingAxes = Enum.GetValues<LedRoutingAxis>();
-    private IReadOnlyList<LedStartDirection> availableStartDirections = Array.Empty<LedStartDirection>();
 
     public GymSetupPage()
     {
@@ -46,7 +44,6 @@ public partial class GymSetupPage : ContentPage
             previewDrawable = app.LayoutPreviewDrawable;
 
             RoomsPicker.ItemsSource = viewModel.Rooms;
-            LedRoutingAxisPicker.ItemsSource = availableRoutingAxes.Select(PanelDefinition.GetAxisLabel).ToList();
             PreviewCanvas.Drawable = previewDrawable;
 
             ApplyWallEditorDefaults();
@@ -90,7 +87,7 @@ public partial class GymSetupPage : ContentPage
     {
         try
         {
-            await viewModel.EnsureLoadedAsync();
+            await viewModel.LoadWallsAsync();
             ApplyWallEditorState(useSelectedWallValues: viewModel.SelectedWall is not null);
             ApplyPanelEditorState(resetToDefaults: true);
             activeWorkspaceSection = ResolveSuggestedWorkspaceSection();
@@ -316,12 +313,6 @@ public partial class GymSetupPage : ContentPage
         UpdatePreviewZoomLayout();
     }
 
-    private void OnLedRoutingAxisChanged(object? sender, EventArgs e)
-    {
-        var axis = GetSelectedLedRoutingAxis();
-        RefreshLedStartDirectionPicker(axis, selectedDirection: GetDefaultDirection(axis));
-    }
-
     private void SyncViewFromState()
     {
         isSyncingSelection = true;
@@ -454,7 +445,7 @@ public partial class GymSetupPage : ContentPage
         PanelEditorContainer.IsVisible = canEditPanels && isPanelEditorExpanded;
         NewPanelButton.IsEnabled = canEditPanels;
         TogglePanelEditorButton.IsEnabled = canEditPanels;
-        TogglePanelEditorButton.Text = isPanelEditorExpanded ? "Chiudi editor pannello" : "Apri editor pannello";
+        TogglePanelEditorButton.Text = isPanelEditorExpanded ? "Nascondi editor" : "Mostra editor";
     }
 
     private void UpdateWallEditorVisibility()
@@ -482,12 +473,6 @@ public partial class GymSetupPage : ContentPage
     private void OnPanelsWorkspaceClicked(object? sender, EventArgs e)
     {
         activeWorkspaceSection = WorkspaceSection.Panels;
-        if (viewModel.SelectedWall is not null && !viewModel.SelectedWall.Panels.Any())
-        {
-            isPanelEditorExpanded = true;
-            viewModel.ClearSelectedPanel();
-            ApplyPanelEditorState(resetToDefaults: true);
-        }
         SyncViewFromState();
     }
 
@@ -618,7 +603,6 @@ public partial class GymSetupPage : ContentPage
         HoleHorizontalEntry.Text = editorState.HoleHorizontalText;
         HoleVerticalEntry.Text = editorState.HoleVerticalText;
         PanelEditorModeLabel.Text = editorState.ModeText;
-        ApplyLedRoutingEditorState(editorState.LedRoutingAxis, editorState.LedStartDirection);
     }
 
     private void UpdatePreviewZoomLayout()
@@ -840,8 +824,6 @@ public partial class GymSetupPage : ContentPage
 
     private PanelInput ReadPanelInput()
     {
-        var axis = GetSelectedLedRoutingAxis();
-        var direction = GetSelectedLedStartDirection();
         return new PanelInput
         {
             Name = PanelNameEntry.Text?.Trim() ?? string.Empty,
@@ -852,68 +834,8 @@ public partial class GymSetupPage : ContentPage
             EdgeOffsetX = ParseNonNegativeDouble(HoleOffsetEntry.Text),
             EdgeOffsetY = ParseNonNegativeDouble(HoleOffsetYEntry.Text),
             HorizontalSpacing = ParsePositiveDouble(HoleHorizontalEntry.Text, "Controlla i valori del pannello e dei fori."),
-            VerticalSpacing = ParsePositiveDouble(HoleVerticalEntry.Text, "Controlla i valori del pannello e dei fori."),
-            LedRoutingAxis = axis,
-            LedStartDirection = direction
+            VerticalSpacing = ParsePositiveDouble(HoleVerticalEntry.Text, "Controlla i valori del pannello e dei fori.")
         };
-    }
-
-    private void ApplyLedRoutingEditorState(LedRoutingAxis axis, LedStartDirection direction)
-    {
-        LedRoutingAxisPicker.SelectedIndex = (int)axis;
-        RefreshLedStartDirectionPicker(axis, direction);
-    }
-
-    private void RefreshLedStartDirectionPicker(LedRoutingAxis axis, LedStartDirection selectedDirection)
-    {
-        availableStartDirections = GetDirectionsForAxis(axis);
-        LedStartDirectionPicker.ItemsSource = availableStartDirections
-            .Select(PanelDefinition.GetDirectionLabel)
-            .ToList();
-
-        var selectedIndex = availableStartDirections
-            .Select((direction, index) => new { direction, index })
-            .FirstOrDefault(item => item.direction == selectedDirection)?.index ?? -1;
-        if (selectedIndex < 0)
-        {
-            selectedIndex = 0;
-        }
-
-        LedStartDirectionPicker.SelectedIndex = selectedIndex;
-    }
-
-    private static IReadOnlyList<LedStartDirection> GetDirectionsForAxis(LedRoutingAxis axis)
-    {
-        return axis == LedRoutingAxis.Horizontal
-            ? new[] { LedStartDirection.LeftToRight, LedStartDirection.RightToLeft }
-            : new[] { LedStartDirection.BottomToTop, LedStartDirection.TopToBottom };
-    }
-
-    private LedRoutingAxis GetSelectedLedRoutingAxis()
-    {
-        if (LedRoutingAxisPicker.SelectedIndex < 0 || LedRoutingAxisPicker.SelectedIndex >= availableRoutingAxes.Count)
-        {
-            return LedRoutingAxis.Vertical;
-        }
-
-        return availableRoutingAxes[LedRoutingAxisPicker.SelectedIndex];
-    }
-
-    private LedStartDirection GetSelectedLedStartDirection()
-    {
-        if (LedStartDirectionPicker.SelectedIndex < 0 || LedStartDirectionPicker.SelectedIndex >= availableStartDirections.Count)
-        {
-            return GetDefaultDirection(GetSelectedLedRoutingAxis());
-        }
-
-        return availableStartDirections[LedStartDirectionPicker.SelectedIndex];
-    }
-
-    private static LedStartDirection GetDefaultDirection(LedRoutingAxis axis)
-    {
-        return axis == LedRoutingAxis.Horizontal
-            ? LedStartDirection.LeftToRight
-            : LedStartDirection.BottomToTop;
     }
 
     private static double ParsePositiveDouble(string? text, string errorMessage)

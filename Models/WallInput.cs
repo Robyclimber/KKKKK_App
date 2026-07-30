@@ -1,4 +1,4 @@
-namespace RuoteLab.Models;
+namespace WallPanelPlanner.Models;
 
 public sealed class WallInput
 {

@@ -1,3 +1,3 @@
-namespace RuoteLab.Models;
+namespace WallPanelPlanner.Models;
 
 public readonly record struct HoleDefinition(int Number, double X, double Y);

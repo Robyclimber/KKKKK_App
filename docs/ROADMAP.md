@@ -11,24 +11,24 @@
 ## Fase 2: consolidamento circuiti
 
 - migliorare UX tracciatura circuito
-- rifinire globali circuito e preset
+- affinare sequenza start -> movimenti -> top
+- gestione migliore dei cambi mano
+- piu strumenti visivi nella preview
 - verifica qualitativa dei crop immagine dei movimenti
-- validare import `ESP32 -> app` con merge coerente per `CircuitId`
-- collaudo reale import/export editoriale circuiti
 
 ## Fase 3: integrazione ESP32
 
-- collaudare flusso push configurazione parete
-- collaudare flusso push circuiti runtime
-- collaudare flusso editoriale `app <-> ESP32`
-- collaudare davvero `Visualizza` vs `Avvia`
-- verificare convenzione `pointId`, `ledIndex` e `holeNumber`
-- migliorare gestione stato controller e diagnostica
+- completare flusso push configurazione parete
+- completare flusso push circuiti
+- verificare convenzione `pointId` e `ledIndex`
+- test reale end-to-end app -> ESP32
+- gestione stato controller e diagnostica
 
 ## Fase 4: allenamento
 
-- estendere la pagina `Esegui Circuiti`
-- feedback piu ricco da stato runtime ESP32
+- sezione dedicata allenamento
+- scelta circuito
+- invio comando start/stop
 - eventuale comando da app o da pulsanti fisici ESP32
 - feedback visivo sincronizzato
 
@@ -44,4 +44,3 @@
 - alcuni nomi legacy potrebbero ancora parlare di `wall image`; il termine corretto e' `immagine pannello`
 - alcune classi UI sono ancora corpose
 - servono piu test di integrazione reale su Android
-- il firmware editoriale circuiti va compilato e collaudato con toolchain reale

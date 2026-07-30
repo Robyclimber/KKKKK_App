@@ -1,7 +1,7 @@
-using RuoteLab.Models;
-using RuoteLab.ViewModels;
+using WallPanelPlanner.Models;
+using WallPanelPlanner.ViewModels;
 
-namespace RuoteLab.Services;
+namespace WallPanelPlanner.Services;
 
 public sealed class CircuitPageStateService : ICircuitPageStateService
 {
@@ -44,7 +44,6 @@ public sealed class CircuitPageStateService : ICircuitPageStateService
             OrderedMovements = viewModel.GetOrderedMovements(),
             InteractionHintText = interactionMode switch
             {
-                CircuitInteractionMode.Select => "Tap sul foro per selezionarlo senza modificare il circuito. Usa poi i pulsanti rapidi o il pannello suggerimento.",
                 CircuitInteractionMode.Start => $"Tap sul foro per impostare START con mano {(specialModeHand == HandSide.Right ? "DX" : "SX")}. Dopo il primo start, l'altro passa automaticamente sull'altra mano.",
                 CircuitInteractionMode.Top => $"Tap sul foro per impostare TOP con mano {(specialModeHand == HandSide.Right ? "DX" : "SX")}.",
                 CircuitInteractionMode.Remove => "Tap sul foro per rimuovere la presa dal circuito.",

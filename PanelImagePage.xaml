@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="RuoteLab.PanelImagePage"
+             x:Class="WallPanelPlanner.PanelImagePage"
              Title="Immagine pannello">
     <ScrollView>
         <VerticalStackLayout Padding="20,16,20,24" Spacing="18">
@@ -48,14 +48,13 @@
                            TextColor="{StaticResource WarmGold}"
                            FontFamily="OpenSansSemibold" />
                     <Border BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 12" Padding="8">
-                        <Grid x:Name="ImagePreviewHost"
-                              HeightRequest="220"
-                              SizeChanged="OnImagePreviewHostSizeChanged">
-                            <AbsoluteLayout x:Name="ImagePreviewWarpHost"
-                                            InputTransparent="True" />
+                        <Grid HeightRequest="220">
+                            <Image x:Name="ImagePreview"
+                                   Aspect="AspectFit"
+                                   IsVisible="False" />
                             <Label x:Name="ImagePreviewEmptyLabel"
-                                    Text="Carica un'immagine del pannello per vedere l'anteprima."
-                                    TextColor="{StaticResource MutedText}"
+                                   Text="Carica un'immagine del pannello per vedere l'anteprima."
+                                   TextColor="{StaticResource MutedText}"
                                    HorizontalOptions="Center"
                                    VerticalOptions="Center" />
                         </Grid>
@@ -116,9 +115,9 @@
                     <VerticalStackLayout x:Name="AdvancedSection"
                                          IsVisible="False"
                                          Spacing="12">
-                        <Label Text="Usa questi valori per la rifinitura finale. Per ritaglio e prospettiva usa l'editor dedicato."
-                                TextColor="{StaticResource MutedText}"
-                                FontSize="12" />
+                        <Label Text="Usa questi valori per la rifinitura finale. Per il ritaglio grande usa l'editor dedicato."
+                               TextColor="{StaticResource MutedText}"
+                               FontSize="12" />
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                             <VerticalStackLayout Spacing="4">
                                 <Label Text="Offset X (mm)" TextColor="{StaticResource MutedText}" FontSize="13" />
@@ -190,9 +189,6 @@
                             <Button Text="Reset ritaglio"
                                     Clicked="OnResetCropClicked"
                                     Style="{StaticResource SecondaryActionButtonStyle}" />
-                            <Label Text="La prospettiva si corregge nell'editor dedicato spostando i 4 angoli in modo indipendente."
-                                   TextColor="{StaticResource MutedText}"
-                                   FontSize="12" />
                         </VerticalStackLayout>
                     </VerticalStackLayout>
                 </VerticalStackLayout>

@@ -1,4 +1,4 @@
-namespace RuoteLab.Models;
+namespace WallPanelPlanner.Models;
 
 public sealed class PanelInput
 {
@@ -19,8 +19,4 @@ public sealed class PanelInput
     public double EdgeOffsetX { get; init; }
 
     public double EdgeOffsetY { get; init; }
-
-    public LedRoutingAxis LedRoutingAxis { get; init; } = LedRoutingAxis.Vertical;
-
-    public LedStartDirection LedStartDirection { get; init; } = LedStartDirection.BottomToTop;
 }

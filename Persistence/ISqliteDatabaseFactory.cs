@@ -1,6 +1,6 @@
 using SQLite;
 
-namespace RuoteLab.Persistence;
+namespace WallPanelPlanner.Persistence;
 
 public interface ISqliteDatabaseFactory
 {

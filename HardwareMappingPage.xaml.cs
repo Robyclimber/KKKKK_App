@@ -1,9 +1,9 @@
 using System.Globalization;
 using Microsoft.Maui.Controls.Shapes;
-using RuoteLab.Models;
-using RuoteLab.ViewModels;
+using WallPanelPlanner.Models;
+using WallPanelPlanner.ViewModels;
 
-namespace RuoteLab;
+namespace WallPanelPlanner;
 
 public partial class HardwareMappingPage : ContentPage
 {
@@ -55,7 +55,7 @@ public partial class HardwareMappingPage : ContentPage
         {
             var selectedRoomName = viewModel.SelectedRoom?.Name;
             var selectedWallName = viewModel.SelectedWall?.Name;
-            await viewModel.EnsureLoadedAsync();
+            await viewModel.LoadWallsAsync();
 
             if (!string.IsNullOrWhiteSpace(selectedRoomName))
             {
@@ -370,7 +370,7 @@ public partial class HardwareMappingPage : ContentPage
         RebuildHoleMappingsList();
     }
 
-    private void OnAutoMapHoleLedsClicked(object? sender, EventArgs e)
+    private void OnAutoRenumberHoleLedsClicked(object? sender, EventArgs e)
     {
         var wall = viewModel.SelectedWall;
         if (wall is null)
@@ -378,7 +378,11 @@ public partial class HardwareMappingPage : ContentPage
             return;
         }
 
-        wall.AutoAssignLedIndicesByPanelRouting();
+        foreach (var hole in wall.GetOrderedHoles().OrderBy(hole => hole.Number))
+        {
+            viewModel.UpdateHoleHardware(hole.Number, hole.PointId, hole.Number, hole.IsEnabled);
+        }
+
         SyncViewFromState();
     }
 

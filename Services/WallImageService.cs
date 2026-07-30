@@ -1,4 +1,4 @@
-namespace RuoteLab.Services;
+namespace WallPanelPlanner.Services;
 
 public sealed class WallImageService : IWallImageService
 {

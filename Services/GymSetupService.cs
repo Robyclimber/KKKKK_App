@@ -1,6 +1,6 @@
-using RuoteLab.Models;
+using WallPanelPlanner.Models;
 
-namespace RuoteLab.Services;
+namespace WallPanelPlanner.Services;
 
 public sealed class GymSetupService : IGymSetupService
 {
@@ -68,8 +68,6 @@ public sealed class GymSetupService : IGymSetupService
             throw new InvalidOperationException("Controlla i valori del pannello e dei fori.");
         }
 
-        ValidateLedRouting(input.LedRoutingAxis, input.LedStartDirection);
-
         var fallbackNumber = currentPanel is null ? wall.Panels.Count + 1 : wall.Panels.IndexOf(currentPanel) + 1;
         var panel = new PanelDefinition
         {
@@ -82,8 +80,6 @@ public sealed class GymSetupService : IGymSetupService
             VerticalSpacing = input.VerticalSpacing,
             EdgeOffsetX = input.EdgeOffsetX,
             EdgeOffsetY = input.EdgeOffsetY,
-            LedRoutingAxis = input.LedRoutingAxis,
-            LedStartDirection = input.LedStartDirection,
             ImagePath = currentPanel?.ImagePath,
             ImageOffsetX = currentPanel?.ImageOffsetX ?? 0d,
             ImageOffsetY = currentPanel?.ImageOffsetY ?? 0d,
@@ -108,21 +104,6 @@ public sealed class GymSetupService : IGymSetupService
         return panel;
     }
 
-    private static void ValidateLedRouting(LedRoutingAxis axis, LedStartDirection direction)
-    {
-        var isValid = axis switch
-        {
-            LedRoutingAxis.Vertical => direction is LedStartDirection.BottomToTop or LedStartDirection.TopToBottom,
-            LedRoutingAxis.Horizontal => direction is LedStartDirection.LeftToRight or LedStartDirection.RightToLeft,
-            _ => false
-        };
-
-        if (!isValid)
-        {
-            throw new InvalidOperationException("La direzione iniziale LED non e' coerente con l'asse scelto.");
-        }
-    }
-
     public void SetPanelImage(PanelDefinition panel, string imagePath)
     {
         ArgumentNullException.ThrowIfNull(panel);
@@ -141,7 +122,6 @@ public sealed class GymSetupService : IGymSetupService
         panel.ImageCropTop = 0d;
         panel.ImageCropRight = 0d;
         panel.ImageCropBottom = 0d;
-        ResetPanelImagePerspective(panel);
     }
 
     public void ClearPanelImage(PanelDefinition panel)
@@ -157,7 +137,6 @@ public sealed class GymSetupService : IGymSetupService
         panel.ImageCropTop = 0d;
         panel.ImageCropRight = 0d;
         panel.ImageCropBottom = 0d;
-        ResetPanelImagePerspective(panel);
     }
 
     public void UpdatePanelImageAlignment(PanelDefinition panel, double offsetX, double offsetY, double scale, double opacity)
@@ -203,40 +182,5 @@ public sealed class GymSetupService : IGymSetupService
         panel.ImageCropTop = cropTop;
         panel.ImageCropRight = cropRight;
         panel.ImageCropBottom = cropBottom;
-    }
-
-    public void UpdatePanelImagePerspective(
-        PanelDefinition panel,
-        double topLeftX,
-        double topLeftY,
-        double topRightX,
-        double topRightY,
-        double bottomLeftX,
-        double bottomLeftY,
-        double bottomRightX,
-        double bottomRightY)
-    {
-        ArgumentNullException.ThrowIfNull(panel);
-
-        panel.ImagePerspectiveTopLeftX = Math.Clamp(topLeftX, 0d, 1d);
-        panel.ImagePerspectiveTopLeftY = Math.Clamp(topLeftY, 0d, 1d);
-        panel.ImagePerspectiveTopRightX = Math.Clamp(topRightX, 0d, 1d);
-        panel.ImagePerspectiveTopRightY = Math.Clamp(topRightY, 0d, 1d);
-        panel.ImagePerspectiveBottomLeftX = Math.Clamp(bottomLeftX, 0d, 1d);
-        panel.ImagePerspectiveBottomLeftY = Math.Clamp(bottomLeftY, 0d, 1d);
-        panel.ImagePerspectiveBottomRightX = Math.Clamp(bottomRightX, 0d, 1d);
-        panel.ImagePerspectiveBottomRightY = Math.Clamp(bottomRightY, 0d, 1d);
-    }
-
-    private static void ResetPanelImagePerspective(PanelDefinition panel)
-    {
-        panel.ImagePerspectiveTopLeftX = 0d;
-        panel.ImagePerspectiveTopLeftY = 0d;
-        panel.ImagePerspectiveTopRightX = 1d;
-        panel.ImagePerspectiveTopRightY = 0d;
-        panel.ImagePerspectiveBottomLeftX = 0d;
-        panel.ImagePerspectiveBottomLeftY = 1d;
-        panel.ImagePerspectiveBottomRightX = 1d;
-        panel.ImagePerspectiveBottomRightY = 1d;
     }
 }

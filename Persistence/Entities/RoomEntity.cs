@@ -1,6 +1,6 @@
 using SQLite;
 
-namespace RuoteLab.Persistence.Entities;
+namespace WallPanelPlanner.Persistence.Entities;
 
 [Table("rooms")]
 public sealed class RoomEntity
