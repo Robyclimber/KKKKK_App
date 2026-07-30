@@ -1,0 +1,6 @@
+﻿<Solution>
+  <Project Path="RouteLab.csproj">
+    <Deploy Solution="Debug|*" />
+  </Project>
+</Solution>
+

@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:RouteLab.Controls"
+             x:Class="RouteLab.PanelDetailPage"
+             Title="Dettaglio pannello">
+    <Grid RowDefinitions="Auto,*">
+        <controls:EntityActionBar x:Name="PanelActions"
+                                  Margin="16,8,16,0"
+                                  ContextText="Azioni pannello"
+                                  AddDescription="Nuovo pannello"
+                                  SaveDescription="Salva pannello"
+                                  DeleteDescription="Elimina pannello"
+                                  AddClicked="OnNewPanelClicked"
+                                  SaveClicked="OnSavePanelClicked"
+                                  DeleteClicked="OnDeletePanelClicked" />
+
+        <ScrollView x:Name="PanelDetailScrollView"
+                    Grid.Row="1">
+        <VerticalStackLayout Padding="20,16,20,28" Spacing="18">
+            <VerticalStackLayout Spacing="4">
+                <Label x:Name="PageHeadingLabel"
+                       Text="Dettaglio pannello"
+                       FontSize="28"
+                       TextColor="{StaticResource WarmGold}"
+                       FontFamily="OpenSansSemibold" />
+                <Label x:Name="PanelContextLabel"
+                       Text="Nessuna parete selezionata."
+                       TextColor="{StaticResource MutedText}" />
+            </VerticalStackLayout>
+
+            <Border BackgroundColor="{StaticResource PanelBlackAlt}"
+                    Stroke="{StaticResource WarmGoldMuted}"
+                    StrokeShape="RoundRectangle 18"
+                    Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Dati pannello"
+                           FontSize="20"
+                           TextColor="{StaticResource WarmGold}"
+                           FontFamily="OpenSansSemibold" />
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Nome" TextColor="{StaticResource MutedText}" FontSize="13" />
+                        <Entry x:Name="PanelNameEntry" Placeholder="Nome pannello" />
+                    </VerticalStackLayout>
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Posizione X (mm)" TextColor="{StaticResource MutedText}" FontSize="13" />
+                            <Entry x:Name="PanelXEntry" Keyboard="Numeric" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <Label Text="Posizione Y (mm)" TextColor="{StaticResource MutedText}" FontSize="13" />
+                            <Entry x:Name="PanelYEntry" Keyboard="Numeric" />
+                        </VerticalStackLayout>
+                    </Grid>
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Larghezza (mm)" TextColor="{StaticResource MutedText}" FontSize="13" />
+                            <Entry x:Name="PanelWidthEntry" Keyboard="Numeric" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <Label Text="Altezza (mm)" TextColor="{StaticResource MutedText}" FontSize="13" />
+                            <Entry x:Name="PanelHeightEntry" Keyboard="Numeric" />
+                        </VerticalStackLayout>
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="{StaticResource PanelBlackAlt}"
+                    Stroke="{StaticResource WarmGoldMuted}"
+                    StrokeShape="RoundRectangle 18"
+                    Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Griglia fori"
+                           FontSize="20"
+                           TextColor="{StaticResource WarmGold}"
+                           FontFamily="OpenSansSemibold" />
+                    <Label Text="Definisci la griglia dei fori. La numerazione LED si configura globalmente sulla parete."
+                           TextColor="{StaticResource MutedText}"
+                           FontSize="12" />
+                    <Button x:Name="OpenHoleGridEditorButton"
+                            Text="Modifica griglia sull'immagine"
+                            Style="{StaticResource PrimaryActionButtonStyle}"
+                            Clicked="OnOpenHoleGridEditorClicked" />
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Offset fori X (mm)" TextColor="{StaticResource MutedText}" FontSize="13" />
+                            <Entry x:Name="HoleOffsetEntry"
+                                   Keyboard="Numeric"
+                                   IsReadOnly="True" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <Label Text="Offset fori Y (mm)" TextColor="{StaticResource MutedText}" FontSize="13" />
+                            <Entry x:Name="HoleOffsetYEntry"
+                                   Keyboard="Numeric"
+                                   IsReadOnly="True" />
+                        </VerticalStackLayout>
+                    </Grid>
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Passo fori X (mm)" TextColor="{StaticResource MutedText}" FontSize="13" />
+                            <Entry x:Name="HoleHorizontalEntry"
+                                   Keyboard="Numeric"
+                                   IsReadOnly="True" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <Label Text="Passo fori Y (mm)" TextColor="{StaticResource MutedText}" FontSize="13" />
+                            <Entry x:Name="HoleVerticalEntry"
+                                   Keyboard="Numeric"
+                                   IsReadOnly="True" />
+                        </VerticalStackLayout>
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="{StaticResource PanelBlackAlt}"
+                    Stroke="{StaticResource WarmGoldMuted}"
+                    StrokeShape="RoundRectangle 18"
+                    Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Immagine pannello"
+                           FontSize="20"
+                           TextColor="{StaticResource WarmGold}"
+                           FontFamily="OpenSansSemibold" />
+                    <Label x:Name="PanelImageStatusLabel"
+                           Text="Salva prima il pannello per associargli una foto."
+                           TextColor="{StaticResource MutedText}" />
+                    <Border x:Name="PanelImagePreviewFrame"
+                            BackgroundColor="{StaticResource PanelBlack}"
+                            Stroke="{StaticResource WarmGoldMuted}"
+                            StrokeShape="RoundRectangle 12"
+                            HeightRequest="180"
+                            IsVisible="False">
+                        <Image x:Name="PanelImagePreview"
+                               Aspect="AspectFit" />
+                    </Border>
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Button x:Name="ManageImageButton"
+                                Text="Gestisci foto"
+                                Style="{StaticResource SecondaryActionButtonStyle}"
+                                Clicked="OnManageImageClicked" />
+                        <Button x:Name="CropImageButton"
+                                Grid.Column="1"
+                                Text="Ritaglia e adatta"
+                                Style="{StaticResource PrimaryActionButtonStyle}"
+                                Clicked="OnCropImageClicked" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="{StaticResource PanelBlack}"
+                    Stroke="{StaticResource WarmGoldMuted}"
+                    StrokeShape="RoundRectangle 18"
+                    Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Prese del pannello"
+                           FontSize="20"
+                           TextColor="{StaticResource WarmGold}"
+                           FontFamily="OpenSansSemibold" />
+                    <Label Text="Associa le prese ai fori di questo pannello e specifica dimensione e tipo."
+                           TextColor="{StaticResource MutedText}"
+                           FontSize="12" />
+                    <Button x:Name="MapHoldsButton"
+                            Text="Mappa prese del pannello"
+                            Style="{StaticResource PrimaryActionButtonStyle}"
+                            Clicked="OnMapHoldsClicked" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Label x:Name="StatusLabel"
+                   Text="Le modifiche non sono ancora state salvate."
+                   TextColor="{StaticResource MutedText}"
+                   FontSize="12" />
+        </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

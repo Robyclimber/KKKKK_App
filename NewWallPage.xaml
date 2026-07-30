@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:RouteLab.Controls"
+             x:Class="RouteLab.NewWallPage"
+             Title="Nuova parete">
+    <Grid RowDefinitions="Auto,*">
+        <controls:EntityActionBar x:Name="WallActions"
+                                  Margin="16,8,16,0"
+                                  ContextText="Nuova parete"
+                                  ShowAdd="False"
+                                  ShowDelete="False"
+                                  SaveDescription="Crea parete"
+                                  SaveClicked="OnSaveWallClicked" />
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="20,16,20,28"
+                                 Spacing="18">
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="Nuova parete"
+                           FontSize="28"
+                           TextColor="{StaticResource WarmGold}"
+                           FontFamily="OpenSansSemibold" />
+                    <Label x:Name="RoomContextLabel"
+                           Text="Nessuna sala selezionata."
+                           TextColor="{StaticResource MutedText}" />
+                </VerticalStackLayout>
+
+                <Border BackgroundColor="{StaticResource PanelBlackAlt}"
+                        Stroke="{StaticResource WarmGoldMuted}"
+                        StrokeShape="RoundRectangle 18"
+                        Padding="16">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="Dati parete"
+                               FontSize="20"
+                               TextColor="{StaticResource WarmGold}"
+                               FontFamily="OpenSansSemibold" />
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Nome"
+                                   FontSize="13"
+                                   TextColor="{StaticResource MutedText}" />
+                            <Entry x:Name="WallNameEntry"
+                                   Placeholder="Nome parete" />
+                        </VerticalStackLayout>
+                        <Grid ColumnDefinitions="*,*"
+                              ColumnSpacing="12">
+                            <VerticalStackLayout Spacing="4">
+                                <Label Text="Larghezza (mm)"
+                                       FontSize="13"
+                                       TextColor="{StaticResource MutedText}" />
+                                <Entry x:Name="WallWidthEntry"
+                                       Placeholder="Larghezza"
+                                       Keyboard="Numeric" />
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="1"
+                                                 Spacing="4">
+                                <Label Text="Altezza (mm)"
+                                       FontSize="13"
+                                       TextColor="{StaticResource MutedText}" />
+                                <Entry x:Name="WallHeightEntry"
+                                       Placeholder="Altezza"
+                                       Keyboard="Numeric" />
+                            </VerticalStackLayout>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Label x:Name="StatusLabel"
+                       Text="Compila i dati e salva la nuova parete."
+                       FontSize="12"
+                       TextColor="{StaticResource MutedText}" />
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

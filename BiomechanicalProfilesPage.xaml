@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="RouteLab.BiomechanicalProfilesPage"
+             Title="Profili biomeccanici">
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Salva profili"
+                     IconImageSource="save.svg"
+                     Order="Primary"
+                     Priority="0"
+                     Clicked="OnSaveClicked" />
+    </ContentPage.ToolbarItems>
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20,16,20,32" Spacing="18">
+            <VerticalStackLayout Spacing="4">
+                <Label Text="Profili biomeccanici"
+                       FontSize="28"
+                       TextColor="{StaticResource WarmGold}"
+                       FontFamily="OpenSansSemibold" />
+                <Label Text="Configura le persone per cui verranno calcolati baricentro, raggiungibilita e presa successiva."
+                       TextColor="{StaticResource MutedText}" />
+            </VerticalStackLayout>
+
+            <Border BackgroundColor="{StaticResource PanelBlackAlt}"
+                    Stroke="{StaticResource WarmGoldMuted}"
+                    StrokeShape="RoundRectangle 18"
+                    Padding="16">
+                <VerticalStackLayout Spacing="14">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Persona" TextColor="{StaticResource MutedText}" FontSize="13" />
+                            <Picker x:Name="ProfilePicker"
+                                    Title="Seleziona un profilo"
+                                    ItemDisplayBinding="{Binding Name}"
+                                    SelectedIndexChanged="OnProfileChanged" />
+                        </VerticalStackLayout>
+                        <ImageButton Grid.Column="1"
+                                     Source="add.svg"
+                                     WidthRequest="44"
+                                     HeightRequest="44"
+                                     Margin="0,18,0,0"
+                                     Padding="10"
+                                     BackgroundColor="{StaticResource PanelBlack}"
+                                     BorderColor="{StaticResource WarmGoldMuted}"
+                                     BorderWidth="1"
+                                     CornerRadius="12"
+                                     SemanticProperties.Description="Aggiungi profilo biomeccanico"
+                                     ToolTipProperties.Text="Aggiungi profilo biomeccanico"
+                                     Clicked="OnAddProfileClicked" />
+                    </Grid>
+
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Nome profilo" TextColor="{StaticResource MutedText}" FontSize="13" />
+                        <Entry x:Name="ProfileNameEntry" Placeholder="Nome della persona" />
+                        <Label x:Name="ProfileHintLabel"
+                               Text="Il profilo predefinito rimane sempre disponibile."
+                               TextColor="{StaticResource MutedText}"
+                               FontSize="11" />
+                    </VerticalStackLayout>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Altezza (mm)" TextColor="{StaticResource MutedText}" FontSize="13" />
+                            <Entry x:Name="HeightEntry" Keyboard="Numeric" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <Label Text="Apertura braccia (mm)" TextColor="{StaticResource MutedText}" FontSize="13" />
+                            <Entry x:Name="ArmSpanEntry" Keyboard="Numeric" />
+                        </VerticalStackLayout>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Massa (kg)" TextColor="{StaticResource MutedText}" FontSize="13" />
+                            <Entry x:Name="MassEntry" Keyboard="Numeric" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <Label Text="Distanza corpo-parete (mm)" TextColor="{StaticResource MutedText}" FontSize="13" />
+                            <Entry x:Name="WallDistanceEntry" Keyboard="Numeric" />
+                        </VerticalStackLayout>
+                    </Grid>
+
+                    <Label Text="La distanza corpo-parete influenza la proiezione del baricentro e il momento torcente."
+                           TextColor="{StaticResource WarmText}"
+                           FontSize="12" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="{StaticResource PanelBlack}"
+                    Stroke="{StaticResource WarmGoldMuted}"
+                    StrokeShape="RoundRectangle 14"
+                    Padding="12">
+                <Label x:Name="StatusLabel"
+                       Text="Seleziona un profilo oppure creane uno nuovo."
+                       TextColor="{StaticResource MutedText}"
+                       FontSize="12" />
+            </Border>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

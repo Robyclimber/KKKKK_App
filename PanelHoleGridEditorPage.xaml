@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:RouteLab.Controls"
+             x:Class="RouteLab.PanelHoleGridEditorPage"
+             Title="Griglia fori">
+    <Grid RowDefinitions="Auto,Auto,*">
+        <controls:EntityActionBar x:Name="GridActions"
+                                  Margin="16,8,16,0"
+                                  ContextText="Editor griglia fori"
+                                  ShowAdd="False"
+                                  ShowDelete="False"
+                                  SaveDescription="Conferma griglia"
+                                  SaveClicked="OnConfirmClicked" />
+
+        <VerticalStackLayout Grid.Row="1"
+                             Padding="16,10,16,8"
+                             Spacing="8">
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto"
+                  ColumnSpacing="8">
+                <VerticalStackLayout Spacing="2">
+                    <Label x:Name="PanelInfoLabel"
+                           Text="Pannello"
+                           TextColor="{StaticResource WarmGold}"
+                           FontFamily="OpenSansSemibold" />
+                    <Label x:Name="HoleCountLabel"
+                           Text="0 fori"
+                           FontSize="12"
+                           TextColor="{StaticResource MutedText}" />
+                    <Label x:Name="GeometryStatusLabel"
+                           Text="Geometria immagine non disponibile"
+                           FontSize="11"
+                           TextColor="{StaticResource MutedText}"
+                           LineBreakMode="TailTruncation" />
+                </VerticalStackLayout>
+                <Button Grid.Column="1"
+                        Text="-"
+                        Padding="12,6"
+                        Clicked="OnZoomOutClicked" />
+                <Button Grid.Column="2"
+                        Text="Reset"
+                        Padding="12,6"
+                        Clicked="OnResetViewportClicked" />
+                <Button Grid.Column="3"
+                        Text="+"
+                        Padding="12,6"
+                        Clicked="OnZoomInClicked" />
+            </Grid>
+
+            <Grid ColumnDefinitions="*,*"
+                  RowDefinitions="Auto,Auto"
+                  ColumnSpacing="12"
+                  RowSpacing="6">
+                <VerticalStackLayout Spacing="0">
+                    <Label x:Name="OffsetXValueLabel"
+                           Text="Offset X: 0 mm"
+                           FontSize="12"
+                           TextColor="{StaticResource WarmText}" />
+                    <Slider x:Name="OffsetXSlider"
+                            Minimum="0"
+                            MinimumTrackColor="{StaticResource WarmGold}"
+                            ThumbColor="{StaticResource WarmGold}"
+                            ValueChanged="OnGridSliderChanged" />
+                </VerticalStackLayout>
+                <VerticalStackLayout Grid.Column="1"
+                                     Spacing="0">
+                    <Label x:Name="OffsetYValueLabel"
+                           Text="Offset Y: 0 mm"
+                           FontSize="12"
+                           TextColor="{StaticResource WarmText}" />
+                    <Slider x:Name="OffsetYSlider"
+                            Minimum="0"
+                            MinimumTrackColor="{StaticResource WarmGold}"
+                            ThumbColor="{StaticResource WarmGold}"
+                            ValueChanged="OnGridSliderChanged" />
+                </VerticalStackLayout>
+                <VerticalStackLayout Grid.Row="1"
+                                     Spacing="0">
+                    <Label x:Name="SpacingXValueLabel"
+                           Text="Passo X: 0 mm"
+                           FontSize="12"
+                           TextColor="{StaticResource WarmText}" />
+                    <Slider x:Name="SpacingXSlider"
+                            Minimum="1"
+                            MinimumTrackColor="{StaticResource WarmGold}"
+                            ThumbColor="{StaticResource WarmGold}"
+                            ValueChanged="OnGridSliderChanged" />
+                </VerticalStackLayout>
+                <VerticalStackLayout Grid.Row="1"
+                                     Grid.Column="1"
+                                     Spacing="0">
+                    <Label x:Name="SpacingYValueLabel"
+                           Text="Passo Y: 0 mm"
+                           FontSize="12"
+                           TextColor="{StaticResource WarmText}" />
+                    <Slider x:Name="SpacingYSlider"
+                            Minimum="1"
+                            MinimumTrackColor="{StaticResource WarmGold}"
+                            ThumbColor="{StaticResource WarmGold}"
+                            ValueChanged="OnGridSliderChanged" />
+                </VerticalStackLayout>
+            </Grid>
+
+            <Label x:Name="ZoomLabel"
+                   Text="Zoom: 100% - trascina per muoverti"
+                   FontSize="12"
+                   TextColor="{StaticResource MutedText}" />
+        </VerticalStackLayout>
+
+        <Border Grid.Row="2"
+                Margin="16,0,16,16"
+                BackgroundColor="#101820"
+                Stroke="{StaticResource WarmGoldMuted}"
+                StrokeShape="RoundRectangle 16"
+                Padding="0">
+            <Grid x:Name="EditorHost"
+                  SizeChanged="OnEditorSizeChanged">
+                <GraphicsView x:Name="EditorGraphicsView"
+                              StartInteraction="OnStartInteraction"
+                              DragInteraction="OnDragInteraction"
+                              EndInteraction="OnEndInteraction" />
+            </Grid>
+        </Border>
+    </Grid>
+</ContentPage>

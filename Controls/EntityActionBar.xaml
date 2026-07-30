@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="RouteLab.Controls.EntityActionBar"
+             x:Name="RootControl">
+    <Border BackgroundColor="{StaticResource PanelBlackAlt}"
+            Stroke="{StaticResource WarmGoldMuted}"
+            StrokeShape="RoundRectangle 14"
+            Padding="12,8">
+        <Grid ColumnDefinitions="*,Auto,Auto,Auto"
+              ColumnSpacing="8">
+            <Label Text="{Binding ContextText, Source={x:Reference RootControl}}"
+                   VerticalOptions="Center"
+                   TextColor="{StaticResource MutedText}"
+                   FontSize="13"
+                   LineBreakMode="TailTruncation" />
+
+            <ImageButton Grid.Column="1"
+                         Source="add.svg"
+                         IsVisible="{Binding ShowAdd, Source={x:Reference RootControl}}"
+                         IsEnabled="{Binding CanAdd, Source={x:Reference RootControl}}"
+                         WidthRequest="44"
+                         HeightRequest="44"
+                         Padding="10"
+                         BackgroundColor="{StaticResource PanelBlack}"
+                         BorderColor="{StaticResource WarmGoldMuted}"
+                         BorderWidth="1"
+                         CornerRadius="12"
+                         SemanticProperties.Description="{Binding AddDescription, Source={x:Reference RootControl}}"
+                         ToolTipProperties.Text="{Binding AddDescription, Source={x:Reference RootControl}}"
+                         Clicked="OnAddClicked" />
+
+            <ImageButton Grid.Column="2"
+                         Source="save.svg"
+                         IsVisible="{Binding ShowSave, Source={x:Reference RootControl}}"
+                         IsEnabled="{Binding CanSave, Source={x:Reference RootControl}}"
+                         WidthRequest="44"
+                         HeightRequest="44"
+                         Padding="10"
+                         BackgroundColor="{StaticResource PanelBlack}"
+                         BorderColor="{StaticResource WarmGoldMuted}"
+                         BorderWidth="1"
+                         CornerRadius="12"
+                         SemanticProperties.Description="{Binding SaveDescription, Source={x:Reference RootControl}}"
+                         ToolTipProperties.Text="{Binding SaveDescription, Source={x:Reference RootControl}}"
+                         Clicked="OnSaveClicked" />
+
+            <ImageButton Grid.Column="3"
+                         Source="trash.svg"
+                         IsVisible="{Binding ShowDelete, Source={x:Reference RootControl}}"
+                         IsEnabled="{Binding CanDelete, Source={x:Reference RootControl}}"
+                         WidthRequest="44"
+                         HeightRequest="44"
+                         Padding="10"
+                         BackgroundColor="{StaticResource PanelBlack}"
+                         BorderColor="{StaticResource Danger}"
+                         BorderWidth="1"
+                         CornerRadius="12"
+                         SemanticProperties.Description="{Binding DeleteDescription, Source={x:Reference RootControl}}"
+                         ToolTipProperties.Text="{Binding DeleteDescription, Source={x:Reference RootControl}}"
+                         Clicked="OnDeleteClicked" />
+        </Grid>
+    </Border>
+</ContentView>

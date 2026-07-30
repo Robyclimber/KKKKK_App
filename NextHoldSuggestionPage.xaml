@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="RouteLab.NextHoldSuggestionPage"
+             Title="Presa successiva">
+    <ScrollView>
+        <VerticalStackLayout Padding="20,16,20,32" Spacing="18">
+            <VerticalStackLayout Spacing="4">
+                <Label Text="Presa successiva"
+                       FontSize="28"
+                       TextColor="{StaticResource WarmGold}"
+                       FontFamily="OpenSansSemibold" />
+                <Label x:Name="CircuitContextLabel"
+                       Text="Caricamento circuito..."
+                       TextColor="{StaticResource MutedText}" />
+            </VerticalStackLayout>
+
+            <Border BackgroundColor="{StaticResource PanelBlackAlt}"
+                    Stroke="{StaticResource WarmGoldMuted}"
+                    StrokeShape="RoundRectangle 18"
+                    Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="1. Persona"
+                           FontSize="18"
+                           TextColor="{StaticResource WarmGold}"
+                           FontFamily="OpenSansSemibold" />
+                    <Picker x:Name="ProfilePicker"
+                            Title="Seleziona il profilo biomeccanico"
+                            ItemDisplayBinding="{Binding Name}"
+                            SelectedIndexChanged="OnProfileChanged" />
+                    <Label Text="La persona selezionata viene salvata nel circuito."
+                           TextColor="{StaticResource MutedText}"
+                           FontSize="11" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="{StaticResource PanelBlackAlt}"
+                    Stroke="{StaticResource WarmGoldMuted}"
+                    StrokeShape="RoundRectangle 18"
+                    Padding="16">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="2. Posizione corrente"
+                           FontSize="18"
+                           TextColor="{StaticResource WarmGold}"
+                           FontFamily="OpenSansSemibold" />
+                    <Label x:Name="CurrentStateLabel"
+                           Text="Caricamento mani e piedi..."
+                           TextColor="{StaticResource WarmText}"
+                           FontSize="13" />
+                    <Label Text="Le mani sono ricavate dagli ultimi movimenti; tutte le prese Piedi sono considerate come possibili appoggi."
+                           TextColor="{StaticResource MutedText}"
+                           FontSize="11" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="{StaticResource PanelBlackAlt}"
+                    Stroke="{StaticResource WarmGoldMuted}"
+                    StrokeShape="RoundRectangle 18"
+                    Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
+                        <Label Text="Anteprima"
+                               FontSize="18"
+                               TextColor="{StaticResource WarmGold}"
+                               FontFamily="OpenSansSemibold"
+                               VerticalOptions="Center" />
+                        <Button Grid.Column="1" Text="-" Clicked="OnZoomOutClicked" Padding="10,4" />
+                        <Button Grid.Column="2" Text="Reset" Clicked="OnZoomResetClicked" Padding="10,4" />
+                        <Button Grid.Column="3" Text="+" Clicked="OnZoomInClicked" Padding="10,4" />
+                    </Grid>
+                    <Grid x:Name="PreviewViewport"
+                          HeightRequest="420"
+                          SizeChanged="OnPreviewViewportSizeChanged">
+                        <ScrollView Orientation="Both">
+                            <GraphicsView x:Name="PreviewCanvas" />
+                        </ScrollView>
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="#17130D"
+                    Stroke="#3AA76D"
+                    StrokeShape="RoundRectangle 18"
+                    Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="3. Calcolo"
+                           FontSize="18"
+                           TextColor="#A6FFC8"
+                           FontFamily="OpenSansSemibold" />
+                    <Button x:Name="CalculateButton"
+                            Text="Calcola presa successiva"
+                            BackgroundColor="#2E8B57"
+                            TextColor="White"
+                            Clicked="OnCalculateClicked" />
+                    <Label x:Name="ResultLabel"
+                           Text="Nessun suggerimento calcolato."
+                           TextColor="{StaticResource WarmText}"
+                           FontSize="13" />
+                    <Button x:Name="ApplyButton"
+                            Text="Aggiungi la presa al circuito"
+                            IsEnabled="False"
+                            Style="{StaticResource PrimaryActionButtonStyle}"
+                            Clicked="OnApplyClicked" />
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
