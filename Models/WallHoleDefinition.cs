@@ -1,4 +1,4 @@
-namespace WallPanelPlanner.Models;
+namespace RuoteLab.Models;
 
 public readonly record struct WallHoleDefinition(
     int Number,
@@ -14,12 +14,13 @@ public readonly record struct WallHoleDefinition(
     bool IsEnabled = true,
     bool HasHold = false,
     HoldSize HoldSize = HoldSize.M,
-    HoldType HoldType = HoldType.Jug)
+    HoldType HoldType = HoldType.Jug,
+    bool HasEstimatedHoldMetadata = true)
 {
     public string HoldSummary =>
         !HasHold
             ? "Foro vuoto"
-            : $"{GetHoldSizeLabel(HoldSize)} - {GetHoldTypeLabel(HoldType)}";
+            : $"{GetHoldSizeLabel(HoldSize)} - {GetHoldTypeLabel(HoldType)}{(HasEstimatedHoldMetadata ? " (stimata)" : string.Empty)}";
 
     public static string GetHoldSizeLabel(HoldSize size) =>
         size switch

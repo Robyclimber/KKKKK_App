@@ -1,6 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 
-namespace WallPanelPlanner;
+namespace RuoteLab;
 
 public static class MauiProgram
 {

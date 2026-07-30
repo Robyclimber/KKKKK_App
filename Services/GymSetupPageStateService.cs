@@ -1,7 +1,7 @@
-using WallPanelPlanner.Models;
-using WallPanelPlanner.ViewModels;
+using RuoteLab.Models;
+using RuoteLab.ViewModels;
 
-namespace WallPanelPlanner.Services;
+namespace RuoteLab.Services;
 
 public sealed class GymSetupPageStateService : IGymSetupPageStateService
 {

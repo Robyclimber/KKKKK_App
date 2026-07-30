@@ -1,7 +1,7 @@
 using Microsoft.Maui.Graphics;
-using WallPanelPlanner.Models;
+using RuoteLab.Models;
 
-namespace WallPanelPlanner.Drawing;
+namespace RuoteLab.Drawing;
 
 public sealed class LayoutPreviewDrawable : IDrawable
 {

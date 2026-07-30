@@ -1,7 +1,7 @@
 using Microsoft.Maui.Storage;
-using WallPanelPlanner.Models;
+using RuoteLab.Models;
 
-namespace WallPanelPlanner.Services;
+namespace RuoteLab.Services;
 
 public sealed class Esp32SettingsService : IEsp32SettingsService
 {

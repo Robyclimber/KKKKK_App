@@ -1,4 +1,4 @@
-namespace WallPanelPlanner.Models;
+namespace RuoteLab.Models;
 
 public sealed class PanelEditorState
 {
@@ -21,4 +21,8 @@ public sealed class PanelEditorState
     public string HoleHorizontalText { get; init; } = "200";
 
     public string HoleVerticalText { get; init; } = "200";
+
+    public LedRoutingAxis LedRoutingAxis { get; init; } = LedRoutingAxis.Vertical;
+
+    public LedStartDirection LedStartDirection { get; init; } = LedStartDirection.BottomToTop;
 }

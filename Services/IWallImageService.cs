@@ -1,4 +1,4 @@
-namespace WallPanelPlanner.Services;
+namespace RuoteLab.Services;
 
 public interface IWallImageService
 {

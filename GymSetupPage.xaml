@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="WallPanelPlanner.GymSetupPage"
+             x:Class="RuoteLab.GymSetupPage"
              Title="Dettaglio parete">
     <ScrollView>
         <VerticalStackLayout Padding="20,16,20,24" Spacing="18">
@@ -202,13 +202,33 @@
             <Border x:Name="PanelsSectionBorder" BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
                 <VerticalStackLayout Spacing="12">
                     <Label Text="Pannelli della parete" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
-                    <Label Text="Seleziona un pannello dalla lista. Da ogni scheda puoi entrare subito nella sua immagine."
-                           TextColor="{StaticResource MutedText}"
-                           FontSize="12" />
+                    <Label Text="Da qui aggiungi e modifichi i pannelli della parete. Da ogni scheda puoi entrare subito anche nella sua immagine."
+                            TextColor="{StaticResource MutedText}"
+                            FontSize="12" />
                     <Label x:Name="SelectedPanelSummaryLabel"
                            Text="Nessun pannello selezionato."
                            TextColor="{StaticResource WarmText}"
                            FontSize="12" />
+                    <Border BackgroundColor="{StaticResource PanelBlack}"
+                            Stroke="{StaticResource WarmGoldMuted}"
+                            StrokeShape="RoundRectangle 12"
+                            Padding="12">
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="Come aggiungere un pannello"
+                                   FontSize="15"
+                                   TextColor="{StaticResource WarmGold}"
+                                   FontFamily="OpenSansSemibold" />
+                            <Label Text="1. Premi `Aggiungi nuovo pannello`."
+                                   TextColor="{StaticResource WarmText}"
+                                   FontSize="12" />
+                            <Label Text="2. Compila l'editor pannello qui sotto."
+                                   TextColor="{StaticResource WarmText}"
+                                   FontSize="12" />
+                            <Label Text="3. Premi `Aggiungi pannello` per inserirlo nella parete."
+                                   TextColor="{StaticResource WarmText}"
+                                   FontSize="12" />
+                        </VerticalStackLayout>
+                    </Border>
                     <Border BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 12" Padding="12">
                         <VerticalStackLayout Spacing="10">
                             <Label Text="Pannelli di questa parete" FontSize="16" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
@@ -220,12 +240,12 @@
                     </Border>
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
                         <Button x:Name="NewPanelButton"
-                                Text="Nuovo pannello"
+                                Text="Aggiungi nuovo pannello"
                                 Style="{StaticResource PrimaryActionButtonStyle}"
                                 Clicked="OnNewPanelClicked" />
                         <Button x:Name="TogglePanelEditorButton"
                                 Grid.Column="1"
-                                Text="Mostra editor"
+                                Text="Apri editor pannello"
                                 Style="{StaticResource SecondaryActionButtonStyle}"
                                 Clicked="OnTogglePanelEditorClicked" />
                     </Grid>
@@ -282,6 +302,19 @@
                                 <VerticalStackLayout Grid.Column="1" Spacing="4">
                                     <Label Text="Spaziatura verticale fori (mm)" TextColor="{StaticResource MutedText}" FontSize="13" />
                                     <Entry x:Name="HoleVerticalEntry" Placeholder="Passo verticale mm" Keyboard="Numeric" Text="180" />
+                                </VerticalStackLayout>
+                            </Grid>
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                                <VerticalStackLayout Spacing="4">
+                                    <Label Text="Asse installazione LED" TextColor="{StaticResource MutedText}" FontSize="13" />
+                                    <Picker x:Name="LedRoutingAxisPicker"
+                                            Title="Asse LED"
+                                            SelectedIndexChanged="OnLedRoutingAxisChanged" />
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Column="1" Spacing="4">
+                                    <Label Text="Verso iniziale LED" TextColor="{StaticResource MutedText}" FontSize="13" />
+                                    <Picker x:Name="LedStartDirectionPicker"
+                                            Title="Verso iniziale" />
                                 </VerticalStackLayout>
                             </Grid>
                             <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
