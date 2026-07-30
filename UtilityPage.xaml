@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="WallPanelPlanner.UtilityPage"
+             x:Class="RuoteLab.UtilityPage"
              Title="Utility">
     <ScrollView>
         <VerticalStackLayout Padding="20,16,20,24" Spacing="18">
@@ -64,6 +64,13 @@
                         <Button Grid.Column="1"
                                 Text="Invia e sostituisci circuiti"
                                 Clicked="OnSyncCircuitsClicked" />
+                    </Grid>
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Button Text="Invia circuiti editoriali"
+                                Clicked="OnSyncEditorialCircuitsClicked" />
+                        <Button Grid.Column="1"
+                                Text="Importa circuiti da ESP32"
+                                Clicked="OnImportEditorialCircuitsClicked" />
                     </Grid>
                     <Label Text="Attenzione: Sync circuiti sovrascrive i circuiti gia' presenti sul dispositivo per la parete selezionata."
                            TextColor="{StaticResource WarmGold}"

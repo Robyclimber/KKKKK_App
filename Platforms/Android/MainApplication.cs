@@ -1,7 +1,7 @@
-﻿using Android.App;
+using Android.App;
 using Android.Runtime;
 
-namespace WallPanelPlanner;
+namespace RuoteLab;
 
 [Application]
 public class MainApplication : MauiApplication

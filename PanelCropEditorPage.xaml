@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="WallPanelPlanner.PanelCropEditorPage"
+             x:Class="RuoteLab.PanelCropEditorPage"
              Title="Ritaglio pannello">
     <Grid RowDefinitions="*,Auto" BackgroundColor="{StaticResource CanvasBlack}">
         <Grid x:Name="CropViewport"
@@ -19,13 +19,66 @@
                 <BoxView x:Name="MaskLeft" Color="#AA000000" InputTransparent="True" IsVisible="False" />
                 <BoxView x:Name="MaskRight" Color="#AA000000" InputTransparent="True" IsVisible="False" />
                 <Border x:Name="SelectionBorder"
-                        Stroke="{StaticResource WarmGold}"
-                        StrokeThickness="3"
-                        BackgroundColor="#11F2C94C"
-                        StrokeShape="RoundRectangle 4"
-                        IsVisible="False">
+                         Stroke="{StaticResource WarmGold}"
+                         StrokeThickness="3"
+                         BackgroundColor="#11F2C94C"
+                         StrokeShape="RoundRectangle 4"
+                         ZIndex="1"
+                         IsVisible="False">
                     <Border.GestureRecognizers>
                         <PanGestureRecognizer PanUpdated="OnMovePanUpdated" />
+                    </Border.GestureRecognizers>
+                </Border>
+                <Border x:Name="PerspectiveHandleTopLeft"
+                        WidthRequest="22"
+                        HeightRequest="22"
+                        BackgroundColor="#4DD9FF"
+                        Stroke="#0E0D0B"
+                        StrokeThickness="1"
+                        StrokeShape="RoundRectangle 11"
+                        ZIndex="20"
+                        IsVisible="False">
+                    <Border.GestureRecognizers>
+                        <PanGestureRecognizer PanUpdated="OnPerspectiveTopLeftPanUpdated" />
+                    </Border.GestureRecognizers>
+                </Border>
+                <Border x:Name="PerspectiveHandleTopRight"
+                        WidthRequest="22"
+                        HeightRequest="22"
+                        BackgroundColor="#4DD9FF"
+                        Stroke="#0E0D0B"
+                        StrokeThickness="1"
+                        StrokeShape="RoundRectangle 11"
+                        ZIndex="20"
+                        IsVisible="False">
+                    <Border.GestureRecognizers>
+                        <PanGestureRecognizer PanUpdated="OnPerspectiveTopRightPanUpdated" />
+                    </Border.GestureRecognizers>
+                </Border>
+                <Border x:Name="PerspectiveHandleBottomLeft"
+                        WidthRequest="22"
+                        HeightRequest="22"
+                        BackgroundColor="#4DD9FF"
+                        Stroke="#0E0D0B"
+                        StrokeThickness="1"
+                        StrokeShape="RoundRectangle 11"
+                        ZIndex="20"
+                        IsVisible="False">
+                    <Border.GestureRecognizers>
+                        <PanGestureRecognizer PanUpdated="OnPerspectiveBottomLeftPanUpdated" />
+                    </Border.GestureRecognizers>
+                </Border>
+                <Border x:Name="PerspectiveHandleBottomRight"
+                        WidthRequest="22"
+                        HeightRequest="22"
+                        BackgroundColor="#4DD9FF"
+                        Stroke="#0E0D0B"
+                        StrokeThickness="1"
+                        StrokeShape="RoundRectangle 11"
+                        ZIndex="20"
+                        IsVisible="False">
+                    <Border.GestureRecognizers>
+                        <PanGestureRecognizer PanUpdated="OnPerspectiveBottomRightPanUpdated" />
                     </Border.GestureRecognizers>
                 </Border>
                 <Border x:Name="HandleTopLeft"
@@ -35,6 +88,7 @@
                         Stroke="#14110B"
                         StrokeThickness="1"
                         StrokeShape="RoundRectangle 14"
+                        ZIndex="10"
                         IsVisible="False">
                     <Border.GestureRecognizers>
                         <PanGestureRecognizer PanUpdated="OnTopLeftPanUpdated" />
@@ -47,6 +101,7 @@
                         Stroke="#14110B"
                         StrokeThickness="1"
                         StrokeShape="RoundRectangle 14"
+                        ZIndex="10"
                         IsVisible="False">
                     <Border.GestureRecognizers>
                         <PanGestureRecognizer PanUpdated="OnTopRightPanUpdated" />
@@ -59,6 +114,7 @@
                         Stroke="#14110B"
                         StrokeThickness="1"
                         StrokeShape="RoundRectangle 14"
+                        ZIndex="10"
                         IsVisible="False">
                     <Border.GestureRecognizers>
                         <PanGestureRecognizer PanUpdated="OnBottomLeftPanUpdated" />
@@ -71,6 +127,7 @@
                         Stroke="#14110B"
                         StrokeThickness="1"
                         StrokeShape="RoundRectangle 14"
+                        ZIndex="10"
                         IsVisible="False">
                     <Border.GestureRecognizers>
                         <PanGestureRecognizer PanUpdated="OnBottomRightPanUpdated" />
@@ -83,6 +140,7 @@
                         Stroke="#14110B"
                         StrokeThickness="1"
                         StrokeShape="RoundRectangle 13"
+                        ZIndex="10"
                         IsVisible="False">
                     <Border.GestureRecognizers>
                         <PanGestureRecognizer PanUpdated="OnLeftPanUpdated" />
@@ -95,6 +153,7 @@
                         Stroke="#14110B"
                         StrokeThickness="1"
                         StrokeShape="RoundRectangle 13"
+                        ZIndex="10"
                         IsVisible="False">
                     <Border.GestureRecognizers>
                         <PanGestureRecognizer PanUpdated="OnTopPanUpdated" />
@@ -107,6 +166,7 @@
                         Stroke="#14110B"
                         StrokeThickness="1"
                         StrokeShape="RoundRectangle 13"
+                        ZIndex="10"
                         IsVisible="False">
                     <Border.GestureRecognizers>
                         <PanGestureRecognizer PanUpdated="OnRightPanUpdated" />
@@ -119,6 +179,7 @@
                         Stroke="#14110B"
                         StrokeThickness="1"
                         StrokeShape="RoundRectangle 13"
+                        ZIndex="10"
                         IsVisible="False">
                     <Border.GestureRecognizers>
                         <PanGestureRecognizer PanUpdated="OnBottomPanUpdated" />
@@ -149,6 +210,7 @@
                     <Button Text="Reset ritaglio" Clicked="OnResetClicked" />
                     <Button Grid.Column="1" Text="Chiudi" Clicked="OnCloseClicked" />
                 </Grid>
+                <Button Text="Reset prospettiva" Clicked="OnResetPerspectiveClicked" />
             </VerticalStackLayout>
         </Border>
     </Grid>

@@ -1,0 +1,604 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="RuoteLab.TrainingPage"
+             Title="Allenamento">
+    <ScrollView>
+        <VerticalStackLayout Padding="20,16,20,28" Spacing="18">
+            <VerticalStackLayout Spacing="4">
+                <Label Text="Allenamento"
+                       FontSize="30"
+                       TextColor="{StaticResource WarmGold}"
+                       FontFamily="OpenSansSemibold"
+                       CharacterSpacing="4"
+                       LineBreakMode="NoWrap" />
+                <Label Text="Mattoncini runtime indipendenti. Ora sono disponibili recupero, resistenza libera e sospensione su 1-2 prese."
+                       TextColor="{StaticResource MutedText}" />
+            </VerticalStackLayout>
+
+            <Border BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Parete attiva"
+                           FontSize="20"
+                           TextColor="{StaticResource WarmGold}"
+                           FontFamily="OpenSansSemibold" />
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Sala" FontSize="13" TextColor="{StaticResource MutedText}" />
+                            <Picker x:Name="RoomPicker"
+                                    Title="Seleziona una sala"
+                                    SelectedIndexChanged="OnRoomChanged" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <Label Text="Parete" FontSize="13" TextColor="{StaticResource MutedText}" />
+                            <Picker x:Name="WallPicker"
+                                    Title="Seleziona una parete"
+                                    ItemDisplayBinding="{Binding DisplayLabel}"
+                                    SelectedIndexChanged="OnWallChanged" />
+                        </VerticalStackLayout>
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Recupero"
+                           FontSize="20"
+                           TextColor="{StaticResource WarmGold}"
+                           FontFamily="OpenSansSemibold" />
+                    <Label Text="Il timer gira nell'app. Durante il recupero l'ESP32 riceve feedback LED dedicati per rosso lampeggiante, verde finale e spegnimento."
+                           TextColor="{StaticResource MutedText}" />
+
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Durata sec" FontSize="13" TextColor="{StaticResource MutedText}" />
+                            <Entry x:Name="DurationSecondsEntry" Keyboard="Numeric" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <Label Text="Lampeggio ms" FontSize="13" TextColor="{StaticResource MutedText}" />
+                            <Entry x:Name="BlinkPeriodMsEntry" Keyboard="Numeric" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="2" Spacing="4">
+                            <Label Text="Verde finale sec" FontSize="13" TextColor="{StaticResource MutedText}" />
+                            <Entry x:Name="CompletedHoldSecondsEntry" Keyboard="Numeric" />
+                        </VerticalStackLayout>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Colore recupero" FontSize="13" TextColor="{StaticResource MutedText}" />
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                <BoxView x:Name="BlinkColorPreview" WidthRequest="28" HeightRequest="28" CornerRadius="8" VerticalOptions="Center" />
+                                <Label x:Name="BlinkColorValueLabel" Grid.Column="1" VerticalOptions="Center" />
+                            </Grid>
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <Label Text="Colore fine recupero" FontSize="13" TextColor="{StaticResource MutedText}" />
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                <BoxView x:Name="CompletedColorPreview" WidthRequest="28" HeightRequest="28" CornerRadius="8" VerticalOptions="Center" />
+                                <Label x:Name="CompletedColorValueLabel" Grid.Column="1" VerticalOptions="Center" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Grid>
+                    <Label Text="I colori si configurano in Settings > Allenamento."
+                           TextColor="{StaticResource MutedText}"
+                           FontSize="12" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGold}" StrokeShape="RoundRectangle 18" Padding="18">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Runtime recupero"
+                           FontSize="20"
+                           TextColor="{StaticResource WarmGold}"
+                           FontFamily="OpenSansSemibold" />
+                    <Label x:Name="RuntimeWallLabel"
+                           Text="Nessuna parete selezionata."
+                           TextColor="{StaticResource MutedText}" />
+                    <Label x:Name="CountdownLabel"
+                           Text="01:00"
+                           FontSize="42"
+                           TextColor="{StaticResource WarmText}"
+                           FontFamily="OpenSansSemibold" />
+                    <Label x:Name="RuntimeStatusLabel"
+                           Text="Recupero pronto."
+                           TextColor="{StaticResource WarmText}" />
+                    <Label x:Name="LedFeedbackStatusLabel"
+                           Text="Feedback LED non ancora inviato."
+                           TextColor="{StaticResource MutedText}"
+                           FontSize="12" />
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Button x:Name="StartButton"
+                                Text="Avvia"
+                                Style="{StaticResource PrimaryActionButtonStyle}"
+                                Clicked="OnStartClicked" />
+                        <Button x:Name="PauseButton"
+                                Grid.Column="1"
+                                Text="Pausa"
+                                Style="{StaticResource SecondaryActionButtonStyle}"
+                                Clicked="OnPauseClicked" />
+                    </Grid>
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Button x:Name="ResumeButton"
+                                Text="Riprendi"
+                                Style="{StaticResource SecondaryActionButtonStyle}"
+                                Clicked="OnResumeClicked" />
+                        <Button x:Name="StopButton"
+                                Grid.Column="1"
+                                Text="Termina"
+                                BackgroundColor="{StaticResource Danger}"
+                                TextColor="White"
+                                Clicked="OnStopClicked" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Resistenza"
+                           FontSize="20"
+                           TextColor="{StaticResource WarmGold}"
+                           FontFamily="OpenSansSemibold" />
+                    <Label Text="Lavoro libero sulla parete attiva per un tempo definito. Non usa un circuito e illumina tutta la parete nel colore di attivita'."
+                           TextColor="{StaticResource MutedText}" />
+
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Durata sec" FontSize="13" TextColor="{StaticResource MutedText}" />
+                            <Entry x:Name="ResistanceDurationSecondsEntry" Keyboard="Numeric" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <Label Text="Modalita" FontSize="13" TextColor="{StaticResource MutedText}" />
+                            <Picker x:Name="ResistanceModePicker" Title="Seleziona modalita" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="2" Spacing="4">
+                            <Label Text="Periodo ms" FontSize="13" TextColor="{StaticResource MutedText}" />
+                            <Entry x:Name="ResistanceBlinkPeriodMsEntry" Keyboard="Numeric" />
+                        </VerticalStackLayout>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Colore attivita" FontSize="13" TextColor="{StaticResource MutedText}" />
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                <BoxView x:Name="ResistanceActiveColorPreview" WidthRequest="28" HeightRequest="28" CornerRadius="8" VerticalOptions="Center" />
+                                <Label x:Name="ResistanceActiveColorValueLabel" Grid.Column="1" VerticalOptions="Center" />
+                            </Grid>
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <Label Text="Colore fine resistenza" FontSize="13" TextColor="{StaticResource MutedText}" />
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                <BoxView x:Name="ResistanceCompletedColorPreview" WidthRequest="28" HeightRequest="28" CornerRadius="8" VerticalOptions="Center" />
+                                <Label x:Name="ResistanceCompletedColorValueLabel" Grid.Column="1" VerticalOptions="Center" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Grid>
+                    <Label Text="I colori si configurano in Settings > Allenamento."
+                           TextColor="{StaticResource MutedText}"
+                           FontSize="12" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGold}" StrokeShape="RoundRectangle 18" Padding="18">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Runtime resistenza"
+                           FontSize="20"
+                           TextColor="{StaticResource WarmGold}"
+                           FontFamily="OpenSansSemibold" />
+                    <Label x:Name="ResistanceRuntimeWallLabel"
+                           Text="Nessuna parete selezionata."
+                           TextColor="{StaticResource MutedText}" />
+                    <Label x:Name="ResistanceCountdownLabel"
+                           Text="02:00"
+                           FontSize="42"
+                           TextColor="{StaticResource WarmText}"
+                           FontFamily="OpenSansSemibold" />
+                    <Label x:Name="ResistanceRuntimeStatusLabel"
+                           Text="Resistenza pronta."
+                           TextColor="{StaticResource WarmText}" />
+                    <Label x:Name="ResistanceLedFeedbackStatusLabel"
+                           Text="Feedback LED non ancora inviato."
+                           TextColor="{StaticResource MutedText}"
+                           FontSize="12" />
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Button x:Name="ResistanceStartButton"
+                                Text="Avvia resistenza"
+                                Style="{StaticResource PrimaryActionButtonStyle}"
+                                Clicked="OnResistanceStartClicked" />
+                        <Button x:Name="ResistancePauseButton"
+                                Grid.Column="1"
+                                Text="Pausa"
+                                Style="{StaticResource SecondaryActionButtonStyle}"
+                                Clicked="OnResistancePauseClicked" />
+                    </Grid>
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Button x:Name="ResistanceResumeButton"
+                                Text="Riprendi"
+                                Style="{StaticResource SecondaryActionButtonStyle}"
+                                Clicked="OnResistanceResumeClicked" />
+                        <Button x:Name="ResistanceStopButton"
+                                Grid.Column="1"
+                                Text="Termina"
+                                BackgroundColor="{StaticResource Danger}"
+                                TextColor="White"
+                                Clicked="OnResistanceStopClicked" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Sospensione"
+                           FontSize="20"
+                           TextColor="{StaticResource WarmGold}"
+                           FontFamily="OpenSansSemibold" />
+                    <Label Text="Seleziona 1 o 2 prese sulla parete. Durante il timer si illuminano solo i target scelti."
+                           TextColor="{StaticResource MutedText}" />
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Durata sec" FontSize="13" TextColor="{StaticResource MutedText}" />
+                            <Entry x:Name="HangDurationSecondsEntry" Keyboard="Numeric" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <Label Text="Verde finale sec" FontSize="13" TextColor="{StaticResource MutedText}" />
+                            <Entry x:Name="HangCompletedHoldSecondsEntry" Keyboard="Numeric" />
+                        </VerticalStackLayout>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Colore sospensione" FontSize="13" TextColor="{StaticResource MutedText}" />
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                <BoxView x:Name="HangActiveColorPreview" WidthRequest="28" HeightRequest="28" CornerRadius="8" VerticalOptions="Center" />
+                                <Label x:Name="HangActiveColorValueLabel" Grid.Column="1" VerticalOptions="Center" />
+                            </Grid>
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <Label Text="Colore fine sospensione" FontSize="13" TextColor="{StaticResource MutedText}" />
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                <BoxView x:Name="HangCompletedColorPreview" WidthRequest="28" HeightRequest="28" CornerRadius="8" VerticalOptions="Center" />
+                                <Label x:Name="HangCompletedColorValueLabel" Grid.Column="1" VerticalOptions="Center" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Grid>
+                    <Label Text="I colori si configurano in Settings > Allenamento."
+                           TextColor="{StaticResource MutedText}"
+                           FontSize="12" />
+
+                    <Border BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 14" Padding="12">
+                        <VerticalStackLayout Spacing="10">
+                            <Label Text="Selezione prese"
+                                   FontSize="15"
+                                   TextColor="{StaticResource WarmGold}"
+                                   FontFamily="OpenSansSemibold" />
+                            <Label Text="Tap sui fori per aggiungere o rimuovere i target. Massimo 2 prese."
+                                   TextColor="{StaticResource MutedText}"
+                                   FontSize="12" />
+                            <GraphicsView x:Name="HangPreviewCanvas"
+                                          HeightRequest="340"
+                                          SizeChanged="OnHangPreviewSizeChanged">
+                                <GraphicsView.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnHangPreviewTapped" />
+                                </GraphicsView.GestureRecognizers>
+                            </GraphicsView>
+                            <Label x:Name="HangSelectionLabel"
+                                   Text="Nessuna presa selezionata."
+                                   TextColor="{StaticResource WarmText}" />
+                        </VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGold}" StrokeShape="RoundRectangle 18" Padding="18">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Runtime sospensione"
+                           FontSize="20"
+                           TextColor="{StaticResource WarmGold}"
+                           FontFamily="OpenSansSemibold" />
+                    <Label x:Name="HangRuntimeWallLabel"
+                           Text="Nessuna parete selezionata."
+                           TextColor="{StaticResource MutedText}" />
+                    <Label x:Name="HangCountdownLabel"
+                           Text="00:10"
+                           FontSize="42"
+                           TextColor="{StaticResource WarmText}"
+                           FontFamily="OpenSansSemibold" />
+                    <Label x:Name="HangRuntimeStatusLabel"
+                           Text="Sospensione pronta."
+                           TextColor="{StaticResource WarmText}" />
+                    <Label x:Name="HangLedFeedbackStatusLabel"
+                           Text="Feedback LED non ancora inviato."
+                           TextColor="{StaticResource MutedText}"
+                           FontSize="12" />
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Button x:Name="HangStartButton"
+                                Text="Avvia sospensione"
+                                Style="{StaticResource PrimaryActionButtonStyle}"
+                                Clicked="OnHangStartClicked" />
+                        <Button x:Name="HangPauseButton"
+                                Grid.Column="1"
+                                Text="Pausa"
+                                Style="{StaticResource SecondaryActionButtonStyle}"
+                                Clicked="OnHangPauseClicked" />
+                    </Grid>
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Button x:Name="HangResumeButton"
+                                Text="Riprendi"
+                                Style="{StaticResource SecondaryActionButtonStyle}"
+                                Clicked="OnHangResumeClicked" />
+                        <Button x:Name="HangStopButton"
+                                Grid.Column="1"
+                                Text="Termina"
+                                BackgroundColor="{StaticResource Danger}"
+                                TextColor="White"
+                                Clicked="OnHangStopClicked" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Editor allenamento"
+                           FontSize="20"
+                           TextColor="{StaticResource WarmGold}"
+                           FontFamily="OpenSansSemibold" />
+                    <Label Text="Definisci il workout, salvalo su database e controlla il piano runtime espanso."
+                            TextColor="{StaticResource MutedText}" />
+
+                    <Border BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 14" Padding="12">
+                        <VerticalStackLayout Spacing="6">
+                            <Label x:Name="WorkoutEditorModeLabel"
+                                   Text="Stai creando un nuovo allenamento."
+                                   TextColor="{StaticResource WarmGold}"
+                                   FontSize="14"
+                                   FontFamily="OpenSansSemibold" />
+                            <Label x:Name="WorkoutSelectedStepLabel"
+                                   Text="Nessuno step selezionato."
+                                   TextColor="{StaticResource MutedText}"
+                                   FontSize="12" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 14" Padding="12">
+                        <VerticalStackLayout Spacing="10">
+                            <Label Text="Allenamenti salvati sulla parete"
+                                   FontSize="15"
+                                   TextColor="{StaticResource WarmGold}"
+                                   FontFamily="OpenSansSemibold" />
+                            <Picker x:Name="SavedWorkoutPicker"
+                                    Title="Seleziona allenamento salvato"
+                                    ItemDisplayBinding="{Binding DisplayLabel}"
+                                    SelectedIndexChanged="OnSavedWorkoutChanged" />
+                            <Label x:Name="SavedWorkoutsEmptyLabel"
+                                   Text="Nessun allenamento salvato su questa parete."
+                                   TextColor="{StaticResource MutedText}"
+                                   FontSize="12"
+                                   IsVisible="False" />
+                            <VerticalStackLayout x:Name="SavedWorkoutsHost" Spacing="8" />
+                            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
+                                <Button x:Name="NewWorkoutButton"
+                                        Text="Nuovo"
+                                        Style="{StaticResource SecondaryActionButtonStyle}"
+                                        Clicked="OnNewWorkoutClicked" />
+                                <Button x:Name="SaveWorkoutButton"
+                                        Grid.Column="1"
+                                        Text="Salva allenamento"
+                                        Style="{StaticResource PrimaryActionButtonStyle}"
+                                        Clicked="OnSaveWorkoutClicked" />
+                                <Button x:Name="DeleteWorkoutButton"
+                                        Grid.Column="2"
+                                        Text="Elimina salvato"
+                                        BackgroundColor="{StaticResource Danger}"
+                                        TextColor="White"
+                                        Clicked="OnDeleteWorkoutClicked" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Nome allenamento" FontSize="13" TextColor="{StaticResource MutedText}" />
+                        <Entry x:Name="WorkoutNameEntry" Placeholder="Allenamento A" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Descrizione" FontSize="13" TextColor="{StaticResource MutedText}" />
+                        <Entry x:Name="WorkoutDescriptionEntry" Placeholder="Note rapide" />
+                    </VerticalStackLayout>
+
+                    <Border BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 14" Padding="12">
+                        <VerticalStackLayout Spacing="10">
+                            <Label Text="Step builder"
+                                   FontSize="15"
+                                   TextColor="{StaticResource WarmGold}"
+                                   FontFamily="OpenSansSemibold" />
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                                <VerticalStackLayout Spacing="4">
+                                    <Label Text="Tipo step" FontSize="12" TextColor="{StaticResource MutedText}" />
+                                    <Picker x:Name="WorkoutStepTypePicker"
+                                            Title="Scegli tipo step"
+                                            SelectedIndexChanged="OnWorkoutStepTypeChanged" />
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Column="1" Spacing="4">
+                                    <Label Text="Nome step" FontSize="12" TextColor="{StaticResource MutedText}" />
+                                    <Entry x:Name="WorkoutStepNameEntry" Placeholder="Step 1" />
+                                </VerticalStackLayout>
+                            </Grid>
+
+                            <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="12">
+                                <VerticalStackLayout Spacing="4">
+                                    <Label Text="Lavoro sec" FontSize="12" TextColor="{StaticResource MutedText}" />
+                                    <Entry x:Name="WorkoutStepWorkSecondsEntry" Keyboard="Numeric" />
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Column="1" Spacing="4">
+                                    <Label Text="Rest iniziale" FontSize="12" TextColor="{StaticResource MutedText}" />
+                                    <Entry x:Name="WorkoutStepInitialRestSecondsEntry" Keyboard="Numeric" />
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Column="2" Spacing="4">
+                                    <Label Text="Rest finale" FontSize="12" TextColor="{StaticResource MutedText}" />
+                                    <Entry x:Name="WorkoutStepFinalRestSecondsEntry" Keyboard="Numeric" />
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Column="3" Spacing="4">
+                                    <Label Text="Ripetizioni" FontSize="12" TextColor="{StaticResource MutedText}" />
+                                    <Entry x:Name="WorkoutStepRepetitionsEntry" Keyboard="Numeric" />
+                                </VerticalStackLayout>
+                            </Grid>
+
+                            <VerticalStackLayout x:Name="WorkoutRestPayloadHost" Spacing="4">
+                                <Label Text="Payload recupero" FontSize="12" TextColor="{StaticResource WarmGold}" />
+                                <Label x:Name="WorkoutRestPayloadSummaryLabel"
+                                       Text="Usa i colori e i tempi del mattone Recupero."
+                                       TextColor="{StaticResource MutedText}"
+                                       FontSize="12" />
+                            </VerticalStackLayout>
+
+                            <VerticalStackLayout x:Name="WorkoutResistancePayloadHost" Spacing="4" IsVisible="False">
+                                <Label Text="Payload resistenza" FontSize="12" TextColor="{StaticResource WarmGold}" />
+                                <Label x:Name="WorkoutResistancePayloadSummaryLabel"
+                                       Text="Usa modalita e colori del mattone Resistenza."
+                                       TextColor="{StaticResource MutedText}"
+                                       FontSize="12" />
+                            </VerticalStackLayout>
+
+                            <VerticalStackLayout x:Name="WorkoutHangPayloadHost" Spacing="4" IsVisible="False">
+                                <Label Text="Payload sospensione" FontSize="12" TextColor="{StaticResource WarmGold}" />
+                                <Label x:Name="WorkoutHangPayloadSummaryLabel"
+                                       Text="Usa prese e colori del mattone Sospensione."
+                                       TextColor="{StaticResource MutedText}"
+                                       FontSize="12" />
+                            </VerticalStackLayout>
+
+                            <VerticalStackLayout x:Name="WorkoutCircuitPayloadHost" Spacing="10" IsVisible="False">
+                                <Label Text="Payload circuito" FontSize="12" TextColor="{StaticResource WarmGold}" />
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                                    <VerticalStackLayout Spacing="4">
+                                        <Label Text="Circuito" FontSize="12" TextColor="{StaticResource MutedText}" />
+                                        <Picker x:Name="WorkoutCircuitPicker"
+                                                Title="Seleziona circuito"
+                                                ItemDisplayBinding="{Binding DisplayLabel}" />
+                                    </VerticalStackLayout>
+                                    <VerticalStackLayout Grid.Column="1" Spacing="4">
+                                        <Label Text="Modalita" FontSize="12" TextColor="{StaticResource MutedText}" />
+                                        <Picker x:Name="WorkoutCircuitModePicker"
+                                                Title="Seleziona modalita" />
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </VerticalStackLayout>
+
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                                <Button x:Name="AddWorkoutStepButton"
+                                        Text="Aggiungi step"
+                                        Style="{StaticResource PrimaryActionButtonStyle}"
+                                        Clicked="OnAddWorkoutStepClicked" />
+                                <Button x:Name="UpdateWorkoutStepButton"
+                                        Grid.Column="1"
+                                        Text="Aggiorna selezionato"
+                                        Style="{StaticResource SecondaryActionButtonStyle}"
+                                        Clicked="OnUpdateWorkoutStepClicked" />
+                            </Grid>
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                                <Button x:Name="MoveWorkoutStepUpButton"
+                                        Text="Sposta su"
+                                        Style="{StaticResource SecondaryActionButtonStyle}"
+                                        Clicked="OnMoveWorkoutStepUpClicked" />
+                                <Button x:Name="MoveWorkoutStepDownButton"
+                                        Grid.Column="1"
+                                        Text="Sposta giu"
+                                        Style="{StaticResource SecondaryActionButtonStyle}"
+                                        Clicked="OnMoveWorkoutStepDownClicked" />
+                            </Grid>
+                            <Grid ColumnDefinitions="*" ColumnSpacing="10">
+                                <Button x:Name="RemoveWorkoutStepButton"
+                                        Text="Rimuovi selezionato"
+                                        Style="{StaticResource SecondaryActionButtonStyle}"
+                                        Clicked="OnRemoveWorkoutStepClicked" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Label x:Name="WorkoutEditorStatusLabel"
+                           Text="Nessuno step ancora creato."
+                           TextColor="{StaticResource MutedText}"
+                           FontSize="12" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Step allenamento"
+                           FontSize="20"
+                           TextColor="{StaticResource WarmGold}"
+                           FontFamily="OpenSansSemibold" />
+                    <Label x:Name="WorkoutStepsEmptyLabel"
+                           Text="Nessuno step nell'allenamento."
+                           TextColor="{StaticResource MutedText}" />
+                    <VerticalStackLayout x:Name="WorkoutStepsHost" Spacing="10" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Piano runtime"
+                           FontSize="20"
+                           TextColor="{StaticResource WarmGold}"
+                           FontFamily="OpenSansSemibold" />
+                    <Label x:Name="WorkoutPlanStatusLabel"
+                           Text="Compila il workout per vedere l'espansione delle fasi."
+                           TextColor="{StaticResource MutedText}"
+                           FontSize="12" />
+                    <VerticalStackLayout x:Name="WorkoutPlanHost" Spacing="8" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGold}" StrokeShape="RoundRectangle 18" Padding="18">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Runtime allenamento"
+                           FontSize="20"
+                           TextColor="{StaticResource WarmGold}"
+                           FontFamily="OpenSansSemibold" />
+                    <Label x:Name="WorkoutRuntimeNameLabel"
+                           Text="Nessun allenamento selezionato."
+                           TextColor="{StaticResource MutedText}" />
+                    <Label x:Name="WorkoutRuntimeCountdownLabel"
+                           Text="00:00"
+                           FontSize="42"
+                           TextColor="{StaticResource WarmText}"
+                           FontFamily="OpenSansSemibold" />
+                    <Label x:Name="WorkoutRuntimeStatusLabel"
+                           Text="Allenamento pronto."
+                           TextColor="{StaticResource WarmText}" />
+                    <Label x:Name="WorkoutRuntimeStepLabel"
+                           Text="Compila o carica un allenamento."
+                           TextColor="{StaticResource MutedText}"
+                           FontSize="12" />
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Button x:Name="WorkoutStartButton"
+                                Text="Avvia allenamento"
+                                Style="{StaticResource PrimaryActionButtonStyle}"
+                                Clicked="OnWorkoutStartClicked" />
+                        <Button x:Name="WorkoutPauseButton"
+                                Grid.Column="1"
+                                Text="Pausa"
+                                Style="{StaticResource SecondaryActionButtonStyle}"
+                                Clicked="OnWorkoutPauseClicked" />
+                    </Grid>
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Button x:Name="WorkoutResumeButton"
+                                Text="Riprendi"
+                                Style="{StaticResource SecondaryActionButtonStyle}"
+                                Clicked="OnWorkoutResumeClicked" />
+                        <Button x:Name="WorkoutStopButton"
+                                Grid.Column="1"
+                                Text="Termina"
+                                BackgroundColor="{StaticResource Danger}"
+                                TextColor="White"
+                                Clicked="OnWorkoutStopClicked" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

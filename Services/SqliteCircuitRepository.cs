@@ -1,9 +1,9 @@
 using SQLite;
-using WallPanelPlanner.Models;
-using WallPanelPlanner.Persistence;
-using WallPanelPlanner.Persistence.Entities;
+using RuoteLab.Models;
+using RuoteLab.Persistence;
+using RuoteLab.Persistence.Entities;
 
-namespace WallPanelPlanner.Services;
+namespace RuoteLab.Services;
 
 public sealed class SqliteCircuitRepository : ICircuitRepository
 {
@@ -28,11 +28,27 @@ public sealed class SqliteCircuitRepository : ICircuitRepository
             var circuit = new CircuitDefinition
             {
                 Id = circuitEntity.Id,
+                CircuitId = circuitEntity.CircuitId,
                 RoomName = string.IsNullOrWhiteSpace(circuitEntity.RoomName) ? "Sala Arrampicata" : circuitEntity.RoomName,
                 Name = circuitEntity.Name,
                 Difficulty = circuitEntity.Difficulty,
                 Inclination = circuitEntity.Inclination,
-                WallName = circuitEntity.WallName
+                SuggestNextHoldEnabled = circuitEntity.SuggestNextHoldEnabled,
+                WallName = circuitEntity.WallName,
+                Globals = new CircuitGlobalsDefinition
+                {
+                    PresetName = circuitEntity.PresetName,
+                    Effect = circuitEntity.Effect,
+                    DefaultBrightness = circuitEntity.DefaultBrightness,
+                    DimmedBrightness = circuitEntity.DimmedBrightness,
+                    RightHandColor = circuitEntity.RightHandColor,
+                    LeftHandColor = circuitEntity.LeftHandColor,
+                    StartColor = circuitEntity.StartColor,
+                    TopColor = circuitEntity.TopColor,
+                    BlinkCount = circuitEntity.BlinkCount,
+                    BlinkPeriodMs = circuitEntity.BlinkPeriodMs,
+                    HoldDurationMs = circuitEntity.HoldDurationMs
+                }
             };
 
             foreach (var movementEntity in movementEntities
@@ -66,11 +82,24 @@ public sealed class SqliteCircuitRepository : ICircuitRepository
             : null;
 
         entity ??= new CircuitEntity();
+        entity.CircuitId = string.IsNullOrWhiteSpace(circuit.CircuitId) ? Guid.NewGuid().ToString("N") : circuit.CircuitId;
         entity.RoomName = string.IsNullOrWhiteSpace(circuit.RoomName) ? "Sala Arrampicata" : circuit.RoomName;
         entity.Name = circuit.Name;
         entity.WallName = circuit.WallName;
         entity.Difficulty = circuit.Difficulty;
         entity.Inclination = circuit.Inclination;
+        entity.SuggestNextHoldEnabled = circuit.SuggestNextHoldEnabled;
+        entity.PresetName = circuit.Globals.PresetName;
+        entity.Effect = circuit.Globals.Effect;
+        entity.DefaultBrightness = circuit.Globals.DefaultBrightness;
+        entity.DimmedBrightness = circuit.Globals.DimmedBrightness;
+        entity.RightHandColor = circuit.Globals.RightHandColor;
+        entity.LeftHandColor = circuit.Globals.LeftHandColor;
+        entity.StartColor = circuit.Globals.StartColor;
+        entity.TopColor = circuit.Globals.TopColor;
+        entity.BlinkCount = circuit.Globals.BlinkCount;
+        entity.BlinkPeriodMs = circuit.Globals.BlinkPeriodMs;
+        entity.HoldDurationMs = circuit.Globals.HoldDurationMs;
         entity.UpdatedAtUtcTicks = DateTime.UtcNow.Ticks;
 
         if (entity.Id == 0)
@@ -97,6 +126,7 @@ public sealed class SqliteCircuitRepository : ICircuitRepository
         }
 
         circuit.Id = entity.Id;
+        circuit.CircuitId = entity.CircuitId;
         return entity.Id;
     }
 
