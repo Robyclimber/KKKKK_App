@@ -1,6 +1,6 @@
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
-namespace RuoteLab.Models;
+namespace RouteLab.Models;
 
 public sealed class Esp32ApiResponse<T>
 {
@@ -81,3 +81,4 @@ public sealed class Esp32SimpleResultData
     [JsonExtensionData]
     public Dictionary<string, System.Text.Json.JsonElement>? Extra { get; init; }
 }
+

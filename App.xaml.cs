@@ -1,10 +1,10 @@
-using RuoteLab.Drawing;
-using RuoteLab.Persistence;
-using RuoteLab.Services;
-using RuoteLab.ViewModels;
+using RouteLab.Drawing;
+using RouteLab.Persistence;
+using RouteLab.Services;
+using RouteLab.ViewModels;
 using SQLitePCL;
 
-namespace RuoteLab;
+namespace RouteLab;
 
 public partial class App : Application
 {
@@ -13,24 +13,26 @@ public partial class App : Application
         InitializeComponent();
         Batteries_V2.Init();
 
+        BusyIndicatorService = new BusyIndicatorService();
         SqliteDatabaseFactory = new SqliteDatabaseFactory();
-        RoomRepository = new SqliteRoomRepository(SqliteDatabaseFactory);
-        WallRepository = new SqliteWallRepository(SqliteDatabaseFactory);
-        CircuitRepository = new SqliteCircuitRepository(SqliteDatabaseFactory);
-        WorkoutRepository = new SqliteWorkoutRepository(SqliteDatabaseFactory);
+        RoomRepository = new SqliteRoomRepository(SqliteDatabaseFactory, BusyIndicatorService);
+        WallRepository = new SqliteWallRepository(SqliteDatabaseFactory, BusyIndicatorService);
+        CircuitRepository = new SqliteCircuitRepository(SqliteDatabaseFactory, BusyIndicatorService);
+        WorkoutRepository = new SqliteWorkoutRepository(SqliteDatabaseFactory, BusyIndicatorService);
         HomeStateService = new HomeStateService(RoomRepository, WallRepository, CircuitRepository);
         GymSetupService = new GymSetupService();
         GymSetupEditorStateService = new GymSetupEditorStateService();
         GymSetupPageStateService = new GymSetupPageStateService(GymSetupEditorStateService);
         HoldAnalysisSuggestionService = new HoldAnalysisSuggestionService();
         NextHoldSuggestionService = new NextHoldSuggestionService();
-        AppSettingsService = new AppSettingsService();
+        AppSettingsService = new AppSettingsService(BusyIndicatorService);
         CircuitEditingService = new CircuitEditingService(AppSettingsService);
         CircuitPageStateService = new CircuitPageStateService();
         WallConfigurationStorageService = new WallConfigurationStorageService(WallRepository);
         WallImageService = new WallImageService();
         PanelImageAlignmentService = new PanelImageAlignmentService();
-        Esp32SettingsService = new Esp32SettingsService();
+        PanelImageRectificationService = new PanelImageRectificationService();
+        Esp32SettingsService = new Esp32SettingsService(BusyIndicatorService);
         Esp32PayloadBuilderService = new Esp32PayloadBuilderService();
         Esp32ApiClient = new Esp32ApiClient();
         RestExecutionService = new RestExecutionService(Esp32ApiClient, Esp32SettingsService);
@@ -73,6 +75,8 @@ public partial class App : Application
 
     public INextHoldSuggestionService NextHoldSuggestionService { get; }
 
+    public IBusyIndicatorService BusyIndicatorService { get; }
+
     public IAppSettingsService AppSettingsService { get; }
 
     public ICircuitEditingService CircuitEditingService { get; }
@@ -84,6 +88,8 @@ public partial class App : Application
     public IWallImageService WallImageService { get; }
 
     public IPanelImageAlignmentService PanelImageAlignmentService { get; }
+
+    public IPanelImageRectificationService PanelImageRectificationService { get; }
 
     public IEsp32SettingsService Esp32SettingsService { get; }
 
@@ -108,6 +114,8 @@ public partial class App : Application
 
     protected override Window CreateWindow(IActivationState? activationState)
     {
-        return new Window(new AppShell());
+        var window = new Window(new AppShell());
+        BusyIndicatorService.Attach(window);
+        return window;
     }
 }

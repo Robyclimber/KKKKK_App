@@ -1,6 +1,6 @@
-using RuoteLab.Models;
+﻿using RouteLab.Models;
 
-namespace RuoteLab.Services;
+namespace RouteLab.Services;
 
 public interface IEsp32ApiClient
 {
@@ -32,6 +32,8 @@ public interface IEsp32ApiClient
 
     Task<Esp32ApiResponse<Esp32SimpleResultData>> StartRandomSequenceTestAsync(Esp32DeviceSettings settings, CancellationToken cancellationToken = default);
 
+    Task<Esp32ApiResponse<Esp32SimpleResultData>> StartAllLedsTestAsync(Esp32DeviceSettings settings, CancellationToken cancellationToken = default);
+
     Task<Esp32ApiResponse<Esp32SimpleResultData>> StartRestFeedbackAsync(Esp32DeviceSettings settings, Esp32RestFeedbackStartRequest request, CancellationToken cancellationToken = default);
 
     Task<Esp32ApiResponse<Esp32SimpleResultData>> CompleteRestFeedbackAsync(Esp32DeviceSettings settings, Esp32RestFeedbackCompleteRequest request, CancellationToken cancellationToken = default);
@@ -50,3 +52,4 @@ public interface IEsp32ApiClient
 
     Task<Esp32ApiResponse<Esp32SimpleResultData>> ClearHangFeedbackAsync(Esp32DeviceSettings settings, CancellationToken cancellationToken = default);
 }
+

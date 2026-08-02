@@ -1,4 +1,4 @@
-﻿using RouteLab.Models;
+using RouteLab.Models;
 
 namespace RouteLab.Services;
 

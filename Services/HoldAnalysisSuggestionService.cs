@@ -1,6 +1,6 @@
-using RuoteLab.Models;
+﻿using RouteLab.Models;
 
-namespace RuoteLab.Services;
+namespace RouteLab.Services;
 
 public sealed class HoldAnalysisSuggestionService : IHoldAnalysisSuggestionService
 {
@@ -338,3 +338,4 @@ public sealed class HoldAnalysisSuggestionService : IHoldAnalysisSuggestionServi
     private readonly record struct HoleCropArea(int Left, int Top, int Size);
 #endif
 }
+

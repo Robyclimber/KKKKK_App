@@ -1,6 +1,6 @@
-using RuoteLab.Models;
+﻿using RouteLab.Models;
 
-namespace RuoteLab.Services;
+namespace RouteLab.Services;
 
 public interface IEsp32PayloadBuilderService
 {
@@ -8,3 +8,4 @@ public interface IEsp32PayloadBuilderService
 
     Esp32CircuitsPayload BuildCircuitsPayload(WallDefinition wall, RoomDefinition room, IEnumerable<CircuitDefinition> circuits);
 }
+

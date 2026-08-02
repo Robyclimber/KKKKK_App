@@ -1,4 +1,4 @@
-namespace RuoteLab.Models;
+﻿namespace RouteLab.Models;
 
 public sealed class PanelConfigurationFile
 {
@@ -18,3 +18,4 @@ public sealed class PanelConfigurationFile
 
     public double EdgeOffset { get; init; }
 }
+

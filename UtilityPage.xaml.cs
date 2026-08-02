@@ -1,8 +1,8 @@
 using System.Globalization;
-using RuoteLab.Models;
-using RuoteLab.Services;
+using RouteLab.Models;
+using RouteLab.Services;
 
-namespace RuoteLab;
+namespace RouteLab;
 
 public partial class UtilityPage : ContentPage
 {
@@ -21,6 +21,7 @@ public partial class UtilityPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        using var busy = AppBusy.Show("Connessione a RouteLab Hub...");
         await LoadEsp32StateAsync();
     }
 
@@ -73,6 +74,8 @@ public partial class UtilityPage : ContentPage
             return;
         }
 
+        await app.GymSetupViewModel.EnsureLoadedAsync();
+
         var settings = app.Esp32SettingsService.Load();
         Esp32BaseUrlEntry.Text = settings.BaseUrl;
         Esp32ControllerIdEntry.Text = settings.ControllerId;
@@ -104,7 +107,8 @@ public partial class UtilityPage : ContentPage
             : availableCircuits
                 .Where(circuit =>
                     string.Equals(circuit.RoomName, selectedWall.RoomName, StringComparison.Ordinal) &&
-                    string.Equals(circuit.WallName, selectedWall.Name, StringComparison.Ordinal))
+                    circuit.GetWallNames().Count == 1 &&
+                    circuit.UsesWall(selectedWall.Name))
                 .OrderBy(circuit => circuit.Name)
                 .ToList();
 
@@ -112,11 +116,13 @@ public partial class UtilityPage : ContentPage
         Esp32CircuitPicker.SelectedItem = visibleCircuits.FirstOrDefault();
     }
 
-    private void OnSaveEsp32SettingsClicked(object? sender, EventArgs e)
+    private async void OnSaveEsp32SettingsClicked(object? sender, EventArgs e)
     {
+        using var busy = AppBusy.Show("Salvataggio impostazioni...");
+        await Task.Yield();
         var settings = ReadEsp32Settings();
         app?.Esp32SettingsService.Save(settings);
-        Esp32StatusLabel.Text = "Impostazioni ESP32 salvate.";
+        Esp32StatusLabel.Text = "Impostazioni RouteLab Hub salvate.";
     }
 
     private async void OnEsp32HealthClicked(object? sender, EventArgs e)
@@ -160,7 +166,8 @@ public partial class UtilityPage : ContentPage
         var circuitsForWall = availableCircuits
             .Where(circuit =>
                 string.Equals(circuit.RoomName, room.Name, StringComparison.Ordinal) &&
-                string.Equals(circuit.WallName, wall.Name, StringComparison.Ordinal))
+                circuit.GetWallNames().Count == 1 &&
+                circuit.UsesWall(wall.Name))
             .ToList();
 
         var confirm = await DisplayAlertAsync(
@@ -191,7 +198,8 @@ public partial class UtilityPage : ContentPage
         var circuitsForWall = availableCircuits
             .Where(circuit =>
                 string.Equals(circuit.RoomName, room.Name, StringComparison.Ordinal) &&
-                string.Equals(circuit.WallName, wall.Name, StringComparison.Ordinal))
+                circuit.GetWallNames().Count == 1 &&
+                circuit.UsesWall(wall.Name))
             .ToList();
 
         await RunEsp32ActionAsync(async settings =>
@@ -280,6 +288,17 @@ public partial class UtilityPage : ContentPage
         });
     }
 
+    private async void OnAllLedsTestClicked(object? sender, EventArgs e)
+    {
+        await RunEsp32ActionAsync(async settings =>
+        {
+            var response = await app!.Esp32ApiClient.StartAllLedsTestAsync(settings);
+            return response.Success
+                ? $"Test LED OK - accesi {settings.WallLedCount} LED a luminosità {settings.BrightnessLimit}. Usa Clear LED per spegnerli."
+                : $"Test tutti LED KO - {response.ErrorCode} - {response.Message}";
+        });
+    }
+
     private async void OnStopRandomSequenceTestClicked(object? sender, EventArgs e)
     {
         await RunEsp32ActionAsync(async settings =>
@@ -298,17 +317,18 @@ public partial class UtilityPage : ContentPage
             return;
         }
 
+        using var busy = AppBusy.Show("Comunicazione con RouteLab Hub...");
         try
         {
             isBusyWithEsp32 = true;
-            Esp32StatusLabel.Text = "Chiamata ESP32 in corso...";
+            Esp32StatusLabel.Text = "Chiamata a RouteLab Hub in corso...";
             var settings = ReadEsp32Settings();
             app?.Esp32SettingsService.Save(settings);
             Esp32StatusLabel.Text = await action(settings);
         }
         catch (Exception ex)
         {
-            Esp32StatusLabel.Text = $"Errore ESP32: {ex.Message}";
+            Esp32StatusLabel.Text = $"Errore RouteLab Hub: {ex.Message}";
         }
         finally
         {
@@ -330,7 +350,7 @@ public partial class UtilityPage : ContentPage
         return new Esp32DeviceSettings
         {
             BaseUrl = Esp32BaseUrlEntry.Text?.Trim() ?? string.Empty,
-            ControllerId = string.IsNullOrWhiteSpace(Esp32ControllerIdEntry.Text) ? "esp32-sala-1" : Esp32ControllerIdEntry.Text.Trim(),
+            ControllerId = string.IsNullOrWhiteSpace(Esp32ControllerIdEntry.Text) ? "routelab-hub-sala-1" : Esp32ControllerIdEntry.Text.Trim(),
             WallLedCount = ParsePositiveInt(Esp32WallLedCountEntry.Text, "Inserisci un numero LED valido."),
             BrightnessLimit = ParseRangeInt(Esp32BrightnessLimitEntry.Text, 0, 255, "Inserisci un brightness limit tra 0 e 255.")
         };
@@ -374,6 +394,7 @@ public partial class UtilityPage : ContentPage
                         {
                             MovementRole.Start => 1,
                             MovementRole.Top => 2,
+                            MovementRole.Feet => 3,
                             _ => 0
                         },
                         S = movement.Sequence
@@ -420,7 +441,7 @@ public partial class UtilityPage : ContentPage
 
             localCircuit.CircuitId = remoteCircuit.CircuitId;
             localCircuit.RoomName = wall.RoomName;
-            localCircuit.WallName = wall.Name;
+            localCircuit.SetWallNames(new[] { wall.Name });
             localCircuit.Name = remoteCircuit.Name;
             localCircuit.Difficulty = remoteCircuit.Difficulty;
             localCircuit.Inclination = remoteCircuit.Inclination;
@@ -451,6 +472,7 @@ public partial class UtilityPage : ContentPage
                     {
                         1 => MovementRole.Start,
                         2 => MovementRole.Top,
+                        3 => MovementRole.Feet,
                         _ => MovementRole.Normal
                     },
                     Sequence = movement.S

@@ -1,4 +1,4 @@
-﻿using RouteLab.Models;
+using RouteLab.Models;
 
 namespace RouteLab.Services;
 
@@ -378,4 +378,6 @@ public sealed class HangExecutionService : IHangExecutionService
         return $"fori {string.Join(", ", targetHoleNumbers.OrderBy(value => value))}";
     }
 }
+
+
 

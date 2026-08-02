@@ -1,6 +1,6 @@
-using SQLite;
+﻿using SQLite;
 
-namespace RuoteLab.Persistence.Entities;
+namespace RouteLab.Persistence.Entities;
 
 [Table("circuit_movements")]
 public sealed class CircuitMovementEntity
@@ -21,3 +21,4 @@ public sealed class CircuitMovementEntity
 
     public int Sequence { get; set; }
 }
+

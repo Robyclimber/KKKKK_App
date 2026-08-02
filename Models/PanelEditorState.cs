@@ -1,4 +1,4 @@
-namespace RuoteLab.Models;
+﻿namespace RouteLab.Models;
 
 public sealed class PanelEditorState
 {
@@ -26,3 +26,4 @@ public sealed class PanelEditorState
 
     public LedStartDirection LedStartDirection { get; init; } = LedStartDirection.BottomToTop;
 }
+

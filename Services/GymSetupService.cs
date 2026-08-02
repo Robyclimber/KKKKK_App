@@ -1,6 +1,6 @@
-using RuoteLab.Models;
+﻿using RouteLab.Models;
 
-namespace RuoteLab.Services;
+namespace RouteLab.Services;
 
 public sealed class GymSetupService : IGymSetupService
 {
@@ -38,6 +38,7 @@ public sealed class GymSetupService : IGymSetupService
         updatedWall.ImageOffsetY = currentWall.ImageOffsetY;
         updatedWall.ImageScale = currentWall.ImageScale;
         updatedWall.ImageOpacity = currentWall.ImageOpacity;
+        updatedWall.LedVerticalDirection = currentWall.LedVerticalDirection;
 
         foreach (var panel in currentWall.Panels)
         {
@@ -85,6 +86,8 @@ public sealed class GymSetupService : IGymSetupService
             LedRoutingAxis = input.LedRoutingAxis,
             LedStartDirection = input.LedStartDirection,
             ImagePath = currentPanel?.ImagePath,
+            ImageSourcePath = currentPanel?.ImageSourcePath,
+            IsImageRectified = currentPanel?.IsImageRectified ?? false,
             ImageOffsetX = currentPanel?.ImageOffsetX ?? 0d,
             ImageOffsetY = currentPanel?.ImageOffsetY ?? 0d,
             ImageScale = currentPanel?.ImageScale ?? 1d,
@@ -92,12 +95,37 @@ public sealed class GymSetupService : IGymSetupService
             ImageCropLeft = currentPanel?.ImageCropLeft ?? 0d,
             ImageCropTop = currentPanel?.ImageCropTop ?? 0d,
             ImageCropRight = currentPanel?.ImageCropRight ?? 0d,
-            ImageCropBottom = currentPanel?.ImageCropBottom ?? 0d
+            ImageCropBottom = currentPanel?.ImageCropBottom ?? 0d,
+            ImagePerspectiveTopLeftX = currentPanel?.ImagePerspectiveTopLeftX ?? 0d,
+            ImagePerspectiveTopLeftY = currentPanel?.ImagePerspectiveTopLeftY ?? 0d,
+            ImagePerspectiveTopRightX = currentPanel?.ImagePerspectiveTopRightX ?? 1d,
+            ImagePerspectiveTopRightY = currentPanel?.ImagePerspectiveTopRightY ?? 0d,
+            ImagePerspectiveBottomLeftX = currentPanel?.ImagePerspectiveBottomLeftX ?? 0d,
+            ImagePerspectiveBottomLeftY = currentPanel?.ImagePerspectiveBottomLeftY ?? 1d,
+            ImagePerspectiveBottomRightX = currentPanel?.ImagePerspectiveBottomRightX ?? 1d,
+            ImagePerspectiveBottomRightY = currentPanel?.ImagePerspectiveBottomRightY ?? 1d
         };
 
         if (!wall.Contains(panel))
         {
             throw new InvalidOperationException("Il pannello esce dai limiti della parete selezionata.");
+        }
+
+        var panelWithSameName = wall.Panels.FirstOrDefault(existingPanel =>
+            !ReferenceEquals(existingPanel, currentPanel) &&
+            string.Equals(existingPanel.Name, panel.Name, StringComparison.OrdinalIgnoreCase));
+        if (panelWithSameName is not null)
+        {
+            throw new InvalidOperationException($"Esiste gia' un pannello chiamato {panel.Name}.");
+        }
+
+        var overlappingPanel = wall.Panels.FirstOrDefault(existingPanel =>
+            !ReferenceEquals(existingPanel, currentPanel) &&
+            PanelsOverlap(existingPanel, panel));
+        if (overlappingPanel is not null)
+        {
+            throw new InvalidOperationException(
+                $"Il pannello {panel.Name} si sovrappone al pannello {overlappingPanel.Name}. Correggi posizione o dimensioni.");
         }
 
         if (input.EdgeOffsetX > input.Width || input.EdgeOffsetY > input.Height)
@@ -106,6 +134,15 @@ public sealed class GymSetupService : IGymSetupService
         }
 
         return panel;
+    }
+
+    private static bool PanelsOverlap(PanelDefinition left, PanelDefinition right)
+    {
+        const double tolerance = 0.0001d;
+        return left.X + left.Width > right.X + tolerance
+            && right.X + right.Width > left.X + tolerance
+            && left.Y + left.Height > right.Y + tolerance
+            && right.Y + right.Height > left.Y + tolerance;
     }
 
     private static void ValidateLedRouting(LedRoutingAxis axis, LedStartDirection direction)
@@ -133,6 +170,8 @@ public sealed class GymSetupService : IGymSetupService
         }
 
         panel.ImagePath = imagePath;
+        panel.ImageSourcePath = imagePath;
+        panel.IsImageRectified = false;
         panel.ImageOffsetX = 0;
         panel.ImageOffsetY = 0;
         panel.ImageScale = 1d;
@@ -144,11 +183,35 @@ public sealed class GymSetupService : IGymSetupService
         ResetPanelImagePerspective(panel);
     }
 
+    public void SetPanelRectifiedImage(PanelDefinition panel, string sourceImagePath, string rectifiedImagePath)
+    {
+        ArgumentNullException.ThrowIfNull(panel);
+
+        if (string.IsNullOrWhiteSpace(sourceImagePath) || !File.Exists(sourceImagePath))
+        {
+            throw new InvalidOperationException("Immagine sorgente non disponibile.");
+        }
+
+        if (string.IsNullOrWhiteSpace(rectifiedImagePath) || !File.Exists(rectifiedImagePath))
+        {
+            throw new InvalidOperationException("Immagine rettificata non disponibile.");
+        }
+
+        panel.ImageSourcePath = sourceImagePath;
+        panel.ImagePath = rectifiedImagePath;
+        panel.IsImageRectified = true;
+        panel.ImageOffsetX = 0d;
+        panel.ImageOffsetY = 0d;
+        panel.ImageScale = 1d;
+    }
+
     public void ClearPanelImage(PanelDefinition panel)
     {
         ArgumentNullException.ThrowIfNull(panel);
 
         panel.ImagePath = null;
+        panel.ImageSourcePath = null;
+        panel.IsImageRectified = false;
         panel.ImageOffsetX = 0;
         panel.ImageOffsetY = 0;
         panel.ImageScale = 1d;
@@ -203,6 +266,7 @@ public sealed class GymSetupService : IGymSetupService
         panel.ImageCropTop = cropTop;
         panel.ImageCropRight = cropRight;
         panel.ImageCropBottom = cropBottom;
+        RestorePanelSourceImage(panel);
     }
 
     public void UpdatePanelImagePerspective(
@@ -226,6 +290,20 @@ public sealed class GymSetupService : IGymSetupService
         panel.ImagePerspectiveBottomLeftY = Math.Clamp(bottomLeftY, 0d, 1d);
         panel.ImagePerspectiveBottomRightX = Math.Clamp(bottomRightX, 0d, 1d);
         panel.ImagePerspectiveBottomRightY = Math.Clamp(bottomRightY, 0d, 1d);
+        RestorePanelSourceImage(panel);
+    }
+
+    private static void RestorePanelSourceImage(PanelDefinition panel)
+    {
+        if (!panel.IsImageRectified ||
+            string.IsNullOrWhiteSpace(panel.ImageSourcePath) ||
+            !File.Exists(panel.ImageSourcePath))
+        {
+            return;
+        }
+
+        panel.ImagePath = panel.ImageSourcePath;
+        panel.IsImageRectified = false;
     }
 
     private static void ResetPanelImagePerspective(PanelDefinition panel)
@@ -239,4 +317,5 @@ public sealed class GymSetupService : IGymSetupService
         panel.ImagePerspectiveBottomRightX = 1d;
         panel.ImagePerspectiveBottomRightY = 1d;
     }
+
 }

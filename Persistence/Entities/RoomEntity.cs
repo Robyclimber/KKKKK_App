@@ -1,6 +1,6 @@
-using SQLite;
+﻿using SQLite;
 
-namespace RuoteLab.Persistence.Entities;
+namespace RouteLab.Persistence.Entities;
 
 [Table("rooms")]
 public sealed class RoomEntity
@@ -11,3 +11,4 @@ public sealed class RoomEntity
     [Indexed(Unique = true)]
     public string Name { get; set; } = string.Empty;
 }
+

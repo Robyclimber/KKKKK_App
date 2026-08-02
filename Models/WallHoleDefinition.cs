@@ -1,4 +1,4 @@
-namespace RuoteLab.Models;
+﻿namespace RouteLab.Models;
 
 public readonly record struct WallHoleDefinition(
     int Number,
@@ -15,12 +15,17 @@ public readonly record struct WallHoleDefinition(
     bool HasHold = false,
     HoldSize HoldSize = HoldSize.M,
     HoldType HoldType = HoldType.Jug,
-    bool HasEstimatedHoldMetadata = true)
+    bool HasEstimatedHoldMetadata = true,
+    WallHoleSourceKind SourceKind = WallHoleSourceKind.Generated)
 {
     public string HoldSummary =>
         !HasHold
             ? "Foro vuoto"
             : $"{GetHoldSizeLabel(HoldSize)} - {GetHoldTypeLabel(HoldType)}{(HasEstimatedHoldMetadata ? " (stimata)" : string.Empty)}";
+
+    public bool IsSuppressed => SourceKind == WallHoleSourceKind.Suppressed;
+
+    public bool IsManual => SourceKind == WallHoleSourceKind.Manual;
 
     public static string GetHoldSizeLabel(HoldSize size) =>
         size switch
@@ -47,3 +52,4 @@ public readonly record struct WallHoleDefinition(
             _ => "Maniglia"
         };
 }
+

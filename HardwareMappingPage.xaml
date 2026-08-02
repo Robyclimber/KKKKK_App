@@ -1,12 +1,21 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="RuoteLab.HardwareMappingPage"
+             x:Class="RouteLab.HardwareMappingPage"
              Title="Mapping hardware della parete">
+    <ContentPage.ToolbarItems>
+        <ToolbarItem x:Name="SaveToolbarItem"
+                     Text="Salva"
+                     IconImageSource="save.svg"
+                     Order="Primary"
+                     Priority="0"
+                     Clicked="OnSaveWallClicked" />
+    </ContentPage.ToolbarItems>
+
     <ScrollView>
         <VerticalStackLayout Padding="20,16,20,24" Spacing="18">
             <VerticalStackLayout Spacing="4">
-                <Label Text="RuoteLab"
+                <Label Text="RouteLab"
                        FontSize="28"
                        TextColor="{StaticResource WarmGold}"
                        FontFamily="OpenSansSemibold"
@@ -42,11 +51,19 @@
             <Border BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
                 <VerticalStackLayout Spacing="12">
                     <Label Text="Mapping hardware della parete" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
-                    <Label Text="Puoi assegnare i LED automaticamente in base al routing dei pannelli, poi rifinire manualmente il cablaggio reale della parete per ESP32."
+                    <Label Text="La numerazione LED è unica per tutta la parete e percorre verticalmente i pannelli senza ripartire da 1."
                            TextColor="{StaticResource MutedText}"
                            FontSize="12" />
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Verso iniziale della parete"
+                               TextColor="{StaticResource MutedText}"
+                               FontSize="13" />
+                        <Picker x:Name="WallLedDirectionPicker"
+                                Title="Scegli il verso verticale"
+                                SelectedIndexChanged="OnWallLedDirectionChanged" />
+                    </VerticalStackLayout>
                     <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-                        <Button Text="Auto-mapping LED dai pannelli"
+                        <Button Text="Genera numerazione LED globale"
                                 Clicked="OnAutoMapHoleLedsClicked" />
                         <HorizontalStackLayout Grid.Column="1"
                                                Spacing="8"
@@ -58,14 +75,9 @@
                                     Toggled="OnShowOnlyHoleConflictsToggled" />
                         </HorizontalStackLayout>
                     </Grid>
-                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                        <Button x:Name="SaveWallButton"
-                                Text="Salva parete"
-                                Clicked="OnSaveWallClicked" />
-                        <Button Grid.Column="1"
-                                Text="Aggiorna elenco"
-                                Clicked="OnRefreshClicked" />
-                    </Grid>
+                    <Button Text="Aggiorna elenco"
+                            Style="{StaticResource SecondaryActionButtonStyle}"
+                            Clicked="OnRefreshClicked" />
                     <Label x:Name="HoleMappingEmptyLabel"
                            Text="Nessun foro disponibile."
                            TextColor="{StaticResource MutedText}" />

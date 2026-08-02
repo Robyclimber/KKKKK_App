@@ -1,4 +1,4 @@
-﻿namespace RouteLab.Models;
+namespace RouteLab.Models;
 
 public sealed class NextHoldSuggestionRequest
 {
@@ -15,6 +15,10 @@ public sealed class NextHoldSuggestionRequest
     public int CurrentRightHandHoleNumber { get; init; }
 
     public IReadOnlyList<int> CurrentFootHoleNumbers { get; init; } = Array.Empty<int>();
+
+    public int? CurrentLeftFootHoleNumber { get; init; }
+
+    public int? CurrentRightFootHoleNumber { get; init; }
 
     public double? CenterX { get; init; }
 

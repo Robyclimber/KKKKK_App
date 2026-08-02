@@ -1,14 +1,15 @@
-using System.Collections.ObjectModel;
-using RuoteLab.Models;
-using RuoteLab.Services;
+﻿using System.Collections.ObjectModel;
+using RouteLab.Models;
+using RouteLab.Services;
 
-namespace RuoteLab.ViewModels;
+namespace RouteLab.ViewModels;
 
 public sealed class CircuitEditorViewModel
 {
     private readonly ICircuitEditingService circuitEditingService;
     private readonly GymSetupViewModel roomViewModel;
     private readonly ICircuitRepository circuitRepository;
+    private string? activeWallName;
 
     public CircuitEditorViewModel(ICircuitEditingService circuitEditingService, GymSetupViewModel roomViewModel, ICircuitRepository circuitRepository)
     {
@@ -29,15 +30,22 @@ public sealed class CircuitEditorViewModel
         SelectedCircuit is not null
             ? roomViewModel.Walls.FirstOrDefault(wall =>
                 string.Equals(wall.RoomName, SelectedCircuit.RoomName, StringComparison.Ordinal) &&
-                string.Equals(wall.Name, SelectedCircuit.WallName, StringComparison.Ordinal))
-            : GetWallsForSelectedRoom().FirstOrDefault();
+                string.Equals(
+                    wall.Name,
+                    SelectedCircuit.UsesWall(activeWallName)
+                        ? activeWallName
+                        : SelectedCircuit.GetWallNames().FirstOrDefault(),
+                    StringComparison.Ordinal))
+            : GetWallsForSelectedRoom().FirstOrDefault(wall =>
+                  string.Equals(wall.Name, activeWallName, StringComparison.Ordinal))
+              ?? GetWallsForSelectedRoom().FirstOrDefault();
 
     public string SuggestedCircuitName => $"Circuito {Circuits.Count + 1}";
 
     public string CurrentWallLabel =>
         CurrentWall is null
             ? "Nessuna parete disponibile."
-            : $"Sala: {CurrentWall.RoomName} - Parete del circuito: {CurrentWall.Name}";
+            : $"Sala: {CurrentWall.RoomName} - Parete attiva: {CurrentWall.Name}";
 
     public IReadOnlyList<string> GetAvailableRooms() =>
         roomViewModel.AvailableRoomNames;
@@ -57,12 +65,13 @@ public sealed class CircuitEditorViewModel
         return Circuits
             .Where(circuit =>
             {
-                var wall = AvailableWalls.FirstOrDefault(item =>
-                    string.Equals(item.RoomName, circuit.RoomName, StringComparison.Ordinal) &&
-                    string.Equals(item.Name, circuit.WallName, StringComparison.Ordinal));
-                return wall is not null
-                       && string.Equals(circuit.RoomName, wall.RoomName, StringComparison.Ordinal)
-                       && (string.IsNullOrWhiteSpace(targetRoom) || string.Equals(circuit.RoomName, targetRoom, StringComparison.Ordinal));
+                var hasAvailableWall = circuit.GetWallNames().Any(wallName =>
+                    AvailableWalls.Any(item =>
+                        string.Equals(item.RoomName, circuit.RoomName, StringComparison.Ordinal) &&
+                        string.Equals(item.Name, wallName, StringComparison.Ordinal)));
+                return hasAvailableWall &&
+                       (string.IsNullOrWhiteSpace(targetRoom) ||
+                        string.Equals(circuit.RoomName, targetRoom, StringComparison.Ordinal));
             })
             .OrderBy(circuit => circuit.Name)
             .ToList();
@@ -74,19 +83,16 @@ public sealed class CircuitEditorViewModel
 
         if (SelectedCircuit is not null)
         {
-            var currentCircuitWall = AvailableWalls.FirstOrDefault(wall =>
-                string.Equals(wall.RoomName, SelectedCircuit.RoomName, StringComparison.Ordinal) &&
-                string.Equals(wall.Name, SelectedCircuit.WallName, StringComparison.Ordinal));
-            if (currentCircuitWall is null ||
-                !string.Equals(currentCircuitWall.RoomName, SelectedCircuit.RoomName, StringComparison.Ordinal) ||
-                !string.Equals(currentCircuitWall.RoomName, SelectedRoomName, StringComparison.Ordinal))
+            if (!string.Equals(SelectedCircuit.RoomName, SelectedRoomName, StringComparison.Ordinal) ||
+                GetWallsForCircuit(SelectedCircuit).Count == 0)
             {
                 SelectedCircuit = GetVisibleCircuits().FirstOrDefault();
+                activeWallName = SelectedCircuit?.GetWallNames().FirstOrDefault();
             }
         }
         else
         {
-            SelectedCircuit = GetVisibleCircuits().FirstOrDefault();
+            activeWallName = GetWallsForSelectedRoom().FirstOrDefault()?.Name;
         }
     }
 
@@ -98,17 +104,18 @@ public sealed class CircuitEditorViewModel
         }
     }
 
-    public async Task CreateCircuitAsync(string? name, string? difficulty, string? inclination, bool suggestNextHoldEnabled, CircuitGlobalsDefinition? globals, WallDefinition? wall, CancellationToken cancellationToken = default)
+    public async Task CreateCircuitAsync(string? name, string? difficulty, string? inclination, string? climberProfileId, bool suggestNextHoldEnabled, CircuitGlobalsDefinition? globals, IReadOnlyList<WallDefinition> walls, CancellationToken cancellationToken = default)
     {
-        if (wall is null)
+        if (walls.Count == 0)
         {
             throw new InvalidOperationException("Crea prima almeno una parete nella Sala Arrampicata.");
         }
 
-        var circuit = circuitEditingService.CreateCircuit(name, difficulty, inclination, suggestNextHoldEnabled, globals, wall, SuggestedCircuitName);
+        var circuit = circuitEditingService.CreateCircuit(name, difficulty, inclination, climberProfileId, suggestNextHoldEnabled, globals, walls, SuggestedCircuitName);
 
         Circuits.Add(circuit);
         SelectedCircuit = circuit;
+        activeWallName = circuit.GetWallNames().FirstOrDefault();
         await circuitRepository.SaveAsync(circuit, cancellationToken);
     }
 
@@ -120,23 +127,27 @@ public sealed class CircuitEditorViewModel
             return;
         }
 
-        var circuitWall = AvailableWalls.FirstOrDefault(wall =>
-            string.Equals(wall.RoomName, circuit.RoomName, StringComparison.Ordinal) &&
-            string.Equals(wall.Name, circuit.WallName, StringComparison.Ordinal));
+        var circuitWall = GetWallsForCircuit(circuit).FirstOrDefault();
         if (circuitWall is not null)
         {
             SelectedRoomName = circuitWall.RoomName;
+            activeWallName = circuitWall.Name;
         }
     }
 
-    public async Task UpdateSelectedCircuitAsync(string? name, string? difficulty, string? inclination, bool suggestNextHoldEnabled, CircuitGlobalsDefinition? globals, CancellationToken cancellationToken = default)
+    public async Task UpdateSelectedCircuitAsync(string? name, string? difficulty, string? inclination, string? climberProfileId, bool suggestNextHoldEnabled, CircuitGlobalsDefinition? globals, IReadOnlyList<WallDefinition> walls, CancellationToken cancellationToken = default)
     {
         if (SelectedCircuit is null)
         {
             throw new InvalidOperationException("Seleziona un circuito da aggiornare.");
         }
 
-        circuitEditingService.UpdateCircuitMetadata(SelectedCircuit, name, difficulty, inclination, suggestNextHoldEnabled, globals);
+        circuitEditingService.UpdateCircuitMetadata(SelectedCircuit, name, difficulty, inclination, climberProfileId, suggestNextHoldEnabled, globals);
+        circuitEditingService.UpdateCircuitWalls(SelectedCircuit, walls);
+        if (!SelectedCircuit.UsesWall(activeWallName))
+        {
+            activeWallName = SelectedCircuit.GetWallNames().FirstOrDefault();
+        }
         await circuitRepository.SaveAsync(SelectedCircuit, cancellationToken);
     }
 
@@ -150,11 +161,61 @@ public sealed class CircuitEditorViewModel
         await circuitRepository.DeleteAsync(SelectedCircuit.Id, cancellationToken);
         Circuits.Remove(SelectedCircuit);
         SelectedCircuit = null;
+        activeWallName = null;
     }
 
     public void StartNewCircuitDraft()
     {
         SelectedCircuit = null;
+        activeWallName = GetWallsForSelectedRoom().FirstOrDefault()?.Name;
+    }
+
+    public IReadOnlyList<WallDefinition> GetWallsForCircuit(CircuitDefinition? circuit)
+    {
+        if (circuit is null)
+        {
+            return Array.Empty<WallDefinition>();
+        }
+
+        var wallOrder = circuit.GetWallNames()
+            .Select((name, index) => (name, index))
+            .ToDictionary(item => item.name, item => item.index, StringComparer.Ordinal);
+        return AvailableWalls
+            .Where(wall =>
+                string.Equals(wall.RoomName, circuit.RoomName, StringComparison.Ordinal) &&
+                wallOrder.ContainsKey(wall.Name))
+            .OrderBy(wall => wallOrder[wall.Name])
+            .ToList();
+    }
+
+    public void SetActiveWall(WallDefinition? wall)
+    {
+        if (wall is null)
+        {
+            return;
+        }
+
+        if (SelectedCircuit is not null && !SelectedCircuit.UsesWall(wall.Name))
+        {
+            throw new InvalidOperationException("La parete selezionata non appartiene al circuito.");
+        }
+
+        SelectedRoomName = wall.RoomName;
+        activeWallName = wall.Name;
+    }
+
+    public void SetSelectedCircuitWallsDraft(IReadOnlyList<WallDefinition> walls)
+    {
+        if (SelectedCircuit is null)
+        {
+            return;
+        }
+
+        circuitEditingService.UpdateCircuitWalls(SelectedCircuit, walls);
+        if (!SelectedCircuit.UsesWall(activeWallName))
+        {
+            activeWallName = SelectedCircuit.GetWallNames().FirstOrDefault();
+        }
     }
 
     public async Task ToggleMovementAsync(WallHoleDefinition hole, HandSide hand, MovementRole role, CancellationToken cancellationToken = default)
@@ -170,6 +231,22 @@ public sealed class CircuitEditorViewModel
         }
 
         circuitEditingService.ToggleMovement(SelectedCircuit, CurrentWall.Name, hole, hand, role);
+        await circuitRepository.SaveAsync(SelectedCircuit, cancellationToken);
+    }
+
+    public async Task ToggleFootHoldAsync(WallHoleDefinition hole, CancellationToken cancellationToken = default)
+    {
+        if (SelectedCircuit is null)
+        {
+            throw new InvalidOperationException("Crea o seleziona prima un circuito.");
+        }
+
+        if (CurrentWall is null)
+        {
+            throw new InvalidOperationException("La parete associata al circuito non e' disponibile.");
+        }
+
+        circuitEditingService.ToggleFootHold(SelectedCircuit, CurrentWall.Name, hole);
         await circuitRepository.SaveAsync(SelectedCircuit, cancellationToken);
     }
 
@@ -197,7 +274,8 @@ public sealed class CircuitEditorViewModel
         }
 
         return SelectedCircuit.Movements
-            .OrderBy(movement => movement.Sequence)
+            .OrderBy(movement => movement.IsFootHold ? 0 : 1)
+            .ThenBy(movement => movement.Sequence)
             .ThenBy(movement => movement.Hand)
             .ThenBy(movement => movement.Role)
             .ToList();
@@ -215,7 +293,8 @@ public sealed class CircuitEditorViewModel
         }
 
         SelectedRoomName ??= GetAvailableRooms().FirstOrDefault();
-        SelectedCircuit = GetVisibleCircuits().FirstOrDefault();
+        SelectedCircuit = null;
+        activeWallName = GetWallsForSelectedRoom().FirstOrDefault()?.Name;
     }
 
     public string? GetRoomNameForCircuit(CircuitDefinition? circuit)

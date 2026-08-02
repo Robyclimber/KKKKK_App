@@ -1,6 +1,6 @@
-using SQLite;
+﻿using SQLite;
 
-namespace RuoteLab.Persistence.Entities;
+namespace RouteLab.Persistence.Entities;
 
 [Table("wall_holes")]
 public sealed class WallHoleEntity
@@ -38,4 +38,7 @@ public sealed class WallHoleEntity
     public int HoldType { get; set; }
 
     public bool HasEstimatedHoldMetadata { get; set; } = true;
+
+    public int SourceKind { get; set; }
 }
+

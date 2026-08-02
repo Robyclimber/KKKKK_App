@@ -1,6 +1,6 @@
-using SQLite;
+﻿using SQLite;
 
-namespace RuoteLab.Persistence.Entities;
+namespace RouteLab.Persistence.Entities;
 
 [Table("circuits")]
 public sealed class CircuitEntity
@@ -20,9 +20,13 @@ public sealed class CircuitEntity
     [Indexed]
     public string WallName { get; set; } = string.Empty;
 
+    public string WallNamesJson { get; set; } = "[]";
+
     public string Difficulty { get; set; } = string.Empty;
 
     public string Inclination { get; set; } = string.Empty;
+
+    public string ClimberProfileId { get; set; } = "default";
 
     public bool SuggestNextHoldEnabled { get; set; }
 
@@ -50,3 +54,4 @@ public sealed class CircuitEntity
 
     public long UpdatedAtUtcTicks { get; set; }
 }
+

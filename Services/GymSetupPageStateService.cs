@@ -1,7 +1,7 @@
-using RuoteLab.Models;
-using RuoteLab.ViewModels;
+﻿using RouteLab.Models;
+using RouteLab.ViewModels;
 
-namespace RuoteLab.Services;
+namespace RouteLab.Services;
 
 public sealed class GymSetupPageStateService : IGymSetupPageStateService
 {
@@ -32,11 +32,11 @@ public sealed class GymSetupPageStateService : IGymSetupPageStateService
             WorkflowTitleText = workflow.Title,
             WorkflowMessageText = workflow.Message,
             ActiveRoomText = selectedRoom is null
-                ? "Nessuna sala selezionata."
-                : $"Sala selezionata: {selectedRoom.Name}",
+                ? "Nessuna sala"
+                : selectedRoom.Name,
             ActiveWallText = selectedWall is null
-                ? "Nessuna parete selezionata."
-                : $"Parete selezionata: {selectedWall.Name} - {selectedWall.Width:0.#} x {selectedWall.Height:0.#} mm",
+                ? "Nessuna parete"
+                : selectedWall.Name,
             ActivePanelText = selectedPanel is null
                 ? "Nessun pannello selezionato."
                 : $"Pannello selezionato: {selectedPanel.Name} - {selectedPanel.Width:0.#} x {selectedPanel.Height:0.#} mm - Fori: {selectedPanel.HoleCount}",
@@ -60,17 +60,17 @@ public sealed class GymSetupPageStateService : IGymSetupPageStateService
                 : $"Pareti disponibili nella sala {selectedRoom!.Name}: {wallCount}",
             WallInfoText = selectedWall is null
                 ? "Nessuna parete selezionata."
-                : $"Parete {selectedWall.Name} nella sala {selectedWall.RoomName} - Pannelli: {selectedWall.Panels.Count}",
+                : $"{selectedWall.Width:0.#} x {selectedWall.Height:0.#} mm",
             PanelEditorModeText = panelEditorState.ModeText,
             SelectedPanelSummaryText = selectedPanel is null
                 ? "Seleziona un pannello dall'elenco per modificarlo, oppure aggiungine uno nuovo."
                 : selectedPanel.Summary,
             ShowEmptyPanels = selectedWall is null || selectedWall.Panels.Count == 0,
             WallImageInfoText = selectedPanel is null
-                ? "Seleziona un pannello per gestire la sua immagine."
+                ? "Seleziona un pannello per gestire la sua foto."
                 : panelHasImage
-                    ? $"Immagine del pannello {selectedPanel.Name}: {Path.GetFileName(selectedPanel.ImagePath)}"
-                    : $"Nessuna immagine associata al pannello {selectedPanel.Name}.",
+                    ? $"Foto del pannello {selectedPanel.Name}: {Path.GetFileName(selectedPanel.ImagePath)}"
+                    : $"Nessuna foto associata al pannello {selectedPanel.Name}.",
             WallImageOffsetXText = ToEditorText(selectedPanel?.ImageOffsetX ?? 0d),
             WallImageOffsetYText = ToEditorText(selectedPanel?.ImageOffsetY ?? 0d),
             WallImageScale = selectedPanel is null || selectedPanel.ImageScale <= 0 ? 1d : selectedPanel.ImageScale,
@@ -114,7 +114,7 @@ public sealed class GymSetupPageStateService : IGymSetupPageStateService
             return ("Passo 3: aggiungi i pannelli", $"La parete {selectedWall.Name} e' pronta. Inserisci il primo pannello.", "Compila i dati del pannello e premi Aggiungi pannello.");
         }
 
-        return ("Parete pronta per il salvataggio", $"Hai {panelCount} pannelli su {selectedWall.Name}. Puoi rifinire l'immagine di un pannello oppure salvare la parete.", "Seleziona un pannello per modificarlo oppure salva la parete.");
+        return ("Parete pronta per il salvataggio", $"Hai {panelCount} pannelli su {selectedWall.Name}. Puoi rifinire la foto di un pannello oppure salvare la parete.", "Seleziona un pannello per modificarlo oppure salva la parete.");
     }
 
     private static string ToEditorText(double value)
@@ -127,3 +127,4 @@ public sealed class GymSetupPageStateService : IGymSetupPageStateService
         return (value * 100d).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
     }
 }
+

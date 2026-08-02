@@ -1,352 +1,151 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="RuoteLab.GymSetupPage"
+             xmlns:controls="clr-namespace:RouteLab.Controls"
+             x:Class="RouteLab.GymSetupPage"
              Title="Dettaglio parete">
-    <ScrollView>
+    <Grid RowDefinitions="Auto,*">
+        <controls:EntityActionBar x:Name="WallActions"
+                                  Margin="16,8,16,0"
+                                  ContextText="Azioni parete"
+                                  AddDescription="Aggiungi pannello"
+                                  SaveDescription="Salva parete"
+                                  ShowDelete="False"
+                                  AddClicked="OnNewPanelClicked"
+                                  SaveClicked="OnSaveWallClicked" />
+
+        <ScrollView Grid.Row="1">
         <VerticalStackLayout Padding="20,16,20,24" Spacing="18">
             <VerticalStackLayout Spacing="4">
                 <Label Text="Dettaglio parete"
                        FontSize="28"
                        TextColor="{StaticResource WarmGold}"
-                       FontFamily="OpenSansSemibold"
-                       LineBreakMode="WordWrap" />
-                <Label Text="Qui lavori su una sola parete: pannelli, anteprima, immagine pannello e mapping hardware."
+                       FontFamily="OpenSansSemibold" />
+                <Label Text="Seleziona un pannello per modificarne dati, foto e ritaglio."
                        TextColor="{StaticResource MutedText}" />
             </VerticalStackLayout>
 
-            <Border BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGold}" StrokeShape="RoundRectangle 18" Padding="16">
-                <VerticalStackLayout Spacing="6">
-                    <Label x:Name="WorkflowTitleLabel"
-                           Text="Dettaglio parete"
-                           FontSize="20"
+            <Border BackgroundColor="{StaticResource PanelBlackAlt}"
+                    Stroke="{StaticResource WarmGoldMuted}"
+                    StrokeShape="RoundRectangle 18"
+                    Padding="16">
+                <VerticalStackLayout Spacing="14">
+                    <Label Text="PARETE ATTIVA"
+                           FontSize="12"
+                           CharacterSpacing="1.5"
                            TextColor="{StaticResource WarmGold}"
                            FontFamily="OpenSansSemibold" />
-                    <Label x:Name="WorkflowMessageLabel"
-                           Text="Apri una parete dalla pagina Pareti."
-                           TextColor="{StaticResource MutedText}" />
-                </VerticalStackLayout>
-            </Border>
 
-            <Border BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
-                <VerticalStackLayout Spacing="10">
-                    <Label Text="Parete attiva"
-                           FontSize="20"
-                           TextColor="{StaticResource WarmGold}"
-                           FontFamily="OpenSansSemibold" />
-                    <Label x:Name="ActiveRoomContextLabel"
-                           Text="Nessuna sala selezionata."
-                           TextColor="{StaticResource WarmText}" />
-                    <Label x:Name="ActiveWallContextLabel"
-                           Text="Nessuna parete selezionata."
-                           TextColor="{StaticResource WarmText}" />
-                    <Label x:Name="ActivePanelContextLabel"
-                           Text="Nessun pannello selezionato."
-                           TextColor="{StaticResource WarmText}" />
-                    <Border BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 12" Padding="12">
-                        <VerticalStackLayout Spacing="4">
-                            <Label Text="Prossima azione consigliata"
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <VerticalStackLayout Spacing="3">
+                            <Label Text="Sala"
                                    TextColor="{StaticResource MutedText}"
                                    FontSize="12" />
-                            <Label x:Name="NextActionLabel"
-                                   Text="Apri una parete dalla pagina precedente."
-                                   TextColor="{StaticResource WarmGold}"
+                            <Label x:Name="ActiveRoomContextLabel"
+                                   Text="Nessuna sala"
+                                   FontSize="18"
+                                   TextColor="{StaticResource WarmText}"
                                    FontFamily="OpenSansSemibold" />
                         </VerticalStackLayout>
-                    </Border>
-                </VerticalStackLayout>
-            </Border>
-
-            <Border BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
-                <VerticalStackLayout Spacing="10">
-                    <Label Text="Azioni rapide della parete"
-                           FontSize="18"
-                           TextColor="{StaticResource WarmGold}"
-                           FontFamily="OpenSansSemibold" />
-                    <Label x:Name="WallSummaryLabel"
-                           Text="Nessuna parete selezionata."
-                           TextColor="{StaticResource WarmText}" />
-                    <Label x:Name="WallPanelsSummaryLabel"
-                           Text="0 pannelli"
-                           TextColor="{StaticResource MutedText}" />
-                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                        <Button Text="Torna a pareti"
-                                Style="{StaticResource SecondaryActionButtonStyle}"
-                                Clicked="OnBackToWallsClicked" />
-                        <Button Grid.Column="1"
-                                x:Name="QuickOpenHardwareMappingButton"
-                                Text="Apri mapping"
-                                Style="{StaticResource SecondaryActionButtonStyle}"
-                                Clicked="OnOpenHardwareMappingClicked" />
+                        <VerticalStackLayout Grid.Column="1" Spacing="3">
+                            <Label Text="Parete"
+                                   TextColor="{StaticResource MutedText}"
+                                   FontSize="12" />
+                            <Label x:Name="ActiveWallContextLabel"
+                                   Text="Nessuna parete"
+                                   FontSize="18"
+                                   TextColor="{StaticResource WarmText}"
+                                   FontFamily="OpenSansSemibold" />
+                        </VerticalStackLayout>
                     </Grid>
-                    <Button x:Name="QuickSaveWallButton"
-                            Text="Salva questa parete"
-                            Style="{StaticResource PrimaryActionButtonStyle}"
-                            Clicked="OnSaveWallClicked" />
-                </VerticalStackLayout>
-            </Border>
 
-            <Border BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
-                <VerticalStackLayout Spacing="10">
-                    <Label Text="Aree di lavoro"
-                           FontSize="18"
-                           TextColor="{StaticResource WarmGold}"
-                           FontFamily="OpenSansSemibold" />
-                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                        <Button x:Name="SetupWorkspaceButton" Text="Parete" Clicked="OnSetupWorkspaceClicked" />
-                        <Button x:Name="PanelsWorkspaceButton" Grid.Column="1" Text="Pannelli" Clicked="OnPanelsWorkspaceClicked" />
-                    </Grid>
-                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                        <Button x:Name="PreviewWorkspaceButton" Text="Anteprima" Clicked="OnPreviewWorkspaceClicked" />
-                        <Button x:Name="ImageWorkspaceButton" Grid.Column="1" Text="Immagine pannello" Clicked="OnImageWorkspaceClicked" />
-                    </Grid>
-                    <Button x:Name="OutputWorkspaceButton" Text="Mapping e salvataggio" Clicked="OnOutputWorkspaceClicked" />
-                </VerticalStackLayout>
-            </Border>
-
-            <Border x:Name="RoomSectionBorder" BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
-                <VerticalStackLayout Spacing="12">
-                    <Label Text="Sala di appartenenza" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
-                    <Label Text="Questa informazione serve solo come contesto della parete aperta."
-                           TextColor="{StaticResource MutedText}"
-                           FontSize="12" />
-                    <VerticalStackLayout Spacing="4">
-                        <Label Text="Nome sala" TextColor="{StaticResource MutedText}" FontSize="13" />
-                        <Entry x:Name="RoomNameEntry" Placeholder="Nome sala" Text="Sala Arrampicata" />
-                    </VerticalStackLayout>
-                    <Label x:Name="RoomSummaryLabel"
-                           Text="Nessuna sala presente."
-                           TextColor="{StaticResource MutedText}"
-                           FontSize="12" />
-                    <Button Text="Aggiungi sala" Clicked="OnAddRoomClicked" IsVisible="False" />
-                </VerticalStackLayout>
-            </Border>
-
-            <Border x:Name="WallSectionBorder" BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
-                <VerticalStackLayout Spacing="12">
-                    <Label Text="Geometria della parete" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
-                    <Label Text="Qui modifichi i dati principali della parete selezionata."
-                           TextColor="{StaticResource MutedText}"
-                           FontSize="12" />
-                    <VerticalStackLayout Spacing="4">
-                        <Label Text="Sala selezionata" TextColor="{StaticResource MutedText}" FontSize="13" />
-                        <Picker x:Name="RoomsPicker"
-                                Title="Seleziona una sala"
-                                ItemDisplayBinding="{Binding DisplayLabel}"
-                                SelectedIndexChanged="OnRoomSelectionChanged" />
-                    </VerticalStackLayout>
-                    <Label x:Name="WallSelectionHintLabel"
-                           Text="Crea o seleziona prima una sala."
-                           TextColor="{StaticResource MutedText}"
-                           FontSize="12" />
-                    <VerticalStackLayout Spacing="4">
-                        <Label Text="Parete selezionata" TextColor="{StaticResource MutedText}" FontSize="13" />
-                        <Picker x:Name="WallsPicker"
-                                Title="Seleziona una parete"
-                                ItemDisplayBinding="{Binding DisplayLabel}"
-                                SelectedIndexChanged="OnWallSelectionChanged" />
-                    </VerticalStackLayout>
-                    <Label x:Name="WallInfoLabel"
-                           Text="Nessuna parete selezionata."
-                           TextColor="{StaticResource MutedText}" />
-                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                        <Button x:Name="NewWallButton"
-                                Text="Nuova parete"
-                                Style="{StaticResource PrimaryActionButtonStyle}"
-                                Clicked="OnNewWallClicked" />
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                        <Label x:Name="WallInfoLabel"
+                               VerticalOptions="Center"
+                               Text="Nessuna parete selezionata."
+                               TextColor="{StaticResource MutedText}" />
                         <Button x:Name="ToggleWallEditorButton"
                                 Grid.Column="1"
-                                Text="Mostra editor"
+                                Text="Modifica parete"
+                                Padding="14,8"
                                 Style="{StaticResource SecondaryActionButtonStyle}"
                                 Clicked="OnToggleWallEditorClicked" />
                     </Grid>
-                    <Border x:Name="WallEditorContainer"
-                            BackgroundColor="{StaticResource PanelBlack}"
-                            Stroke="{StaticResource WarmGoldMuted}"
-                            StrokeShape="RoundRectangle 12"
-                            Padding="12"
-                            IsVisible="False">
-                        <VerticalStackLayout Spacing="12">
-                            <Label x:Name="WallEditorModeLabel"
-                                   Text="Nuova parete"
-                                   TextColor="{StaticResource WarmGold}"
-                                   FontFamily="OpenSansSemibold" />
-                            <VerticalStackLayout Spacing="4">
-                                <Label Text="Nome parete" TextColor="{StaticResource MutedText}" FontSize="13" />
-                                <Entry x:Name="WallNameEntry" Placeholder="Nome parete" Text="Parete 1" />
-                            </VerticalStackLayout>
-                            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
-                                <VerticalStackLayout Spacing="4">
-                                    <Label Text="Larghezza parete (mm)" TextColor="{StaticResource MutedText}" FontSize="13" />
-                                    <Entry x:Name="WallWidthEntry" Placeholder="Larghezza mm" Keyboard="Numeric" Text="4000" />
-                                </VerticalStackLayout>
-                                <VerticalStackLayout Grid.Column="1" Spacing="4">
-                                    <Label Text="Altezza parete (mm)" TextColor="{StaticResource MutedText}" FontSize="13" />
-                                    <Entry x:Name="WallHeightEntry" Placeholder="Altezza mm" Keyboard="Numeric" Text="2800" />
-                                </VerticalStackLayout>
-                            </Grid>
-                            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                                <Button x:Name="AddWallButton" Text="Aggiungi parete" Style="{StaticResource PrimaryActionButtonStyle}" Clicked="OnAddWallClicked" />
-                                <Button x:Name="UpdateWallButton"
-                                        Grid.Column="1"
-                                        Text="Aggiorna parete"
-                                        Style="{StaticResource SecondaryActionButtonStyle}"
-                                        Clicked="OnUpdateWallClicked"
-                                        IsEnabled="False" />
-                            </Grid>
-                        </VerticalStackLayout>
-                    </Border>
-                </VerticalStackLayout>
-            </Border>
 
-            <Border x:Name="PanelsSectionBorder" BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
-                <VerticalStackLayout Spacing="12">
-                    <Label Text="Pannelli della parete" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
-                    <Label Text="Da qui aggiungi e modifichi i pannelli della parete. Da ogni scheda puoi entrare subito anche nella sua immagine."
-                            TextColor="{StaticResource MutedText}"
-                            FontSize="12" />
-                    <Label x:Name="SelectedPanelSummaryLabel"
-                           Text="Nessun pannello selezionato."
-                           TextColor="{StaticResource WarmText}"
-                           FontSize="12" />
-                    <Border BackgroundColor="{StaticResource PanelBlack}"
-                            Stroke="{StaticResource WarmGoldMuted}"
-                            StrokeShape="RoundRectangle 12"
-                            Padding="12">
-                        <VerticalStackLayout Spacing="6">
-                            <Label Text="Come aggiungere un pannello"
-                                   FontSize="15"
-                                   TextColor="{StaticResource WarmGold}"
-                                   FontFamily="OpenSansSemibold" />
-                            <Label Text="1. Premi `Aggiungi nuovo pannello`."
-                                   TextColor="{StaticResource WarmText}"
-                                   FontSize="12" />
-                            <Label Text="2. Compila l'editor pannello qui sotto."
-                                   TextColor="{StaticResource WarmText}"
-                                   FontSize="12" />
-                            <Label Text="3. Premi `Aggiungi pannello` per inserirlo nella parete."
-                                   TextColor="{StaticResource WarmText}"
-                                   FontSize="12" />
-                        </VerticalStackLayout>
-                    </Border>
-                    <Border BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 12" Padding="12">
-                        <VerticalStackLayout Spacing="10">
-                            <Label Text="Pannelli di questa parete" FontSize="16" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
-                            <Label x:Name="PanelsEmptyLabel"
-                                   Text="Nessun pannello presente."
-                                   TextColor="{StaticResource MutedText}" />
-                            <VerticalStackLayout x:Name="PanelsHost" Spacing="10" />
-                        </VerticalStackLayout>
-                    </Border>
-                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                        <Button x:Name="NewPanelButton"
-                                Text="Aggiungi nuovo pannello"
-                                Style="{StaticResource PrimaryActionButtonStyle}"
-                                Clicked="OnNewPanelClicked" />
-                        <Button x:Name="TogglePanelEditorButton"
-                                Grid.Column="1"
-                                Text="Apri editor pannello"
-                                Style="{StaticResource SecondaryActionButtonStyle}"
-                                Clicked="OnTogglePanelEditorClicked" />
+                    <BoxView HeightRequest="1"
+                             Color="{StaticResource WarmGoldMuted}"
+                             Opacity="0.55" />
+
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                        <Label Text="Pannelli"
+                               FontSize="20"
+                               TextColor="{StaticResource WarmGold}"
+                               FontFamily="OpenSansSemibold" />
+                        <Label x:Name="PanelsCountLabel"
+                               Grid.Column="1"
+                               VerticalOptions="Center"
+                               Text="0 pannelli"
+                               TextColor="{StaticResource MutedText}" />
                     </Grid>
-                    <Border x:Name="PanelEditorContainer"
-                            BackgroundColor="{StaticResource PanelBlack}"
-                            Stroke="{StaticResource WarmGoldMuted}"
-                            StrokeShape="RoundRectangle 12"
-                            Padding="12"
-                            IsVisible="False">
-                        <VerticalStackLayout Spacing="12">
-                            <Label x:Name="PanelEditorModeLabel"
-                                   Text="Inserimento nuovo pannello"
-                                   TextColor="{StaticResource WarmGold}"
-                                   FontFamily="OpenSansSemibold" />
-                            <VerticalStackLayout Spacing="4">
-                                <Label Text="Nome pannello" TextColor="{StaticResource MutedText}" FontSize="13" />
-                                <Entry x:Name="PanelNameEntry" Placeholder="Nome pannello" Text="Pannello A" />
-                            </VerticalStackLayout>
-                            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
-                                <VerticalStackLayout Spacing="4">
-                                    <Label Text="Posizione X dal bordo sinistro (mm)" TextColor="{StaticResource MutedText}" FontSize="13" />
-                                    <Entry x:Name="PanelXEntry" Placeholder="Pos X mm" Keyboard="Numeric" Text="100" />
-                                </VerticalStackLayout>
-                                <VerticalStackLayout Grid.Column="1" Spacing="4">
-                                    <Label Text="Posizione Y dal bordo alto (mm)" TextColor="{StaticResource MutedText}" FontSize="13" />
-                                    <Entry x:Name="PanelYEntry" Placeholder="Pos Y mm" Keyboard="Numeric" Text="100" />
-                                </VerticalStackLayout>
-                            </Grid>
-                            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
-                                <VerticalStackLayout Spacing="4">
-                                    <Label Text="Larghezza pannello (mm)" TextColor="{StaticResource MutedText}" FontSize="13" />
-                                    <Entry x:Name="PanelWidthEntry" Placeholder="Larghezza mm" Keyboard="Numeric" Text="1200" />
-                                </VerticalStackLayout>
-                                <VerticalStackLayout Grid.Column="1" Spacing="4">
-                                    <Label Text="Altezza pannello (mm)" TextColor="{StaticResource MutedText}" FontSize="13" />
-                                    <Entry Grid.Column="1" x:Name="PanelHeightEntry" Placeholder="Altezza mm" Keyboard="Numeric" Text="2200" />
-                                </VerticalStackLayout>
-                            </Grid>
-                            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
-                                <VerticalStackLayout Spacing="4">
-                                    <Label Text="Offset iniziale fori X (mm)" TextColor="{StaticResource MutedText}" FontSize="13" />
-                                    <Entry x:Name="HoleOffsetEntry" Placeholder="Offset X mm" Keyboard="Numeric" Text="40" />
-                                </VerticalStackLayout>
-                                <VerticalStackLayout Grid.Column="1" Spacing="4">
-                                    <Label Text="Offset iniziale fori Y (mm)" TextColor="{StaticResource MutedText}" FontSize="13" />
-                                    <Entry x:Name="HoleOffsetYEntry" Placeholder="Offset Y mm" Keyboard="Numeric" Text="40" />
-                                </VerticalStackLayout>
-                            </Grid>
-                            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
-                                <VerticalStackLayout Spacing="4">
-                                    <Label Text="Spaziatura orizzontale fori (mm)" TextColor="{StaticResource MutedText}" FontSize="13" />
-                                    <Entry x:Name="HoleHorizontalEntry" Placeholder="Passo orizzontale mm" Keyboard="Numeric" Text="150" />
-                                </VerticalStackLayout>
-                                <VerticalStackLayout Grid.Column="1" Spacing="4">
-                                    <Label Text="Spaziatura verticale fori (mm)" TextColor="{StaticResource MutedText}" FontSize="13" />
-                                    <Entry x:Name="HoleVerticalEntry" Placeholder="Passo verticale mm" Keyboard="Numeric" Text="180" />
-                                </VerticalStackLayout>
-                            </Grid>
-                            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
-                                <VerticalStackLayout Spacing="4">
-                                    <Label Text="Asse installazione LED" TextColor="{StaticResource MutedText}" FontSize="13" />
-                                    <Picker x:Name="LedRoutingAxisPicker"
-                                            Title="Asse LED"
-                                            SelectedIndexChanged="OnLedRoutingAxisChanged" />
-                                </VerticalStackLayout>
-                                <VerticalStackLayout Grid.Column="1" Spacing="4">
-                                    <Label Text="Verso iniziale LED" TextColor="{StaticResource MutedText}" FontSize="13" />
-                                    <Picker x:Name="LedStartDirectionPicker"
-                                            Title="Verso iniziale" />
-                                </VerticalStackLayout>
-                            </Grid>
-                            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
-                                <Button x:Name="AddPanelButton" Text="Aggiungi pannello" Style="{StaticResource PrimaryActionButtonStyle}" Clicked="OnAddPanelClicked" />
-                                <Button x:Name="UpdatePanelButton"
-                                        Grid.Column="1"
-                                        Text="Aggiorna"
-                                        Style="{StaticResource SecondaryActionButtonStyle}"
-                                        Clicked="OnUpdatePanelClicked"
-                                        IsEnabled="False" />
-                                <Button x:Name="DeletePanelButton"
-                                        Grid.Column="2"
-                                        Text="Elimina"
-                                        Clicked="OnDeletePanelClicked"
-                                        IsEnabled="False"
-                                        BackgroundColor="{StaticResource Danger}"
-                                        TextColor="{StaticResource White}" />
-                            </Grid>
-                        </VerticalStackLayout>
-                    </Border>
+                    <Label Text="Apri un pannello per modificarne dati, fori e immagine."
+                           TextColor="{StaticResource MutedText}"
+                           FontSize="12" />
+                    <Label x:Name="PanelsEmptyLabel"
+                           Text="Questa parete non contiene ancora pannelli."
+                           TextColor="{StaticResource MutedText}" />
+                    <VerticalStackLayout x:Name="PanelsHost"
+                                         Spacing="10" />
+
                 </VerticalStackLayout>
             </Border>
 
-            <Border x:Name="PreviewSectionBorder" BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
+            <Border x:Name="WallEditorContainer"
+                    BackgroundColor="{StaticResource PanelBlackAlt}"
+                    Stroke="{StaticResource WarmGoldMuted}"
+                    StrokeShape="RoundRectangle 18"
+                    Padding="16"
+                    IsVisible="False">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Modifica parete"
+                           FontSize="20"
+                           TextColor="{StaticResource WarmGold}"
+                           FontFamily="OpenSansSemibold" />
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Nome parete" TextColor="{StaticResource MutedText}" FontSize="13" />
+                        <Entry x:Name="WallNameEntry" Placeholder="Nome parete" />
+                    </VerticalStackLayout>
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Larghezza (mm)" TextColor="{StaticResource MutedText}" FontSize="13" />
+                            <Entry x:Name="WallWidthEntry" Placeholder="Larghezza mm" Keyboard="Numeric" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <Label Text="Altezza (mm)" TextColor="{StaticResource MutedText}" FontSize="13" />
+                            <Entry x:Name="WallHeightEntry" Placeholder="Altezza mm" Keyboard="Numeric" />
+                        </VerticalStackLayout>
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border x:Name="PreviewSectionBorder"
+                    BackgroundColor="{StaticResource PanelBlack}"
+                    Stroke="{StaticResource WarmGoldMuted}"
+                    StrokeShape="RoundRectangle 18"
+                    Padding="16">
                 <VerticalStackLayout Spacing="12">
                     <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
-                        <Label Text="Anteprima della parete" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" VerticalOptions="Center" />
+                        <Label Text="Anteprima parete"
+                               FontSize="20"
+                               TextColor="{StaticResource WarmGold}"
+                               FontFamily="OpenSansSemibold"
+                               VerticalOptions="Center" />
                         <Button Grid.Column="1" Text="-" Clicked="OnZoomOutClicked" Padding="10,4" />
                         <Button Grid.Column="2" Text="Reset" Clicked="OnZoomResetClicked" Padding="10,4" />
                         <Button Grid.Column="3" Text="+" Clicked="OnZoomInClicked" Padding="10,4" />
                     </Grid>
-                    <Grid x:Name="PreviewViewport" HeightRequest="360" SizeChanged="OnPreviewViewportSizeChanged">
+                    <Grid x:Name="PreviewViewport"
+                          HeightRequest="360"
+                          SizeChanged="OnPreviewViewportSizeChanged">
                         <ScrollView Orientation="Both">
                             <AbsoluteLayout x:Name="PreviewLayer">
                                 <GraphicsView x:Name="PreviewCanvas"
@@ -357,118 +156,38 @@
                                         <TapGestureRecognizer NumberOfTapsRequired="2" Tapped="OnPreviewDoubleTapped" />
                                     </GraphicsView.GestureRecognizers>
                                 </GraphicsView>
-                                <Image x:Name="WallImageOverlay"
-                                       InputTransparent="True"
-                                       Aspect="Fill"
-                                       IsVisible="False" />
+                                <AbsoluteLayout x:Name="PanelImagesLayer"
+                                                InputTransparent="True"
+                                                AbsoluteLayout.LayoutBounds="0,0,1,1"
+                                                AbsoluteLayout.LayoutFlags="All" />
                             </AbsoluteLayout>
                         </ScrollView>
                     </Grid>
-                    <Label Text="Doppio tap per reset, pinch o pulsanti per zoom."
+                    <Label Text="Il pannello selezionato è evidenziato. Doppio tap per azzerare lo zoom."
                            FontSize="12"
                            TextColor="{StaticResource MutedText}" />
-                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                        <Button x:Name="PreviewGoToImageButton"
-                                Text="Immagine pannello"
-                                Style="{StaticResource SecondaryActionButtonStyle}"
-                                Clicked="OnPreviewGoToImageClicked" />
-                        <Button Grid.Column="1"
-                                Text="Vai al finale"
-                                Style="{StaticResource PrimaryActionButtonStyle}"
-                                Clicked="OnPreviewGoToOutputClicked" />
-                    </Grid>
                 </VerticalStackLayout>
             </Border>
 
-            <Border x:Name="WallImageSectionBorder" BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
-                <VerticalStackLayout Spacing="12">
-                    <Label Text="Immagine del pannello selezionato" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
-                    <Label Text="La gestione completa dell'immagine adesso e' in una pagina dedicata."
+            <Border BackgroundColor="{StaticResource PanelBlack}"
+                    Stroke="{StaticResource WarmGoldMuted}"
+                    StrokeShape="RoundRectangle 18"
+                    Padding="16">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Mapping hardware"
+                           FontSize="20"
+                           TextColor="{StaticResource WarmGold}"
+                           FontFamily="OpenSansSemibold" />
+                    <Label Text="Configura l'associazione tra i fori della parete e i LED."
                            TextColor="{StaticResource MutedText}"
                            FontSize="12" />
-                    <Label x:Name="WallImageInfoLabel"
-                           Text="Nessuna immagine associata."
-                           TextColor="{StaticResource MutedText}"
-                           FontSize="12" />
-                    <Button x:Name="OpenPanelImagePageButton"
-                            Text="Apri pagina immagine pannello"
-                            Style="{StaticResource PrimaryActionButtonStyle}"
-                            Clicked="OnOpenPanelImagePageClicked" />
-                    <Button x:Name="ImageGoToOutputButton"
-                            Text="Vai al finale"
+                    <Button x:Name="OpenHardwareMappingButton"
+                            Text="Apri mapping hardware"
                             Style="{StaticResource SecondaryActionButtonStyle}"
-                            Clicked="OnImageGoToOutputClicked" />
-                    <VerticalStackLayout IsVisible="False" Spacing="0">
-                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                            <Button x:Name="LoadWallImageButton" />
-                            <Button x:Name="ClearWallImageButton" Grid.Column="1" />
-                        </Grid>
-                        <Button x:Name="AnalyzeHoldsButton" />
-                        <Button x:Name="AutoAlignPanelImageButton" />
-                        <Grid x:Name="CropEditorViewport">
-                            <AbsoluteLayout x:Name="CropEditorLayer">
-                                <Image x:Name="CropEditorImage" />
-                                <BoxView x:Name="CropMaskTop" />
-                                <BoxView x:Name="CropMaskBottom" />
-                                <BoxView x:Name="CropMaskLeft" />
-                                <BoxView x:Name="CropMaskRight" />
-                                <Border x:Name="CropSelectionBorder" />
-                                <Border x:Name="CropHandleTopLeft" />
-                                <Border x:Name="CropHandleTopRight" />
-                                <Border x:Name="CropHandleBottomLeft" />
-                                <Border x:Name="CropHandleBottomRight" />
-                                <Label x:Name="CropEditorEmptyLabel" />
-                            </AbsoluteLayout>
-                        </Grid>
-                        <Entry x:Name="WallImageOffsetXEntry" />
-                        <Entry x:Name="WallImageOffsetYEntry" />
-                        <Slider x:Name="WallImageScaleSlider" />
-                        <Label x:Name="WallImageScaleValueLabel" />
-                        <Slider x:Name="WallImageOpacitySlider" />
-                        <Entry x:Name="WallImageCropLeftEntry" />
-                        <Entry x:Name="WallImageCropTopEntry" />
-                        <Entry x:Name="WallImageCropRightEntry" />
-                        <Entry x:Name="WallImageCropBottomEntry" />
-                    </VerticalStackLayout>
-                </VerticalStackLayout>
-            </Border>
-
-            <Border x:Name="OutputSectionBorder" BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
-                <VerticalStackLayout Spacing="12">
-                    <Label Text="Finale: mapping e salvataggio" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
-                    <Label Text="Da qui completi la parete: prima il mapping hardware, poi il salvataggio."
-                           TextColor="{StaticResource MutedText}"
-                           FontSize="12" />
-                    <Border BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 12" Padding="12">
-                        <VerticalStackLayout Spacing="8">
-                            <Label Text="1. Mapping hardware della parete"
-                                   TextColor="{StaticResource WarmGold}"
-                                   FontFamily="OpenSansSemibold" />
-                            <Label Text="Il mapping fori -> LED appartiene alla parete ed e' in una pagina separata."
-                                   TextColor="{StaticResource MutedText}"
-                                   FontSize="12" />
-                            <Button x:Name="OpenHardwareMappingButton"
-                                    Text="Apri mapping hardware della parete"
-                                    Style="{StaticResource SecondaryActionButtonStyle}"
-                                    Clicked="OnOpenHardwareMappingClicked" />
-                        </VerticalStackLayout>
-                    </Border>
-                    <Border BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 12" Padding="12">
-                        <VerticalStackLayout Spacing="8">
-                            <Label Text="2. Salvataggio parete"
-                                   TextColor="{StaticResource WarmGold}"
-                                   FontFamily="OpenSansSemibold" />
-                            <Label Text="Salva la parete selezionata con i suoi pannelli, i fori e le immagini dei pannelli."
-                                   TextColor="{StaticResource MutedText}"
-                                   FontSize="12" />
-                    <Button x:Name="SaveWallButton"
-                            Text="Salva parete"
-                            Style="{StaticResource PrimaryActionButtonStyle}"
-                            Clicked="OnSaveWallClicked" />
-                        </VerticalStackLayout>
-                    </Border>
+                            Clicked="OnOpenHardwareMappingClicked" />
                 </VerticalStackLayout>
             </Border>
         </VerticalStackLayout>
-    </ScrollView>
+        </ScrollView>
+    </Grid>
 </ContentPage>

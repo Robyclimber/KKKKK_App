@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="RuoteLab.PanelImagePage"
+             x:Class="RouteLab.PanelImagePage"
              Title="Immagine pannello">
     <ScrollView>
         <VerticalStackLayout Padding="20,16,20,24" Spacing="18">
@@ -10,7 +10,7 @@
                        FontSize="28"
                        TextColor="{StaticResource WarmGold}"
                        FontFamily="OpenSansSemibold" />
-                <Label Text="Qui lavori solo sull'immagine del pannello: carica, ritaglia, allinea e applica."
+                <Label Text="Carica una foto del pannello e apri l'editor per ritaglio e allineamento."
                        TextColor="{StaticResource MutedText}" />
             </VerticalStackLayout>
 
@@ -24,6 +24,10 @@
                            Text="Nessun pannello selezionato."
                            TextColor="{StaticResource WarmText}"
                            FontFamily="OpenSansSemibold" />
+                    <Label x:Name="PanelFormatLabel"
+                           Text="Formato pannello e immagine non disponibili."
+                           TextColor="{StaticResource MutedText}"
+                           FontSize="12" />
                     <Label x:Name="PanelImageInfoLabel"
                            Text="Nessuna immagine associata."
                            TextColor="{StaticResource MutedText}" />
@@ -33,9 +37,13 @@
                                    TextColor="{StaticResource MutedText}"
                                    FontSize="12" />
                             <Label x:Name="SuggestedFlowLabel"
-                                   Text="Carica immagine, apri ritaglio, poi applica l'allineamento."
+                                   Text="Carica foto e apri editor."
                                    TextColor="{StaticResource WarmGold}"
                                    FontFamily="OpenSansSemibold" />
+                            <Label x:Name="SuggestedStepsLabel"
+                                   Text="L'adattamento iniziale viene applicato in automatico."
+                                   TextColor="{StaticResource MutedText}"
+                                   FontSize="12" />
                         </VerticalStackLayout>
                     </Border>
                 </VerticalStackLayout>
@@ -47,9 +55,16 @@
                            FontSize="18"
                            TextColor="{StaticResource WarmGold}"
                            FontFamily="OpenSansSemibold" />
-                    <Border BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 12" Padding="8">
+                    <Border x:Name="ImagePreviewFrame"
+                            BackgroundColor="{StaticResource PanelBlackAlt}"
+                            Stroke="{StaticResource WarmGoldMuted}"
+                            StrokeShape="RoundRectangle 12"
+                            Padding="8"
+                            SizeChanged="OnImagePreviewFrameSizeChanged">
                         <Grid x:Name="ImagePreviewHost"
+                              WidthRequest="220"
                               HeightRequest="220"
+                              HorizontalOptions="Center"
                               SizeChanged="OnImagePreviewHostSizeChanged">
                             <AbsoluteLayout x:Name="ImagePreviewWarpHost"
                                             InputTransparent="True" />
@@ -80,21 +95,25 @@
                                 Clicked="OnClearImageClicked"
                                 Style="{StaticResource SecondaryActionButtonStyle}" />
                     </Grid>
-                    <Label Text="Prima sistema il ritaglio, poi usa auto allineamento o la rifinitura manuale."
+                    <Label Text="Il caricamento applica gia un adattamento iniziale al formato del pannello."
                            TextColor="{StaticResource MutedText}"
                            FontSize="12" />
+                    <Button x:Name="FitImageButton"
+                            Style="{StaticResource SecondaryActionButtonStyle}"
+                            Text="Rifai adattamento automatico"
+                            Clicked="OnFitImageClicked" />
                     <Button x:Name="OpenCropEditorButton"
                             Style="{StaticResource PrimaryActionButtonStyle}"
-                            Text="Apri editor ritaglio"
+                            Text="Apri editor foto"
                             Clicked="OnOpenCropEditorClicked" />
                     <Button x:Name="AutoAlignButton"
-                            Style="{StaticResource PrimaryActionButtonStyle}"
-                            Text="Auto allinea immagine ai fori"
+                            Style="{StaticResource SecondaryActionButtonStyle}"
+                            Text="Rifinitura automatica facoltativa"
                             Clicked="OnAutoAlignClicked" />
                     <Button x:Name="AnalyzeHoldsButton"
-                            Text="Analizza prese dal pannello"
+                            Text="Mappa prese del pannello"
                             Clicked="OnAnalyzeHoldsClicked"
-                            Style="{StaticResource SecondaryActionButtonStyle}" />
+                            Style="{StaticResource PrimaryActionButtonStyle}" />
                 </VerticalStackLayout>
             </Border>
 

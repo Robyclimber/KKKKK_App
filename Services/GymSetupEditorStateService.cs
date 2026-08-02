@@ -1,8 +1,8 @@
-using System.Globalization;
-using RuoteLab.Models;
-using RuoteLab.ViewModels;
+﻿using System.Globalization;
+using RouteLab.Models;
+using RouteLab.ViewModels;
 
-namespace RuoteLab.Services;
+namespace RouteLab.Services;
 
 public sealed class GymSetupEditorStateService : IGymSetupEditorStateService
 {
@@ -69,3 +69,4 @@ public sealed class GymSetupEditorStateService : IGymSetupEditorStateService
         return value.ToString("0.##", CultureInfo.InvariantCulture);
     }
 }
+

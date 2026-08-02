@@ -1,4 +1,4 @@
-namespace RuoteLab.Models;
+﻿namespace RouteLab.Models;
 
 public enum HoldType
 {
@@ -10,3 +10,4 @@ public enum HoldType
     Foothold = 5,
     Volume = 6
 }
+

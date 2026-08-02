@@ -1,4 +1,4 @@
-namespace RuoteLab.Models;
+﻿namespace RouteLab.Models;
 
 public enum HomeWorkflowState
 {
@@ -6,3 +6,4 @@ public enum HomeWorkflowState
     PrimiCircuiti,
     Operativo
 }
+

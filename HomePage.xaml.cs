@@ -1,9 +1,9 @@
-namespace RuoteLab;
+﻿namespace RouteLab;
 
 public partial class HomePage : ContentPage
 {
     private App? app;
-    private RuoteLab.Models.HomeWorkflowState currentState = RuoteLab.Models.HomeWorkflowState.SetupPalestra;
+    private RouteLab.Models.HomeWorkflowState currentState = RouteLab.Models.HomeWorkflowState.SetupPalestra;
     private bool isRefreshing;
 
     public HomePage()
@@ -29,6 +29,7 @@ public partial class HomePage : ContentPage
             return;
         }
 
+        using var busy = AppBusy.Show("Aggiornamento home...");
         try
         {
             isRefreshing = true;
@@ -54,8 +55,8 @@ public partial class HomePage : ContentPage
     {
         switch (currentState)
         {
-            case RuoteLab.Models.HomeWorkflowState.PrimiCircuiti:
-            case RuoteLab.Models.HomeWorkflowState.Operativo:
+            case RouteLab.Models.HomeWorkflowState.PrimiCircuiti:
+            case RouteLab.Models.HomeWorkflowState.Operativo:
                 await Shell.Current.GoToAsync("//circuiti");
                 break;
             default:
@@ -85,16 +86,16 @@ public partial class HomePage : ContentPage
         ApplyStateToView(currentState);
     }
 
-    private void ApplyStateToView(RuoteLab.Models.HomeWorkflowState state)
+    private void ApplyStateToView(RouteLab.Models.HomeWorkflowState state)
     {
         switch (state)
         {
-            case RuoteLab.Models.HomeWorkflowState.PrimiCircuiti:
+            case RouteLab.Models.HomeWorkflowState.PrimiCircuiti:
                 NextStepTitleLabel.Text = "Prossimo passo";
                 NextStepMessageLabel.Text = "La palestra e' configurata. Ora crea il tuo primo circuito.";
                 PrimaryActionButton.Text = "Vai ai circuiti";
                 break;
-            case RuoteLab.Models.HomeWorkflowState.Operativo:
+            case RouteLab.Models.HomeWorkflowState.Operativo:
                 NextStepTitleLabel.Text = "Sistema pronto";
                 NextStepMessageLabel.Text = "La palestra e i circuiti sono disponibili. Puoi continuare a gestire i circuiti.";
                 PrimaryActionButton.Text = "Vai ai circuiti";

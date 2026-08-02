@@ -1,7 +1,7 @@
-using System.Text;
-using RuoteLab.Models;
+﻿using System.Text;
+using RouteLab.Models;
 
-namespace RuoteLab.Services;
+namespace RouteLab.Services;
 
 public sealed class Esp32PayloadBuilderService : IEsp32PayloadBuilderService
 {
@@ -14,7 +14,7 @@ public sealed class Esp32PayloadBuilderService : IEsp32PayloadBuilderService
         var orderedHoles = wall.GetOrderedHoles();
         if (orderedHoles.Count == 0)
         {
-            throw new InvalidOperationException("La parete non contiene fori da esportare verso ESP32.");
+            throw new InvalidOperationException("La parete non contiene fori da esportare verso RouteLab Hub.");
         }
 
         if (settings.WallLedCount < orderedHoles.Count)
@@ -60,8 +60,9 @@ public sealed class Esp32PayloadBuilderService : IEsp32PayloadBuilderService
         var payloadCircuits = circuits
             .Where(circuit =>
                 string.Equals(circuit.RoomName, room.Name, StringComparison.Ordinal) &&
-                string.Equals(circuit.WallName, wall.Name, StringComparison.Ordinal))
-            .Select(circuit => BuildCircuitPayload(circuit, wallId, pointsByNumber))
+                circuit.GetWallNames().Count == 1 &&
+                circuit.UsesWall(wall.Name))
+            .Select(circuit => BuildCircuitPayload(circuit, wall.Name, wallId, pointsByNumber))
             .ToList();
 
         return new Esp32CircuitsPayload
@@ -72,11 +73,20 @@ public sealed class Esp32PayloadBuilderService : IEsp32PayloadBuilderService
         };
     }
 
-    private static Esp32CircuitPayload BuildCircuitPayload(CircuitDefinition circuit, string wallId, IReadOnlyDictionary<int, WallHoleDefinition> pointsByNumber)
+    private static Esp32CircuitPayload BuildCircuitPayload(
+        CircuitDefinition circuit,
+        string wallName,
+        string wallId,
+        IReadOnlyDictionary<int, WallHoleDefinition> pointsByNumber)
     {
         var orderedMovements = circuit.Movements
-            .OrderBy(movement => movement.Sequence)
+            .Where(movement => string.Equals(movement.WallName, wallName, StringComparison.Ordinal))
+            .OrderBy(movement => movement.IsFootHold ? 0 : 1)
+            .ThenBy(movement => movement.Sequence)
             .ThenBy(movement => movement.Hand)
+            .ToList();
+        var orderedStepMovements = orderedMovements
+            .Where(movement => !movement.IsFootHold)
             .ToList();
 
         return new Esp32CircuitPayload
@@ -102,7 +112,7 @@ public sealed class Esp32PayloadBuilderService : IEsp32PayloadBuilderService
                     Enabled = true
                 })
                 .ToList(),
-            Steps = orderedMovements
+            Steps = orderedStepMovements
                 .Select((movement, index) => new Esp32CircuitStepPayload
                 {
                     PointId = ResolvePointId(wallId, movement.HoleNumber, pointsByNumber),
@@ -137,6 +147,7 @@ public sealed class Esp32PayloadBuilderService : IEsp32PayloadBuilderService
         {
             MovementRole.Start => "start",
             MovementRole.Top => "top",
+            MovementRole.Feet => "foot",
             _ => movement.Hand == HandSide.Right ? "rightHand" : "leftHand"
         };
     }
@@ -152,6 +163,7 @@ public sealed class Esp32PayloadBuilderService : IEsp32PayloadBuilderService
         {
             MovementRole.Start => string.IsNullOrWhiteSpace(globals?.StartColor) ? "#FFFF00" : globals!.StartColor,
             MovementRole.Top => string.IsNullOrWhiteSpace(globals?.TopColor) ? "#FF0000" : globals!.TopColor,
+            MovementRole.Feet => "#FFFFFF",
             _ => movement.Hand == HandSide.Right
                 ? string.IsNullOrWhiteSpace(globals?.RightHandColor) ? "#C44536" : globals!.RightHandColor
                 : string.IsNullOrWhiteSpace(globals?.LeftHandColor) ? "#247BA0" : globals!.LeftHandColor
@@ -164,6 +176,7 @@ public sealed class Esp32PayloadBuilderService : IEsp32PayloadBuilderService
         {
             MovementRole.Start => "#404000",
             MovementRole.Top => "#400000",
+            MovementRole.Feet => "#404040",
             _ => movement.Hand == HandSide.Right ? "#40201C" : "#1D3440"
         };
     }

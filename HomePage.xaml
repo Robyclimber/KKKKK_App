@@ -1,20 +1,30 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="RuoteLab.HomePage"
+             x:Class="RouteLab.HomePage"
              Title="Home">
     <ScrollView>
         <VerticalStackLayout Padding="24" Spacing="18">
-            <VerticalStackLayout Spacing="6">
-                <Label Text="RuoteLab"
-                       FontSize="30"
-                       FontFamily="OpenSansSemibold"
-                       CharacterSpacing="2"
-                       LineBreakMode="NoWrap"
-                       TextColor="{StaticResource WarmGold}" />
-                <Label Text="Configurazione palestra, circuiti e allenamento."
-                       TextColor="{StaticResource MutedText}" />
-            </VerticalStackLayout>
+            <Grid ColumnDefinitions="76,*"
+                  ColumnSpacing="14">
+                <Image Source="routelab_mark.svg"
+                       WidthRequest="76"
+                       HeightRequest="76"
+                       Aspect="AspectFit"
+                       SemanticProperties.Description="Simbolo RouteLab" />
+                <VerticalStackLayout Grid.Column="1"
+                                     Spacing="4"
+                                     VerticalOptions="Center">
+                    <Label Text="RouteLab"
+                           FontSize="30"
+                           FontFamily="OpenSansSemibold"
+                           CharacterSpacing="2"
+                           LineBreakMode="NoWrap"
+                           TextColor="{StaticResource WarmGold}" />
+                    <Label Text="Configurazione palestra, circuiti e allenamento."
+                           TextColor="{StaticResource MutedText}" />
+                </VerticalStackLayout>
+            </Grid>
 
             <Border BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="18">
                 <VerticalStackLayout Spacing="12">
@@ -79,3 +89,4 @@
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>
+

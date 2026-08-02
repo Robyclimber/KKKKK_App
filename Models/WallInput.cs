@@ -1,4 +1,4 @@
-namespace RuoteLab.Models;
+﻿namespace RouteLab.Models;
 
 public sealed class WallInput
 {
@@ -10,3 +10,4 @@ public sealed class WallInput
 
     public double Height { get; init; }
 }
+

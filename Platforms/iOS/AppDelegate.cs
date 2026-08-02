@@ -1,9 +1,10 @@
 using Foundation;
 
-namespace RuoteLab;
+namespace RouteLab;
 
 [Register("AppDelegate")]
 public class AppDelegate : MauiUIApplicationDelegate
 {
 	protected override MauiApp CreateMauiApp() => MauiProgram.CreateMauiApp();
 }
+

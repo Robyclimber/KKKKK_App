@@ -1,6 +1,6 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 
-namespace RuoteLab.Models;
+namespace RouteLab.Models;
 
 public sealed class PanelDefinition
 {
@@ -27,6 +27,10 @@ public sealed class PanelDefinition
     public LedStartDirection LedStartDirection { get; init; } = LedStartDirection.BottomToTop;
 
     public string? ImagePath { get; set; }
+
+    public string? ImageSourcePath { get; set; }
+
+    public bool IsImageRectified { get; set; }
 
     public double ImageOffsetX { get; set; }
 
@@ -219,6 +223,11 @@ public sealed class PanelDefinition
     {
         var u = ClampUnit(normalizedX);
         var v = ClampUnit(normalizedY);
+        if (IsImageRectified)
+        {
+            return new Point(u * sourceWidth, v * sourceHeight);
+        }
+
         var cropLeftPx = sourceWidth * EffectiveImageCropLeft;
         var cropTopPx = sourceHeight * EffectiveImageCropTop;
         var cropWidthPx = sourceWidth * EffectiveImageCropWidthFactor;

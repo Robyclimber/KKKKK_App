@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using Microsoft.Maui.Controls.Shapes;
 using RouteLab.Drawing;
 using RouteLab.Models;

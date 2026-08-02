@@ -1,7 +1,7 @@
-using SQLite;
-using RuoteLab.Persistence.Entities;
+﻿using SQLite;
+using RouteLab.Persistence.Entities;
 
-namespace RuoteLab.Persistence;
+namespace RouteLab.Persistence;
 
 public sealed class SqliteDatabaseFactory : ISqliteDatabaseFactory
 {
@@ -37,9 +37,12 @@ public sealed class SqliteDatabaseFactory : ISqliteDatabaseFactory
             await connection.CreateTableAsync<WorkoutEntity>();
             await connection.CreateTableAsync<WorkoutStepEntity>();
             await EnsureColumnAsync("walls", "RoomName", "TEXT NOT NULL DEFAULT 'Sala Arrampicata'");
+            await EnsureColumnAsync("walls", "LedVerticalDirection", "INTEGER NOT NULL DEFAULT 1");
             await EnsureColumnAsync("circuits", "RoomName", "TEXT NOT NULL DEFAULT 'Sala Arrampicata'");
             await EnsureColumnAsync("circuits", "CircuitId", "TEXT NOT NULL DEFAULT ''");
+            await EnsureColumnAsync("circuits", "WallNamesJson", "TEXT NOT NULL DEFAULT '[]'");
             await EnsureColumnAsync("circuits", "SuggestNextHoldEnabled", "INTEGER NOT NULL DEFAULT 0");
+            await EnsureColumnAsync("circuits", "ClimberProfileId", "TEXT NOT NULL DEFAULT 'default'");
             await EnsureColumnAsync("circuits", "PresetName", "TEXT NOT NULL DEFAULT 'default'");
             await EnsureColumnAsync("circuits", "Effect", "TEXT NOT NULL DEFAULT 'steady'");
             await EnsureColumnAsync("circuits", "DefaultBrightness", "INTEGER NOT NULL DEFAULT 96");
@@ -52,6 +55,8 @@ public sealed class SqliteDatabaseFactory : ISqliteDatabaseFactory
             await EnsureColumnAsync("circuits", "BlinkPeriodMs", "INTEGER NOT NULL DEFAULT 250");
             await EnsureColumnAsync("circuits", "HoldDurationMs", "INTEGER NOT NULL DEFAULT 2500");
             await EnsureColumnAsync("panels", "ImagePath", "TEXT NULL");
+            await EnsureColumnAsync("panels", "ImageSourcePath", "TEXT NULL");
+            await EnsureColumnAsync("panels", "IsImageRectified", "INTEGER NOT NULL DEFAULT 0");
             await EnsureColumnAsync("panels", "ImageOffsetX", "REAL NOT NULL DEFAULT 0");
             await EnsureColumnAsync("panels", "ImageOffsetY", "REAL NOT NULL DEFAULT 0");
             await EnsureColumnAsync("panels", "ImageScale", "REAL NOT NULL DEFAULT 1");

@@ -1,4 +1,4 @@
-﻿namespace RouteLab.Models;
+namespace RouteLab.Models;
 
 public sealed class HangStepDefinition
 {

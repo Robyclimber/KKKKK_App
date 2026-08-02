@@ -1,4 +1,4 @@
-namespace RuoteLab.Models;
+﻿namespace RouteLab.Models;
 
 public sealed class GymSetupPageState
 {
@@ -62,3 +62,4 @@ public sealed class GymSetupPageState
 
     public string WallImageCropBottomText { get; init; } = "0";
 }
+

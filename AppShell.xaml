@@ -1,12 +1,37 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+﻿<?xml version="1.0" encoding="UTF-8" ?>
 <Shell
-    x:Class="RuoteLab.AppShell"
+    x:Class="RouteLab.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:local="clr-namespace:RuoteLab"
-    Title="RuoteLab"
+    xmlns:local="clr-namespace:RouteLab"
+    Title="RouteLab"
     FlyoutBehavior="Flyout"
     FlyoutBackgroundColor="{StaticResource OffBlack}">
+
+    <Shell.FlyoutHeader>
+        <Grid Padding="18,24,18,14"
+              ColumnDefinitions="64,*"
+              ColumnSpacing="12"
+              BackgroundColor="{StaticResource OffBlack}">
+            <Image Source="routelab_mark.svg"
+                   WidthRequest="64"
+                   HeightRequest="64"
+                   Aspect="AspectFit"
+                   SemanticProperties.Description="Simbolo RouteLab" />
+            <VerticalStackLayout Grid.Column="1"
+                                 Spacing="1"
+                                 VerticalOptions="Center">
+                <Label Text="RouteLab"
+                       FontSize="23"
+                       CharacterSpacing="1.5"
+                       FontFamily="OpenSansSemibold"
+                       TextColor="{StaticResource WarmGold}" />
+                <Label Text="Climbing control"
+                       FontSize="12"
+                       TextColor="{StaticResource MutedText}" />
+            </VerticalStackLayout>
+        </Grid>
+    </Shell.FlyoutHeader>
 
     <Shell.ItemTemplate>
         <DataTemplate>
@@ -56,9 +81,9 @@
             Route="training-page" />
     </FlyoutItem>
 
-    <FlyoutItem Title="Utility ESP32" Route="utility">
+    <FlyoutItem Title="RouteLab Hub" Route="utility">
         <ShellContent
-            Title="Utility ESP32"
+            Title="RouteLab Hub"
             ContentTemplate="{DataTemplate local:UtilityPage}"
             Route="utility-page" />
     </FlyoutItem>
@@ -71,3 +96,4 @@
     </FlyoutItem>
 
 </Shell>
+

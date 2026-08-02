@@ -1,6 +1,6 @@
-using RuoteLab.Models;
+﻿using RouteLab.Models;
 
-namespace RuoteLab.Services;
+namespace RouteLab.Services;
 
 public interface IGymSetupService
 {
@@ -11,6 +11,8 @@ public interface IGymSetupService
     PanelDefinition CreatePanel(PanelInput input, WallDefinition wall, PanelDefinition? currentPanel);
 
     void SetPanelImage(PanelDefinition panel, string imagePath);
+
+    void SetPanelRectifiedImage(PanelDefinition panel, string sourceImagePath, string rectifiedImagePath);
 
     void ClearPanelImage(PanelDefinition panel);
 
@@ -29,3 +31,4 @@ public interface IGymSetupService
         double bottomRightX,
         double bottomRightY);
 }
+

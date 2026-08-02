@@ -18,6 +18,7 @@
 
 ## Fase 3: integrazione ESP32
 
+- estendere firmware e API Hub per circuiti con piu `WallId`
 - collaudare flusso push configurazione parete
 - collaudare flusso push circuiti runtime
 - collaudare flusso editoriale `app <-> ESP32`
@@ -31,6 +32,8 @@
 - feedback piu ricco da stato runtime ESP32
 - eventuale comando da app o da pulsanti fisici ESP32
 - feedback visivo sincronizzato
+- validare sul campo la classificazione dei movimenti statici e delle tecniche di equilibrio
+- introdurre in una fase successiva regole dedicate ai movimenti dinamici
 
 ## Fase 5: extra futuri
 

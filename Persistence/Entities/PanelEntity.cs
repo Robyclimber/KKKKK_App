@@ -1,6 +1,6 @@
-using SQLite;
+﻿using SQLite;
 
-namespace RuoteLab.Persistence.Entities;
+namespace RouteLab.Persistence.Entities;
 
 [Table("panels")]
 public sealed class PanelEntity
@@ -35,6 +35,10 @@ public sealed class PanelEntity
 
     public string? ImagePath { get; set; }
 
+    public string? ImageSourcePath { get; set; }
+
+    public bool IsImageRectified { get; set; }
+
     public double ImageOffsetX { get; set; }
 
     public double ImageOffsetY { get; set; }
@@ -67,3 +71,4 @@ public sealed class PanelEntity
 
     public double ImagePerspectiveBottomRightY { get; set; }
 }
+

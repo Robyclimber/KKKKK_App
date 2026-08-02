@@ -1,4 +1,4 @@
-namespace RuoteLab.Models;
+﻿namespace RouteLab.Models;
 
 public sealed class HomeStateSummary
 {
@@ -10,3 +10,4 @@ public sealed class HomeStateSummary
 
     public int CircuitsCount { get; init; }
 }
+

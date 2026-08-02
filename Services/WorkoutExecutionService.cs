@@ -1,4 +1,4 @@
-﻿using RouteLab.Models;
+using RouteLab.Models;
 
 namespace RouteLab.Services;
 
@@ -832,4 +832,6 @@ public sealed class WorkoutExecutionService : IWorkoutExecutionService
         }
     }
 }
+
+
 

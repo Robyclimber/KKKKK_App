@@ -1,4 +1,4 @@
-namespace RuoteLab.Models;
+﻿namespace RouteLab.Models;
 
 public enum CircuitInteractionMode
 {
@@ -8,6 +8,6 @@ public enum CircuitInteractionMode
     Start = 3,
     Top = 4,
     Remove = 5,
-    LeftFoot = 6,
-    RightFoot = 7
+    Feet = 6
 }
+

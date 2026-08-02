@@ -64,8 +64,9 @@
 ### Circuito
 
 - appartiene a una sala
-- e' legato a una parete
-- contiene una sequenza di movimenti
+- e' associato a una o piu pareti della stessa sala
+- mantiene una parete primaria per compatibilita con i dati storici
+- contiene una sequenza globale di movimenti; ogni movimento identifica la propria parete
 - contiene parametri globali di resa LED
 - eredita i default iniziali da `Settings`, poi mantiene i suoi override persistiti
 - puo' essere esportato/importato in forma editoriale verso ESP32
@@ -80,6 +81,9 @@ SQLite:
 - `wall_holes`
 - `circuits`
 - `circuit_movements`
+
+L'elenco ordinato delle pareti del circuito e' persistito in `circuits.WallNamesJson`;
+`circuits.WallName` resta la parete primaria legacy.
 
 Nota:
 

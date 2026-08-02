@@ -1,51 +1,27 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="RuoteLab.RoomsPage"
+             xmlns:controls="clr-namespace:RouteLab.Controls"
+             x:Class="RouteLab.RoomsPage"
              Title="Sale">
-    <ScrollView>
+    <Grid RowDefinitions="Auto,*">
+        <controls:EntityActionBar Margin="16,8,16,0"
+                                  ContextText="Azioni sale"
+                                  AddDescription="Nuova sala"
+                                  ShowSave="False"
+                                  ShowDelete="False"
+                                  AddClicked="OnAddRoomClicked" />
+
+        <ScrollView Grid.Row="1">
         <VerticalStackLayout Padding="20,16,20,24" Spacing="18">
             <VerticalStackLayout Spacing="4">
                 <Label Text="Sale"
                        FontSize="30"
                        TextColor="{StaticResource WarmGold}"
                        FontFamily="OpenSansSemibold" />
-                <Label Text="Qui scegli la sala da gestire. Le pareti stanno nel passaggio successivo."
+                <Label Text="Seleziona una sala disponibile per aprire le sue pareti."
                        TextColor="{StaticResource MutedText}" />
             </VerticalStackLayout>
-
-            <Border BackgroundColor="{StaticResource PanelBlack}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
-                <VerticalStackLayout Spacing="8">
-                    <Label Text="Contesto attivo"
-                           FontSize="18"
-                           TextColor="{StaticResource WarmGold}"
-                           FontFamily="OpenSansSemibold" />
-                    <Label x:Name="ActiveRoomLabel"
-                           Text="Nessuna sala selezionata."
-                           TextColor="{StaticResource WarmText}" />
-                    <Label x:Name="RoomsSummaryLabel"
-                           Text="0 sale"
-                           TextColor="{StaticResource MutedText}" />
-                    <Button x:Name="OpenSelectedRoomWallsButton"
-                            Text="Apri pareti della sala attiva"
-                            Style="{StaticResource SecondaryActionButtonStyle}"
-                            Clicked="OnOpenSelectedRoomWallsClicked" />
-                </VerticalStackLayout>
-            </Border>
-
-            <Border BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
-                <VerticalStackLayout Spacing="12">
-                    <Label Text="Nuova sala"
-                           FontSize="18"
-                           TextColor="{StaticResource WarmGold}"
-                           FontFamily="OpenSansSemibold" />
-                    <Entry x:Name="RoomNameEntry"
-                           Placeholder="Nome sala" />
-                    <Button Text="Aggiungi sala"
-                            Style="{StaticResource PrimaryActionButtonStyle}"
-                            Clicked="OnAddRoomClicked" />
-                </VerticalStackLayout>
-            </Border>
 
             <Border BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
                 <VerticalStackLayout Spacing="12">
@@ -54,12 +30,13 @@
                            TextColor="{StaticResource WarmGold}"
                            FontFamily="OpenSansSemibold" />
                     <Label x:Name="RoomsEmptyLabel"
-                           Text="Non ci sono ancora sale."
+                           Text="Non ci sono sale. Creane una da Settings > Sala."
                            TextColor="{StaticResource MutedText}" />
                     <VerticalStackLayout x:Name="RoomsHost"
                                          Spacing="10" />
                 </VerticalStackLayout>
             </Border>
         </VerticalStackLayout>
-    </ScrollView>
+        </ScrollView>
+    </Grid>
 </ContentPage>

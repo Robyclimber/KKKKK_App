@@ -1,7 +1,7 @@
-using RuoteLab.Models;
-using RuoteLab.ViewModels;
+﻿using RouteLab.Models;
+using RouteLab.ViewModels;
 
-namespace RuoteLab.Services;
+namespace RouteLab.Services;
 
 public interface IGymSetupEditorStateService
 {
@@ -9,3 +9,4 @@ public interface IGymSetupEditorStateService
 
     PanelEditorState BuildPanelEditor(GymSetupViewModel viewModel, bool useSelectedPanelValues);
 }
+

@@ -1,4 +1,4 @@
-namespace RuoteLab.Services;
+﻿namespace RouteLab.Services;
 
 public sealed class WallImageService : IWallImageService
 {
@@ -29,3 +29,4 @@ public sealed class WallImageService : IWallImageService
         return targetPath;
     }
 }
+

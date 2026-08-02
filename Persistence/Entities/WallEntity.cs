@@ -1,6 +1,6 @@
-using SQLite;
+﻿using SQLite;
 
-namespace RuoteLab.Persistence.Entities;
+namespace RouteLab.Persistence.Entities;
 
 [Table("walls")]
 public sealed class WallEntity
@@ -27,6 +27,8 @@ public sealed class WallEntity
     public double ImageScale { get; set; }
 
     public double ImageOpacity { get; set; }
+
+    public int LedVerticalDirection { get; set; } = 1;
 
     public long UpdatedAtUtcTicks { get; set; }
 }

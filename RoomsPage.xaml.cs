@@ -1,7 +1,7 @@
-using Microsoft.Maui.Controls.Shapes;
-using RuoteLab.Models;
+﻿using Microsoft.Maui.Controls.Shapes;
+using RouteLab.Models;
 
-namespace RuoteLab;
+namespace RouteLab;
 
 public partial class RoomsPage : ContentPage
 {
@@ -23,6 +23,7 @@ public partial class RoomsPage : ContentPage
             return;
         }
 
+        using var busy = AppBusy.Show("Caricamento sale...");
         try
         {
             isRefreshing = true;
@@ -35,32 +36,9 @@ public partial class RoomsPage : ContentPage
         }
     }
 
-    private async void OnAddRoomClicked(object? sender, EventArgs e)
-    {
-        try
-        {
-            await app.GymSetupViewModel.AddRoomAsync(RoomNameEntry.Text);
-            RoomNameEntry.Text = string.Empty;
-            SyncView();
-        }
-        catch (InvalidOperationException ex)
-        {
-            await DisplayAlertAsync("Sale", ex.Message, "OK");
-        }
-    }
-
     private void SyncView()
     {
         var viewModel = app.GymSetupViewModel;
-        ActiveRoomLabel.Text = viewModel.SelectedRoom is null
-            ? "Nessuna sala selezionata."
-            : $"Sala selezionata: {viewModel.SelectedRoom.Name}";
-        RoomsSummaryLabel.Text = viewModel.Rooms.Count == 1
-            ? "1 sala"
-            : $"{viewModel.Rooms.Count} sale";
-        RoomNameEntry.Placeholder = viewModel.SuggestedNextRoomName;
-        OpenSelectedRoomWallsButton.IsEnabled = viewModel.SelectedRoom is not null;
-
         RoomsHost.Children.Clear();
         RoomsEmptyLabel.IsVisible = viewModel.Rooms.Count == 0;
 
@@ -70,12 +48,17 @@ public partial class RoomsPage : ContentPage
         }
     }
 
+    private async void OnAddRoomClicked(object? sender, EventArgs e)
+    {
+        await Shell.Current.GoToAsync("//settings");
+    }
+
     private View BuildRoomCard(RoomDefinition room)
     {
         var wallsCount = app.GymSetupViewModel.Walls.Count(wall => string.Equals(wall.RoomName, room.Name, StringComparison.Ordinal));
         var selectButton = new Button
         {
-            Text = "Apri pareti",
+            Text = "Seleziona sala",
             Style = (Style)Application.Current!.Resources["PrimaryActionButtonStyle"]
         };
         selectButton.Clicked += async (_, _) =>
@@ -114,13 +97,4 @@ public partial class RoomsPage : ContentPage
         };
     }
 
-    private async void OnOpenSelectedRoomWallsClicked(object? sender, EventArgs e)
-    {
-        if (app.GymSetupViewModel.SelectedRoom is null)
-        {
-            return;
-        }
-
-        await Shell.Current.GoToAsync("walls-page");
-    }
 }

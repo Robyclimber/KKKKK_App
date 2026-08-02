@@ -1,7 +1,7 @@
-using Microsoft.Maui.Graphics;
-using RuoteLab.Models;
+﻿using Microsoft.Maui.Graphics;
+using RouteLab.Models;
 
-namespace RuoteLab.Drawing;
+namespace RouteLab.Drawing;
 
 public sealed class LayoutPreviewDrawable : IDrawable
 {
@@ -142,3 +142,4 @@ public sealed class LayoutPreviewDrawable : IDrawable
             VerticalAlignment.Center);
     }
 }
+

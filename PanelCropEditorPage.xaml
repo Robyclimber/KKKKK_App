@@ -1,217 +1,71 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="RuoteLab.PanelCropEditorPage"
-             Title="Ritaglio pannello">
-    <Grid RowDefinitions="*,Auto" BackgroundColor="{StaticResource CanvasBlack}">
-        <Grid x:Name="CropViewport"
-              Row="0"
-              Margin="12"
-              SizeChanged="OnCropViewportSizeChanged">
-            <AbsoluteLayout x:Name="CropLayer">
-                <Image x:Name="CropImage"
-                       Aspect="AspectFit"
-                       AbsoluteLayout.LayoutBounds="0,0,1,1"
-                       AbsoluteLayout.LayoutFlags="All"
-                       IsVisible="False" />
-                <BoxView x:Name="MaskTop" Color="#AA000000" InputTransparent="True" IsVisible="False" />
-                <BoxView x:Name="MaskBottom" Color="#AA000000" InputTransparent="True" IsVisible="False" />
-                <BoxView x:Name="MaskLeft" Color="#AA000000" InputTransparent="True" IsVisible="False" />
-                <BoxView x:Name="MaskRight" Color="#AA000000" InputTransparent="True" IsVisible="False" />
-                <Border x:Name="SelectionBorder"
-                         Stroke="{StaticResource WarmGold}"
-                         StrokeThickness="3"
-                         BackgroundColor="#11F2C94C"
-                         StrokeShape="RoundRectangle 4"
-                         ZIndex="1"
-                         IsVisible="False">
-                    <Border.GestureRecognizers>
-                        <PanGestureRecognizer PanUpdated="OnMovePanUpdated" />
-                    </Border.GestureRecognizers>
-                </Border>
-                <Border x:Name="PerspectiveHandleTopLeft"
-                        WidthRequest="22"
-                        HeightRequest="22"
-                        BackgroundColor="#4DD9FF"
-                        Stroke="#0E0D0B"
-                        StrokeThickness="1"
-                        StrokeShape="RoundRectangle 11"
-                        ZIndex="20"
-                        IsVisible="False">
-                    <Border.GestureRecognizers>
-                        <PanGestureRecognizer PanUpdated="OnPerspectiveTopLeftPanUpdated" />
-                    </Border.GestureRecognizers>
-                </Border>
-                <Border x:Name="PerspectiveHandleTopRight"
-                        WidthRequest="22"
-                        HeightRequest="22"
-                        BackgroundColor="#4DD9FF"
-                        Stroke="#0E0D0B"
-                        StrokeThickness="1"
-                        StrokeShape="RoundRectangle 11"
-                        ZIndex="20"
-                        IsVisible="False">
-                    <Border.GestureRecognizers>
-                        <PanGestureRecognizer PanUpdated="OnPerspectiveTopRightPanUpdated" />
-                    </Border.GestureRecognizers>
-                </Border>
-                <Border x:Name="PerspectiveHandleBottomLeft"
-                        WidthRequest="22"
-                        HeightRequest="22"
-                        BackgroundColor="#4DD9FF"
-                        Stroke="#0E0D0B"
-                        StrokeThickness="1"
-                        StrokeShape="RoundRectangle 11"
-                        ZIndex="20"
-                        IsVisible="False">
-                    <Border.GestureRecognizers>
-                        <PanGestureRecognizer PanUpdated="OnPerspectiveBottomLeftPanUpdated" />
-                    </Border.GestureRecognizers>
-                </Border>
-                <Border x:Name="PerspectiveHandleBottomRight"
-                        WidthRequest="22"
-                        HeightRequest="22"
-                        BackgroundColor="#4DD9FF"
-                        Stroke="#0E0D0B"
-                        StrokeThickness="1"
-                        StrokeShape="RoundRectangle 11"
-                        ZIndex="20"
-                        IsVisible="False">
-                    <Border.GestureRecognizers>
-                        <PanGestureRecognizer PanUpdated="OnPerspectiveBottomRightPanUpdated" />
-                    </Border.GestureRecognizers>
-                </Border>
-                <Border x:Name="HandleTopLeft"
-                        WidthRequest="28"
-                        HeightRequest="28"
-                        BackgroundColor="{StaticResource WarmGold}"
-                        Stroke="#14110B"
-                        StrokeThickness="1"
-                        StrokeShape="RoundRectangle 14"
-                        ZIndex="10"
-                        IsVisible="False">
-                    <Border.GestureRecognizers>
-                        <PanGestureRecognizer PanUpdated="OnTopLeftPanUpdated" />
-                    </Border.GestureRecognizers>
-                </Border>
-                <Border x:Name="HandleTopRight"
-                        WidthRequest="28"
-                        HeightRequest="28"
-                        BackgroundColor="{StaticResource WarmGold}"
-                        Stroke="#14110B"
-                        StrokeThickness="1"
-                        StrokeShape="RoundRectangle 14"
-                        ZIndex="10"
-                        IsVisible="False">
-                    <Border.GestureRecognizers>
-                        <PanGestureRecognizer PanUpdated="OnTopRightPanUpdated" />
-                    </Border.GestureRecognizers>
-                </Border>
-                <Border x:Name="HandleBottomLeft"
-                        WidthRequest="28"
-                        HeightRequest="28"
-                        BackgroundColor="{StaticResource WarmGold}"
-                        Stroke="#14110B"
-                        StrokeThickness="1"
-                        StrokeShape="RoundRectangle 14"
-                        ZIndex="10"
-                        IsVisible="False">
-                    <Border.GestureRecognizers>
-                        <PanGestureRecognizer PanUpdated="OnBottomLeftPanUpdated" />
-                    </Border.GestureRecognizers>
-                </Border>
-                <Border x:Name="HandleBottomRight"
-                        WidthRequest="28"
-                        HeightRequest="28"
-                        BackgroundColor="{StaticResource WarmGold}"
-                        Stroke="#14110B"
-                        StrokeThickness="1"
-                        StrokeShape="RoundRectangle 14"
-                        ZIndex="10"
-                        IsVisible="False">
-                    <Border.GestureRecognizers>
-                        <PanGestureRecognizer PanUpdated="OnBottomRightPanUpdated" />
-                    </Border.GestureRecognizers>
-                </Border>
-                <Border x:Name="HandleLeft"
-                        WidthRequest="26"
-                        HeightRequest="44"
-                        BackgroundColor="{StaticResource WarmGold}"
-                        Stroke="#14110B"
-                        StrokeThickness="1"
-                        StrokeShape="RoundRectangle 13"
-                        ZIndex="10"
-                        IsVisible="False">
-                    <Border.GestureRecognizers>
-                        <PanGestureRecognizer PanUpdated="OnLeftPanUpdated" />
-                    </Border.GestureRecognizers>
-                </Border>
-                <Border x:Name="HandleTop"
-                        WidthRequest="44"
-                        HeightRequest="26"
-                        BackgroundColor="{StaticResource WarmGold}"
-                        Stroke="#14110B"
-                        StrokeThickness="1"
-                        StrokeShape="RoundRectangle 13"
-                        ZIndex="10"
-                        IsVisible="False">
-                    <Border.GestureRecognizers>
-                        <PanGestureRecognizer PanUpdated="OnTopPanUpdated" />
-                    </Border.GestureRecognizers>
-                </Border>
-                <Border x:Name="HandleRight"
-                        WidthRequest="26"
-                        HeightRequest="44"
-                        BackgroundColor="{StaticResource WarmGold}"
-                        Stroke="#14110B"
-                        StrokeThickness="1"
-                        StrokeShape="RoundRectangle 13"
-                        ZIndex="10"
-                        IsVisible="False">
-                    <Border.GestureRecognizers>
-                        <PanGestureRecognizer PanUpdated="OnRightPanUpdated" />
-                    </Border.GestureRecognizers>
-                </Border>
-                <Border x:Name="HandleBottom"
-                        WidthRequest="44"
-                        HeightRequest="26"
-                        BackgroundColor="{StaticResource WarmGold}"
-                        Stroke="#14110B"
-                        StrokeThickness="1"
-                        StrokeShape="RoundRectangle 13"
-                        ZIndex="10"
-                        IsVisible="False">
-                    <Border.GestureRecognizers>
-                        <PanGestureRecognizer PanUpdated="OnBottomPanUpdated" />
-                    </Border.GestureRecognizers>
-                </Border>
-                <Label x:Name="EmptyLabel"
-                       Text="Seleziona un pannello con immagine."
-                       TextColor="{StaticResource MutedText}"
-                       HorizontalOptions="Center"
-                       VerticalOptions="Center"
-                       AbsoluteLayout.LayoutBounds="0.5,0.5,-1,-1"
-                       AbsoluteLayout.LayoutFlags="PositionProportional" />
-            </AbsoluteLayout>
-        </Grid>
+             x:Class="RouteLab.PanelCropEditorPage"
+             Title="Editor 4 punti">
 
-        <Border Grid.Row="1"
-                Margin="12,0,12,12"
-                BackgroundColor="{StaticResource PanelBlack}"
-                Stroke="{StaticResource WarmGoldMuted}"
-                StrokeShape="RoundRectangle 16"
-                Padding="16">
-            <VerticalStackLayout Spacing="10">
-                <Label x:Name="CropInfoLabel"
-                       Text="Ritaglio pannello"
-                       TextColor="{StaticResource WarmGold}"
-                       FontSize="16" />
-                <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                    <Button Text="Reset ritaglio" Clicked="OnResetClicked" />
-                    <Button Grid.Column="1" Text="Chiudi" Clicked="OnCloseClicked" />
-                </Grid>
-                <Button Text="Reset prospettiva" Clicked="OnResetPerspectiveClicked" />
-            </VerticalStackLayout>
+    <Grid Padding="16"
+          RowDefinitions="Auto,Auto,*"
+          RowSpacing="10">
+        <Label Grid.Row="0"
+               x:Name="CropInfoLabel"
+               Text="Editor prospettico a 4 punti"
+               FontSize="22"
+               TextColor="{StaticResource WarmGold}"
+               FontFamily="OpenSansSemibold" />
+
+        <VerticalStackLayout Grid.Row="1"
+                             Spacing="10">
+            <Grid ColumnDefinitions="*,*"
+                  RowDefinitions="Auto,Auto,Auto"
+                  ColumnSpacing="10"
+                  RowSpacing="10">
+                <Button Grid.Row="0"
+                        Grid.Column="0"
+                        Text="Zoom -"
+                        Clicked="OnZoomOutClicked" />
+                <Button Grid.Row="0"
+                        Grid.Column="1"
+                        Text="Zoom +"
+                        Clicked="OnZoomInClicked" />
+                <Button Grid.Row="1"
+                        Grid.Column="0"
+                        Text="Reset vista"
+                        Clicked="OnResetViewportClicked" />
+                <Button Grid.Row="1"
+                        Grid.Column="1"
+                        Text="Reset geometria"
+                        Clicked="OnResetGeometryClicked" />
+                <Button Grid.Row="2"
+                        Grid.Column="0"
+                        Text="Annulla"
+                        Style="{StaticResource SecondaryActionButtonStyle}"
+                        Clicked="OnCancelClicked" />
+                <Button x:Name="ConfirmButton"
+                        Grid.Row="2"
+                        Grid.Column="1"
+                        Text="Conferma e usa"
+                        Style="{StaticResource PrimaryActionButtonStyle}"
+                        Clicked="OnConfirmClicked" />
+            </Grid>
+            <Label x:Name="ZoomLabel"
+                   Text="Zoom: 100%"
+                   TextColor="{StaticResource MutedText}" />
+        </VerticalStackLayout>
+
+        <Border Grid.Row="2"
+                x:Name="EditorViewport"
+                BackgroundColor="#101820"
+                StrokeShape="RoundRectangle 18"
+                Padding="0"
+                Margin="0,6,0,0">
+            <Grid x:Name="EditorHost">
+                <GraphicsView x:Name="EditorGraphicsView"
+                              StartInteraction="OnStartInteraction"
+                              DragInteraction="OnDragInteraction"
+                              EndInteraction="OnEndInteraction" />
+            </Grid>
         </Border>
     </Grid>
+
 </ContentPage>

@@ -1,4 +1,4 @@
-namespace RuoteLab.Models;
+﻿namespace RouteLab.Models;
 
 public sealed class RoomDefinition
 {
@@ -8,3 +8,4 @@ public sealed class RoomDefinition
 
     public string DisplayLabel => Name;
 }
+

@@ -1,4 +1,4 @@
-# Stato attuale
+﻿# Stato attuale
 
 ## Visione generale
 
@@ -49,7 +49,8 @@ Database SQLite con persistenza di:
 
 ### Circuiti
 
-- circuito legato a una sola parete
+- circuito associabile a una o piu pareti della stessa sala
+- parete attiva selezionabile nell'editor con sequenza movimenti globale
 - `CircuitId` stabile per sync con ESP32
 - parametri globali circuito persistiti
 - parametri globali di default configurabili da `Settings`
@@ -91,6 +92,7 @@ Gia presenti:
 
 ## Problemi aperti noti
 
+- il protocollo RouteLab Hub usa ancora un solo `WallId`: l'esecuzione hardware dei circuiti multi-parete richiede un'estensione firmware/API
 - l'auto allineamento immagine e' ancora euristico, da validare sul campo
 - l'analisi prese automatica va ancora raffinata
 - esistono ancora campi legacy immagine a livello `wall`, mantenuti per compatibilita dati
@@ -102,10 +104,13 @@ Gia presenti:
 
 ## Ultime decisioni importanti
 
+- `WallName` resta la parete primaria compatibile, mentre `WallNamesJson` contiene tutte le pareti del circuito
+- il suggerimento della presa successiva produce un piano statico con tecnica, equilibrio e sequenza piedi-baricentro-mano
+- i movimenti dinamici sono esclusi dal calcolo corrente e rimandati a uno sviluppo futuro dedicato
 - il mapping hardware e' stato spostato fuori da `Configura palestra` per evitare rallentamenti
 - l'immagine e' stata spostata da `parete` a `pannello`
 - i ritagli immagine per fori e movimenti ora usano il pannello corretto
-- il branding app e namespace applicativi sono stati riallineati a `RuoteLab`
+- il branding app e namespace applicativi sono stati riallineati a `RouteLab`
 - il lessico ufficiale distingue tra `parete selezionata`, `pannello selezionato`, `immagine pannello` e `mapping hardware della parete`
 - il routing LED e' definito a livello pannello, con serpentina implicita
 - il modello circuito locale include `CircuitId` e `Globals`
@@ -117,7 +122,7 @@ Gia presenti:
 Ultima build verificata:
 
 ```powershell
-dotnet build "C:\TMP\Prova\GF\WallPanelPlanner\WallPanelPlanner.csproj"
+dotnet build ".\RouteLab.csproj"
 ```
 
 Esito:
@@ -133,3 +138,4 @@ Esito:
 3. validare bene immagini pannello, crop e auto allineamento
 4. migliorare UX configurazione palestra e mapping
 5. aprire la futura sezione allenamento
+

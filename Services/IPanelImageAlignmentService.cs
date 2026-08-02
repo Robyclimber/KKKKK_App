@@ -1,8 +1,9 @@
-using RuoteLab.Models;
+﻿using RouteLab.Models;
 
-namespace RuoteLab.Services;
+namespace RouteLab.Services;
 
 public interface IPanelImageAlignmentService
 {
     Task<PanelImageAlignmentSuggestion?> SuggestAlignmentAsync(PanelDefinition panel, CancellationToken cancellationToken = default);
 }
+

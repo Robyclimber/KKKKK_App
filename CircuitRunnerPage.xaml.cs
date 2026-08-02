@@ -1,4 +1,4 @@
-﻿using Microsoft.Maui.Controls.Shapes;
+using Microsoft.Maui.Controls.Shapes;
 using Microsoft.Maui.Layouts;
 using RouteLab.Drawing;
 using RouteLab.Models;
@@ -550,4 +550,6 @@ public partial class CircuitRunnerPage : ContentPage, IQueryAttributable
             : null;
     }
 }
+
+
 

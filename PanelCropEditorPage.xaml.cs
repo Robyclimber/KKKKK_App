@@ -1,24 +1,15 @@
-using RuoteLab.Models;
-using RuoteLab.ViewModels;
-using Microsoft.Maui.Layouts;
+using RouteLab.Drawing;
+using RouteLab.Models;
+using RouteLab.Services;
+using RouteLab.ViewModels;
 
-namespace RuoteLab;
+namespace RouteLab;
 
 public partial class PanelCropEditorPage : ContentPage
 {
-    private enum CropDragMode
-    {
-        None,
-        Move,
-        Left,
-        Top,
-        Right,
-        Bottom,
-        TopLeft,
-        TopRight,
-        BottomLeft,
-        BottomRight
-    }
+    private const float MinimumScale = 1f;
+    private const float MaximumScale = 8f;
+    private const float ScaleStep = 0.5f;
 
     private enum PerspectiveDragMode
     {
@@ -30,389 +21,406 @@ public partial class PanelCropEditorPage : ContentPage
     }
 
     private readonly GymSetupViewModel viewModel;
-    private Rect imageBounds;
-    private CropDragMode dragMode;
-    private double startLeft;
-    private double startTop;
-    private double startRight;
-    private double startBottom;
-    private PerspectiveDragMode perspectiveDragMode;
-    private Point startPerspectiveTopLeft;
-    private Point startPerspectiveTopRight;
-    private Point startPerspectiveBottomLeft;
-    private Point startPerspectiveBottomRight;
+    private readonly IPanelImageRectificationService rectificationService;
+    private readonly PanelImageEditorDrawable drawable;
+    private readonly List<PanelImageEditorHandle> handles;
+    private string? activeHandleId;
+    private PointF interactionStart;
+    private PointF panStart;
+    private bool isCanvasPanning;
+    private float scaleStart = 1f;
+    private float offsetStartX;
+    private float offsetStartY;
+    private PanelImageCanvasTransformState transform = new();
 
     public PanelCropEditorPage()
     {
         InitializeComponent();
-        viewModel = ((App)Application.Current!).GymSetupViewModel;
-        Loaded += OnPageLoaded;
+        var app = (App)Application.Current!;
+        viewModel = app.GymSetupViewModel;
+        rectificationService = app.PanelImageRectificationService;
+        handles =
+        [
+            CreateHandle("TopLeft", 0.18f, 0.18f),
+            CreateHandle("TopRight", 0.82f, 0.18f),
+            CreateHandle("BottomRight", 0.82f, 0.82f),
+            CreateHandle("BottomLeft", 0.18f, 0.82f)
+        ];
+
+        drawable = new PanelImageEditorDrawable
+        {
+            HandlesProvider = () => handles,
+            TransformProvider = () => transform
+        };
+        EditorGraphicsView.Drawable = drawable;
+
+        var pinchGesture = new PinchGestureRecognizer();
+        pinchGesture.PinchUpdated += OnPinchUpdated;
+        EditorHost.GestureRecognizers.Add(pinchGesture);
+
     }
 
-    private void OnPageLoaded(object? sender, EventArgs e)
+    protected override void OnAppearing()
     {
-        Loaded -= OnPageLoaded;
-        RefreshView();
-    }
-
-    private void OnCropViewportSizeChanged(object? sender, EventArgs e)
-    {
-        RefreshView();
-    }
-
-    private void RefreshView()
-    {
-        var panel = viewModel.SelectedPanel;
-        if (panel is null || string.IsNullOrWhiteSpace(panel.ImagePath) || !File.Exists(panel.ImagePath) || CropViewport.Width <= 0 || CropViewport.Height <= 0)
-        {
-            imageBounds = Rect.Zero;
-            CropImage.IsVisible = false;
-            SelectionBorder.IsVisible = false;
-            HandleLeft.IsVisible = false;
-            HandleTop.IsVisible = false;
-            HandleRight.IsVisible = false;
-            HandleBottom.IsVisible = false;
-            HandleTopLeft.IsVisible = false;
-            HandleTopRight.IsVisible = false;
-            HandleBottomLeft.IsVisible = false;
-            HandleBottomRight.IsVisible = false;
-            MaskTop.IsVisible = false;
-            MaskBottom.IsVisible = false;
-            MaskLeft.IsVisible = false;
-            MaskRight.IsVisible = false;
-            EmptyLabel.IsVisible = true;
-            CropInfoLabel.Text = "Seleziona un pannello con immagine";
-            return;
-        }
-
-        CropInfoLabel.Text = $"Pannello {panel.Name}";
-        CropImage.Source = ImageSource.FromFile(panel.ImagePath);
-        CropImage.IsVisible = true;
-        EmptyLabel.IsVisible = false;
-
-        imageBounds = GetImageBounds(panel.ImagePath!, CropViewport.Width, CropViewport.Height);
-        AbsoluteLayout.SetLayoutBounds(CropImage, imageBounds);
-        AbsoluteLayout.SetLayoutFlags(CropImage, AbsoluteLayoutFlags.None);
-
-        var selectionX = imageBounds.X + (panel.EffectiveImageCropLeft * imageBounds.Width);
-        var selectionY = imageBounds.Y + (panel.EffectiveImageCropTop * imageBounds.Height);
-        var selectionWidth = panel.EffectiveImageCropWidthFactor * imageBounds.Width;
-        var selectionHeight = panel.EffectiveImageCropHeightFactor * imageBounds.Height;
-        var selectionRect = new Rect(selectionX, selectionY, selectionWidth, selectionHeight);
-
-        SelectionBorder.IsVisible = true;
-        AbsoluteLayout.SetLayoutBounds(SelectionBorder, selectionRect);
-        AbsoluteLayout.SetLayoutFlags(SelectionBorder, AbsoluteLayoutFlags.None);
-
-        UpdateHandle(HandleLeft, selectionRect.Left, selectionRect.Center.Y);
-        UpdateHandle(HandleTop, selectionRect.Center.X, selectionRect.Top);
-        UpdateHandle(HandleRight, selectionRect.Right, selectionRect.Center.Y);
-        UpdateHandle(HandleBottom, selectionRect.Center.X, selectionRect.Bottom);
-        UpdateHandle(HandleTopLeft, selectionRect.Left, selectionRect.Top);
-        UpdateHandle(HandleTopRight, selectionRect.Right, selectionRect.Top);
-        UpdateHandle(HandleBottomLeft, selectionRect.Left, selectionRect.Bottom);
-        UpdateHandle(HandleBottomRight, selectionRect.Right, selectionRect.Bottom);
-        UpdatePerspectiveHandle(PerspectiveHandleTopLeft, selectionRect, panel.EffectivePerspectiveTopLeft);
-        UpdatePerspectiveHandle(PerspectiveHandleTopRight, selectionRect, panel.EffectivePerspectiveTopRight);
-        UpdatePerspectiveHandle(PerspectiveHandleBottomLeft, selectionRect, panel.EffectivePerspectiveBottomLeft);
-        UpdatePerspectiveHandle(PerspectiveHandleBottomRight, selectionRect, panel.EffectivePerspectiveBottomRight);
-        UpdateMasks(imageBounds, selectionRect);
-    }
-
-    private void OnMovePanUpdated(object? sender, PanUpdatedEventArgs e) => HandlePan(CropDragMode.Move, e);
-    private void OnLeftPanUpdated(object? sender, PanUpdatedEventArgs e) => HandlePan(CropDragMode.Left, e);
-    private void OnTopPanUpdated(object? sender, PanUpdatedEventArgs e) => HandlePan(CropDragMode.Top, e);
-    private void OnRightPanUpdated(object? sender, PanUpdatedEventArgs e) => HandlePan(CropDragMode.Right, e);
-    private void OnBottomPanUpdated(object? sender, PanUpdatedEventArgs e) => HandlePan(CropDragMode.Bottom, e);
-    private void OnTopLeftPanUpdated(object? sender, PanUpdatedEventArgs e) => HandlePan(CropDragMode.TopLeft, e);
-    private void OnTopRightPanUpdated(object? sender, PanUpdatedEventArgs e) => HandlePan(CropDragMode.TopRight, e);
-    private void OnBottomLeftPanUpdated(object? sender, PanUpdatedEventArgs e) => HandlePan(CropDragMode.BottomLeft, e);
-    private void OnBottomRightPanUpdated(object? sender, PanUpdatedEventArgs e) => HandlePan(CropDragMode.BottomRight, e);
-    private void OnPerspectiveTopLeftPanUpdated(object? sender, PanUpdatedEventArgs e) => HandlePerspectivePan(PerspectiveDragMode.TopLeft, e);
-    private void OnPerspectiveTopRightPanUpdated(object? sender, PanUpdatedEventArgs e) => HandlePerspectivePan(PerspectiveDragMode.TopRight, e);
-    private void OnPerspectiveBottomLeftPanUpdated(object? sender, PanUpdatedEventArgs e) => HandlePerspectivePan(PerspectiveDragMode.BottomLeft, e);
-    private void OnPerspectiveBottomRightPanUpdated(object? sender, PanUpdatedEventArgs e) => HandlePerspectivePan(PerspectiveDragMode.BottomRight, e);
-
-    private void HandlePan(CropDragMode mode, PanUpdatedEventArgs e)
-    {
-        var panel = viewModel.SelectedPanel;
-        if (panel is null || imageBounds.Width <= 1 || imageBounds.Height <= 1)
-        {
-            return;
-        }
-
-        switch (e.StatusType)
-        {
-            case GestureStatus.Started:
-                dragMode = mode;
-                startLeft = panel.EffectiveImageCropLeft;
-                startTop = panel.EffectiveImageCropTop;
-                startRight = panel.EffectiveImageCropRight;
-                startBottom = panel.EffectiveImageCropBottom;
-                break;
-
-            case GestureStatus.Running:
-                ApplyDrag(e.TotalX / imageBounds.Width, e.TotalY / imageBounds.Height);
-                break;
-
-            case GestureStatus.Completed:
-            case GestureStatus.Canceled:
-                dragMode = CropDragMode.None;
-                break;
-        }
-    }
-
-    private void HandlePerspectivePan(PerspectiveDragMode mode, PanUpdatedEventArgs e)
-    {
-        var panel = viewModel.SelectedPanel;
-        if (panel is null || imageBounds.Width <= 1 || imageBounds.Height <= 1)
-        {
-            return;
-        }
-
-        var selectionRect = new Rect(
-            imageBounds.X + (panel.EffectiveImageCropLeft * imageBounds.Width),
-            imageBounds.Y + (panel.EffectiveImageCropTop * imageBounds.Height),
-            panel.EffectiveImageCropWidthFactor * imageBounds.Width,
-            panel.EffectiveImageCropHeightFactor * imageBounds.Height);
-
-        if (selectionRect.Width <= 1 || selectionRect.Height <= 1)
-        {
-            return;
-        }
-
-        switch (e.StatusType)
-        {
-            case GestureStatus.Started:
-                perspectiveDragMode = mode;
-                startPerspectiveTopLeft = panel.EffectivePerspectiveTopLeft;
-                startPerspectiveTopRight = panel.EffectivePerspectiveTopRight;
-                startPerspectiveBottomLeft = panel.EffectivePerspectiveBottomLeft;
-                startPerspectiveBottomRight = panel.EffectivePerspectiveBottomRight;
-                break;
-
-            case GestureStatus.Running:
-                ApplyPerspectiveDrag(e.TotalX / selectionRect.Width, e.TotalY / selectionRect.Height);
-                break;
-
-            case GestureStatus.Completed:
-            case GestureStatus.Canceled:
-                perspectiveDragMode = PerspectiveDragMode.None;
-                break;
-        }
-    }
-
-    private void ApplyDrag(double dxRatio, double dyRatio)
-    {
-        var panel = viewModel.SelectedPanel;
-        if (panel is null)
-        {
-            return;
-        }
-
-        const double minFactor = 0.00001d;
-        double left = startLeft;
-        double top = startTop;
-        double right = startRight;
-        double bottom = startBottom;
-
-        switch (dragMode)
-        {
-            case CropDragMode.Move:
-            {
-                var width = 1d - left - right;
-                var height = 1d - top - bottom;
-                left = Math.Clamp(startLeft + dxRatio, 0d, 1d - width);
-                top = Math.Clamp(startTop + dyRatio, 0d, 1d - height);
-                right = 1d - width - left;
-                bottom = 1d - height - top;
-                break;
-            }
-            case CropDragMode.Left:
-                left = Math.Clamp(startLeft + dxRatio, 0d, 1d - right - minFactor);
-                break;
-            case CropDragMode.Top:
-                top = Math.Clamp(startTop + dyRatio, 0d, 1d - bottom - minFactor);
-                break;
-            case CropDragMode.Right:
-                right = Math.Clamp(startRight - dxRatio, 0d, 1d - left - minFactor);
-                break;
-            case CropDragMode.Bottom:
-                bottom = Math.Clamp(startBottom - dyRatio, 0d, 1d - top - minFactor);
-                break;
-            case CropDragMode.TopLeft:
-                left = Math.Clamp(startLeft + dxRatio, 0d, 1d - right - minFactor);
-                top = Math.Clamp(startTop + dyRatio, 0d, 1d - bottom - minFactor);
-                break;
-            case CropDragMode.TopRight:
-                right = Math.Clamp(startRight - dxRatio, 0d, 1d - left - minFactor);
-                top = Math.Clamp(startTop + dyRatio, 0d, 1d - bottom - minFactor);
-                break;
-            case CropDragMode.BottomLeft:
-                left = Math.Clamp(startLeft + dxRatio, 0d, 1d - right - minFactor);
-                bottom = Math.Clamp(startBottom - dyRatio, 0d, 1d - top - minFactor);
-                break;
-            case CropDragMode.BottomRight:
-                right = Math.Clamp(startRight - dxRatio, 0d, 1d - left - minFactor);
-                bottom = Math.Clamp(startBottom - dyRatio, 0d, 1d - top - minFactor);
-                break;
-        }
-
+        base.OnAppearing();
         try
         {
-            viewModel.UpdateSelectedPanelImageCrop(left, top, right, bottom);
-            RefreshView();
+            LoadPanelState();
+            ResetViewport();
         }
-        catch (InvalidOperationException)
+        catch (Exception ex)
         {
+            _ = DisplayAlertAsync("Editor foto", $"Errore apertura editor: {ex.Message}", "OK");
         }
     }
 
-    private void ApplyPerspectiveDrag(double dxRatio, double dyRatio)
+    private void LoadPanelState()
     {
         var panel = viewModel.SelectedPanel;
-        if (panel is null)
+        var sourceImagePath = GetSourceImagePath(panel);
+        if (panel is null || sourceImagePath is null)
+        {
+            CropInfoLabel.Text = "Seleziona un pannello con immagine";
+            drawable.ImagePath = null;
+            EditorGraphicsView.Invalidate();
+            return;
+        }
+
+        CropInfoLabel.Text = $"Pannello {panel.Name} - trascina i 4 punti come in HH";
+        drawable.ImagePath = sourceImagePath;
+
+        var left = (float)panel.EffectiveImageCropLeft;
+        var top = (float)panel.EffectiveImageCropTop;
+        var width = (float)panel.EffectiveImageCropWidthFactor;
+        var height = (float)panel.EffectiveImageCropHeightFactor;
+
+        handles[0].NormalizedPosition = ToAbsolutePoint(left, top, width, height, panel.EffectivePerspectiveTopLeft);
+        handles[1].NormalizedPosition = ToAbsolutePoint(left, top, width, height, panel.EffectivePerspectiveTopRight);
+        handles[2].NormalizedPosition = ToAbsolutePoint(left, top, width, height, panel.EffectivePerspectiveBottomRight);
+        handles[3].NormalizedPosition = ToAbsolutePoint(left, top, width, height, panel.EffectivePerspectiveBottomLeft);
+        EditorGraphicsView.Invalidate();
+    }
+
+    private void OnStartInteraction(object? sender, TouchEventArgs e)
+    {
+        if (viewModel.SelectedPanel is null || e.Touches.Length != 1)
         {
             return;
         }
 
-        var topLeft = startPerspectiveTopLeft;
-        var topRight = startPerspectiveTopRight;
-        var bottomLeft = startPerspectiveBottomLeft;
-        var bottomRight = startPerspectiveBottomRight;
-
-        switch (perspectiveDragMode)
+        var imageRect = drawable.LastImageRect;
+        if (imageRect.Width <= 0 || imageRect.Height <= 0)
         {
-            case PerspectiveDragMode.TopLeft:
-                topLeft = new Point(ClampUnit(startPerspectiveTopLeft.X + dxRatio), ClampUnit(startPerspectiveTopLeft.Y + dyRatio));
-                break;
-            case PerspectiveDragMode.TopRight:
-                topRight = new Point(ClampUnit(startPerspectiveTopRight.X + dxRatio), ClampUnit(startPerspectiveTopRight.Y + dyRatio));
-                break;
-            case PerspectiveDragMode.BottomLeft:
-                bottomLeft = new Point(ClampUnit(startPerspectiveBottomLeft.X + dxRatio), ClampUnit(startPerspectiveBottomLeft.Y + dyRatio));
-                break;
-            case PerspectiveDragMode.BottomRight:
-                bottomRight = new Point(ClampUnit(startPerspectiveBottomRight.X + dxRatio), ClampUnit(startPerspectiveBottomRight.Y + dyRatio));
-                break;
+            return;
         }
 
-        viewModel.UpdateSelectedPanelImagePerspective(
-            topLeft.X,
-            topLeft.Y,
-            topRight.X,
-            topRight.Y,
-            bottomLeft.X,
-            bottomLeft.Y,
-            bottomRight.X,
-            bottomRight.Y);
-        RefreshView();
+        interactionStart = e.Touches[0];
+        panStart = new PointF(transform.OffsetX, transform.OffsetY);
+        var canvasPoint = MapTouchToCanvas(interactionStart);
+        activeHandleId = TryFindHandle(canvasPoint, imageRect);
+        isCanvasPanning = activeHandleId is null && transform.Scale > MinimumScale;
+        drawable.ActiveHandleId = activeHandleId;
+        EditorGraphicsView.Invalidate();
     }
 
-    private void OnResetClicked(object? sender, EventArgs e)
+    private void OnDragInteraction(object? sender, TouchEventArgs e)
+    {
+        if (viewModel.SelectedPanel is null || e.Touches.Length != 1)
+        {
+            return;
+        }
+
+        if (activeHandleId is not null)
+        {
+            MoveActiveHandleTo(e.Touches[0]);
+        }
+        else if (isCanvasPanning)
+        {
+            var current = e.Touches[0];
+            UpdateTransform(
+                transform.Scale,
+                panStart.X + current.X - interactionStart.X,
+                panStart.Y + current.Y - interactionStart.Y);
+        }
+
+        EditorGraphicsView.Invalidate();
+    }
+
+    private void OnEndInteraction(object? sender, TouchEventArgs e)
+    {
+        activeHandleId = null;
+        isCanvasPanning = false;
+        drawable.ActiveHandleId = null;
+        EditorGraphicsView.Invalidate();
+    }
+
+    private void OnPinchUpdated(object? sender, PinchGestureUpdatedEventArgs e)
     {
         if (viewModel.SelectedPanel is null)
         {
             return;
         }
 
-        viewModel.UpdateSelectedPanelImageCrop(0d, 0d, 0d, 0d);
-        RefreshView();
+        switch (e.Status)
+        {
+            case GestureStatus.Started:
+                scaleStart = transform.Scale;
+                offsetStartX = transform.OffsetX;
+                offsetStartY = transform.OffsetY;
+                break;
+            case GestureStatus.Running:
+                var newScale = Math.Clamp(scaleStart * (float)e.Scale, MinimumScale, MaximumScale);
+                var focusX = (float)(e.ScaleOrigin.X - 0.5d) * (float)EditorGraphicsView.Width;
+                var focusY = (float)(e.ScaleOrigin.Y - 0.5d) * (float)EditorGraphicsView.Height;
+                UpdateTransform(
+                    newScale,
+                    offsetStartX - (focusX * (newScale - scaleStart)),
+                    offsetStartY - (focusY * (newScale - scaleStart)));
+                EditorGraphicsView.Invalidate();
+                break;
+        }
     }
 
-    private void OnResetPerspectiveClicked(object? sender, EventArgs e)
+    private void OnZoomInClicked(object? sender, EventArgs e)
+    {
+        UpdateTransform(transform.Scale + ScaleStep, transform.OffsetX, transform.OffsetY);
+        EditorGraphicsView.Invalidate();
+    }
+
+    private void OnZoomOutClicked(object? sender, EventArgs e)
+    {
+        UpdateTransform(transform.Scale - ScaleStep, transform.OffsetX, transform.OffsetY);
+        EditorGraphicsView.Invalidate();
+    }
+
+    private void OnResetViewportClicked(object? sender, EventArgs e)
+    {
+        ResetViewport();
+    }
+
+    private void OnResetGeometryClicked(object? sender, EventArgs e)
     {
         if (viewModel.SelectedPanel is null)
         {
             return;
         }
 
-        viewModel.UpdateSelectedPanelImagePerspective(0d, 0d, 1d, 0d, 0d, 1d, 1d, 1d);
-        RefreshView();
+        handles[0].NormalizedPosition = new PointF(0f, 0f);
+        handles[1].NormalizedPosition = new PointF(1f, 0f);
+        handles[2].NormalizedPosition = new PointF(1f, 1f);
+        handles[3].NormalizedPosition = new PointF(0f, 1f);
+        EditorGraphicsView.Invalidate();
     }
 
-    private async void OnCloseClicked(object? sender, EventArgs e)
+    private async void OnCancelClicked(object? sender, EventArgs e)
     {
         await Navigation.PopAsync();
     }
 
-    private static void UpdateHandle(VisualElement handle, double centerX, double centerY)
+    private async void OnConfirmClicked(object? sender, EventArgs e)
     {
-        handle.IsVisible = true;
-        var width = handle.WidthRequest > 0 ? handle.WidthRequest : 28d;
-        var height = handle.HeightRequest > 0 ? handle.HeightRequest : 28d;
-        AbsoluteLayout.SetLayoutBounds(handle, new Rect(centerX - (width / 2d), centerY - (height / 2d), width, height));
-        AbsoluteLayout.SetLayoutFlags(handle, AbsoluteLayoutFlags.None);
-    }
-
-    private static void UpdatePerspectiveHandle(VisualElement handle, Rect selectionRect, Point normalizedPoint)
-    {
-        var marginX = Math.Min(18d, selectionRect.Width * 0.12d);
-        var marginY = Math.Min(18d, selectionRect.Height * 0.12d);
-        var centerX = selectionRect.Left + marginX + (normalizedPoint.X * Math.Max(0d, selectionRect.Width - (marginX * 2d)));
-        var centerY = selectionRect.Top + marginY + (normalizedPoint.Y * Math.Max(0d, selectionRect.Height - (marginY * 2d)));
-        UpdateHandle(handle, centerX, centerY);
-    }
-
-    private void UpdateMasks(Rect imageRect, Rect selectionRect)
-    {
-        SetMask(MaskTop, new Rect(imageRect.X, imageRect.Y, imageRect.Width, Math.Max(0d, selectionRect.Y - imageRect.Y)));
-        SetMask(MaskBottom, new Rect(imageRect.X, selectionRect.Bottom, imageRect.Width, Math.Max(0d, imageRect.Bottom - selectionRect.Bottom)));
-        SetMask(MaskLeft, new Rect(imageRect.X, selectionRect.Y, Math.Max(0d, selectionRect.X - imageRect.X), selectionRect.Height));
-        SetMask(MaskRight, new Rect(selectionRect.Right, selectionRect.Y, Math.Max(0d, imageRect.Right - selectionRect.Right), selectionRect.Height));
-    }
-
-    private static void SetMask(BoxView mask, Rect rect)
-    {
-        mask.IsVisible = rect.Width > 0.5d && rect.Height > 0.5d;
-        AbsoluteLayout.SetLayoutBounds(mask, rect);
-        AbsoluteLayout.SetLayoutFlags(mask, AbsoluteLayoutFlags.None);
-    }
-
-    private static Rect GetImageBounds(string imagePath, double viewportWidth, double viewportHeight)
-    {
-        var pixelSize = TryGetImagePixelSize(imagePath);
-        if (pixelSize is null || pixelSize.Value.Width <= 0 || pixelSize.Value.Height <= 0)
+        var panel = viewModel.SelectedPanel;
+        var sourceImagePath = GetSourceImagePath(panel);
+        if (panel is null || sourceImagePath is null)
         {
-            return new Rect(0d, 0d, viewportWidth, viewportHeight);
+            await DisplayAlertAsync("Editor foto", "Immagine sorgente non disponibile.", "OK");
+            return;
         }
 
-        var sourceAspect = pixelSize.Value.Width / pixelSize.Value.Height;
-        var viewportAspect = viewportWidth / Math.Max(1d, viewportHeight);
+        using var busy = AppBusy.Show("Rettifica immagine...");
+        ConfirmButton.IsEnabled = false;
+        CropInfoLabel.Text = $"Generazione immagine per {panel.Name}...";
 
-        if (sourceAspect >= viewportAspect)
-        {
-            var width = viewportWidth;
-            var height = width / sourceAspect;
-            return new Rect(0d, (viewportHeight - height) / 2d, width, height);
-        }
-
-        var fittedHeight = viewportHeight;
-        var fittedWidth = fittedHeight * sourceAspect;
-        return new Rect((viewportWidth - fittedWidth) / 2d, 0d, fittedWidth, fittedHeight);
-    }
-
-    private static Size? TryGetImagePixelSize(string imagePath)
-    {
-#if ANDROID
         try
         {
-            var options = new Android.Graphics.BitmapFactory.Options { InJustDecodeBounds = true };
-            Android.Graphics.BitmapFactory.DecodeFile(imagePath, options);
-            if (options.OutWidth > 0 && options.OutHeight > 0)
+            var orderedCorners = GetOrderedHandlePoints();
+            var result = await rectificationService.GenerateAsync(
+                sourceImagePath,
+                orderedCorners.Select(point => new Point(point.X, point.Y)).ToArray(),
+                panel.Width,
+                panel.Height);
+
+            if (!result.IsSuccess || string.IsNullOrWhiteSpace(result.FilePath))
             {
-                return new Size(options.OutWidth, options.OutHeight);
+                throw new InvalidOperationException(result.Message);
+            }
+
+            ApplyHandleGeometry(orderedCorners);
+            viewModel.SetSelectedPanelRectifiedImage(sourceImagePath, result.FilePath);
+            await viewModel.SaveSelectedWallAsync();
+
+            await DisplayAlertAsync(
+                "Immagine pannello",
+                $"Immagine rettificata e salvata in formato {result.PixelWidth} x {result.PixelHeight} px.",
+                "OK");
+            await Navigation.PopAsync();
+        }
+        catch (Exception ex)
+        {
+            CropInfoLabel.Text = $"Pannello {panel.Name} - trascina i 4 punti come in HH";
+            await DisplayAlertAsync("Editor foto", ex.Message, "OK");
+        }
+        finally
+        {
+            ConfirmButton.IsEnabled = true;
+        }
+    }
+
+    private void UpdateHandle(string id, PointF normalizedPosition)
+    {
+        var handle = handles.First(item => item.Id == id);
+        handle.NormalizedPosition = normalizedPosition;
+    }
+
+    private void MoveActiveHandleTo(PointF touchPoint)
+    {
+        if (activeHandleId is null)
+        {
+            return;
+        }
+
+        var imageRect = drawable.LastImageRect;
+        if (imageRect.Width <= 0 || imageRect.Height <= 0)
+        {
+            return;
+        }
+
+        var canvasPoint = MapTouchToCanvas(touchPoint);
+        var normalized = new PointF(
+            Math.Clamp((canvasPoint.X - imageRect.Left) / imageRect.Width, 0f, 1f),
+            Math.Clamp((canvasPoint.Y - imageRect.Top) / imageRect.Height, 0f, 1f));
+
+        UpdateHandle(activeHandleId, normalized);
+    }
+
+    private PointF[] GetOrderedHandlePoints()
+    {
+        var points = handles
+            .Select(handle => new PointF(handle.NormalizedPosition.X, handle.NormalizedPosition.Y))
+            .ToArray();
+
+        return OrderCorners(points);
+    }
+
+    private void ApplyHandleGeometry(IReadOnlyList<PointF> ordered)
+    {
+        var minX = ordered.Min(point => point.X);
+        var minY = ordered.Min(point => point.Y);
+        var maxX = ordered.Max(point => point.X);
+        var maxY = ordered.Max(point => point.Y);
+        var width = Math.Max(0.001f, maxX - minX);
+        var height = Math.Max(0.001f, maxY - minY);
+
+        viewModel.UpdateSelectedPanelImageCrop(
+            minX,
+            minY,
+            1f - maxX,
+            1f - maxY);
+
+        viewModel.UpdateSelectedPanelImagePerspective(
+            (ordered[0].X - minX) / width,
+            (ordered[0].Y - minY) / height,
+            (ordered[1].X - minX) / width,
+            (ordered[1].Y - minY) / height,
+            (ordered[3].X - minX) / width,
+            (ordered[3].Y - minY) / height,
+            (ordered[2].X - minX) / width,
+            (ordered[2].Y - minY) / height);
+    }
+
+    private static string? GetSourceImagePath(PanelDefinition? panel)
+    {
+        if (panel is null)
+        {
+            return null;
+        }
+
+        if (!string.IsNullOrWhiteSpace(panel.ImageSourcePath) && File.Exists(panel.ImageSourcePath))
+        {
+            return panel.ImageSourcePath;
+        }
+
+        return !string.IsNullOrWhiteSpace(panel.ImagePath) && File.Exists(panel.ImagePath)
+            ? panel.ImagePath
+            : null;
+    }
+
+    private void UpdateTransform(float scale, float offsetX, float offsetY)
+    {
+        transform = new PanelImageCanvasTransformState
+        {
+            Scale = Math.Clamp(scale, MinimumScale, MaximumScale),
+            OffsetX = offsetX,
+            OffsetY = offsetY
+        };
+        ZoomLabel.Text = $"Zoom: {MathF.Round(transform.Scale * 100f)}%";
+    }
+
+    private void ResetViewport()
+    {
+        UpdateTransform(1f, 0f, 0f);
+        activeHandleId = null;
+        drawable.ActiveHandleId = null;
+        EditorGraphicsView.Invalidate();
+    }
+
+    private PointF MapTouchToCanvas(PointF touch)
+    {
+        var scale = transform.Scale <= 0f ? 1f : transform.Scale;
+        return new PointF(
+            (touch.X - transform.OffsetX) / scale,
+            (touch.Y - transform.OffsetY) / scale);
+    }
+
+    private string? TryFindHandle(PointF point, RectF imageRect)
+    {
+        const float radius = 28f;
+
+        foreach (var handle in handles)
+        {
+            var handlePoint = new PointF(
+                imageRect.Left + (handle.NormalizedPosition.X * imageRect.Width),
+                imageRect.Top + (handle.NormalizedPosition.Y * imageRect.Height));
+
+            var deltaX = handlePoint.X - point.X;
+            var deltaY = handlePoint.Y - point.Y;
+            var distance = MathF.Sqrt((deltaX * deltaX) + (deltaY * deltaY));
+            if (distance <= radius)
+            {
+                return handle.Id;
             }
         }
-        catch
-        {
-        }
-#endif
+
         return null;
     }
 
-    private static double ClampUnit(double value)
+    private static PanelImageEditorHandle CreateHandle(string id, float x, float y)
     {
-        return Math.Clamp(value, 0d, 1d);
+        return new PanelImageEditorHandle
+        {
+            Id = id,
+            NormalizedPosition = new PointF(x, y)
+        };
+    }
+
+    private static PointF ToAbsolutePoint(float left, float top, float width, float height, Point perspectivePoint)
+    {
+        return new PointF(
+            left + ((float)perspectivePoint.X * width),
+            top + ((float)perspectivePoint.Y * height));
+    }
+
+    private static PointF[] OrderCorners(IReadOnlyList<PointF> points)
+    {
+        var orderedByY = points.OrderBy(point => point.Y).ToArray();
+        var top = orderedByY.Take(2).OrderBy(point => point.X).ToArray();
+        var bottom = orderedByY.Skip(2).OrderBy(point => point.X).ToArray();
+        return
+        [
+            top[0],
+            top[1],
+            bottom[1],
+            bottom[0]
+        ];
     }
 }

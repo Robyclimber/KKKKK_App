@@ -1,8 +1,9 @@
-<maui:MauiWinUIApplication
-    x:Class="RuoteLab.WinUI.App"
+﻿<maui:MauiWinUIApplication
+    x:Class="RouteLab.WinUI.App"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:maui="using:Microsoft.Maui"
-    xmlns:local="using:RuoteLab.WinUI">
+    xmlns:local="using:RouteLab.WinUI">
 
 </maui:MauiWinUIApplication>
+

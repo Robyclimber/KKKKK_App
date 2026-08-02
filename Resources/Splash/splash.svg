@@ -1,14 +1,49 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg width="456" height="456" viewBox="0 0 456 456" version="1.1" xmlns="http://www.w3.org/2000/svg">
-  <rect x="0" y="0" width="456" height="456" fill="#0E0D0B" />
+    <rect x="0" y="0" width="456" height="456" fill="#0E0D0B" />
+    <path d="M62 338 L142 222 L190 274 L274 154 L394 338 Z" fill="#4E8B7A" />
+    <path d="M76 338 L142 242 L190 294 L274 176 L378 338 Z"
+          fill="#0E0D0B"
+          opacity="0.32" />
 
-  <path d="M 82 292 L 158 192 L 218 268 L 284 158 L 374 292" fill="none" stroke="#F2C94C" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
-  <path d="M 126 292 L 182 218 L 230 278" fill="none" stroke="#B9922F" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" opacity="0.95" />
+    <circle cx="139" cy="181" r="12" fill="#F2C94C" />
+    <circle cx="315" cy="193" r="12" fill="#F2C94C" />
+    <circle cx="150" cy="300" r="11" fill="#F2C94C" />
+    <circle cx="294" cy="338" r="11" fill="#F2C94C" />
 
-  <text x="228" y="360"
-        font-family="Open Sans, Segoe UI, sans-serif"
-        font-size="42"
-        font-weight="700"
-        text-anchor="middle"
-        fill="#F8E7A8">K-K-K-K</text>
+    <circle cx="226" cy="163" r="23" fill="#F2C94C" />
+    <path d="M209 191
+             C194 196 190 208 192 226
+             L199 267
+             L226 286
+             L253 267
+             L260 227
+             C263 210 258 197 243 192
+             L238 187
+             L214 187 Z"
+          fill="#F2C94C" />
+    <path d="M198 207 L168 218 L139 181"
+          fill="none"
+          stroke="#F2C94C"
+          stroke-width="18"
+          stroke-linecap="round"
+          stroke-linejoin="round" />
+    <path d="M254 216 L283 239 L315 193"
+          fill="none"
+          stroke="#F2C94C"
+          stroke-width="18"
+          stroke-linecap="round"
+          stroke-linejoin="round" />
+    <path d="M207 275 L181 276 L150 300"
+          fill="none"
+          stroke="#F2C94C"
+          stroke-width="20"
+          stroke-linecap="round"
+          stroke-linejoin="round" />
+    <path d="M245 275 L263 313 L294 338"
+          fill="none"
+          stroke="#F2C94C"
+          stroke-width="20"
+          stroke-linecap="round"
+          stroke-linejoin="round" />
 </svg>

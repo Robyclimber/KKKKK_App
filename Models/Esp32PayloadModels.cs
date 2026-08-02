@@ -1,4 +1,4 @@
-namespace RuoteLab.Models;
+﻿namespace RouteLab.Models;
 
 public sealed class Esp32WallConfigPayload
 {
@@ -116,6 +116,15 @@ public sealed class Esp32CircuitStepPayload
 public sealed class Esp32CircuitCommandRequest
 {
     public string CircuitId { get; init; } = string.Empty;
+}
+
+public sealed class Esp32AllLedsTestRequest
+{
+    public int LedCount { get; init; }
+
+    public int Brightness { get; init; }
+
+    public string Color { get; init; } = "#FFFFFF";
 }
 
 public sealed class Esp32RestFeedbackStartRequest
@@ -255,3 +264,4 @@ public sealed class Esp32EditorialCircuitMovementPayload
 
     public int S { get; init; }
 }
+

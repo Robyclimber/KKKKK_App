@@ -1,8 +1,8 @@
-using System.Globalization;
+﻿using System.Globalization;
 using Microsoft.Maui.Controls.Shapes;
-using RuoteLab.Models;
+using RouteLab.Models;
 
-namespace RuoteLab;
+namespace RouteLab;
 
 public partial class WallsPage : ContentPage
 {
@@ -24,6 +24,7 @@ public partial class WallsPage : ContentPage
             return;
         }
 
+        using var busy = AppBusy.Show("Caricamento pareti...");
         try
         {
             isRefreshing = true;
@@ -36,27 +37,15 @@ public partial class WallsPage : ContentPage
         }
     }
 
-    private async void OnAddWallClicked(object? sender, EventArgs e)
+    private async void OnNewWallClicked(object? sender, EventArgs e)
     {
-        try
+        if (app.GymSetupViewModel.SelectedRoom is null)
         {
-            app.GymSetupViewModel.AddWall(new WallInput
-            {
-                Name = WallNameEntry.Text?.Trim() ?? string.Empty,
-                Width = ParsePositiveDouble(WallWidthEntry.Text, "Inserisci una larghezza valida."),
-                Height = ParsePositiveDouble(WallHeightEntry.Text, "Inserisci un'altezza valida.")
-            });
+            await DisplayAlertAsync("Nuova parete", "Seleziona prima una sala.", "OK");
+            return;
+        }
 
-            WallNameEntry.Text = string.Empty;
-            WallWidthEntry.Text = string.Empty;
-            WallHeightEntry.Text = string.Empty;
-            SyncView();
-            await Shell.Current.GoToAsync("gym-setup-page");
-        }
-        catch (InvalidOperationException ex)
-        {
-            await DisplayAlertAsync("Pareti", ex.Message, "OK");
-        }
+        await Shell.Current.GoToAsync("new-wall-page");
     }
 
     private void SyncView()
@@ -68,19 +57,9 @@ public partial class WallsPage : ContentPage
         SelectedRoomLabel.Text = selectedRoom is null
             ? "Nessuna sala selezionata."
             : $"Sala selezionata: {selectedRoom.Name}";
-        SelectedWallLabel.Text = viewModel.SelectedWall is null
-            ? "Nessuna parete selezionata."
-            : $"Parete selezionata: {viewModel.SelectedWall.Name}";
         WallsSummaryLabel.Text = walls.Count == 1 ? "1 parete" : $"{walls.Count} pareti";
 
-        WallNameEntry.Placeholder = viewModel.SuggestedNextWallName;
-        WallNameEntry.IsEnabled = selectedRoom is not null;
-        WallWidthEntry.IsEnabled = selectedRoom is not null;
-        WallHeightEntry.IsEnabled = selectedRoom is not null;
-        OpenSelectedWallDetailButton.IsEnabled = viewModel.SelectedWall is not null;
-        AddWallHintLabel.Text = selectedRoom is null
-            ? "Seleziona prima una sala."
-            : "Aggiungi una parete a questa sala.";
+        WallsActions.CanAdd = selectedRoom is not null;
         WallsHost.Children.Clear();
         WallsEmptyLabel.IsVisible = walls.Count == 0;
 
@@ -94,7 +73,7 @@ public partial class WallsPage : ContentPage
     {
         var openButton = new Button
         {
-            Text = "Apri dettaglio parete",
+            Text = "Apri parete",
             Style = (Style)Application.Current!.Resources["PrimaryActionButtonStyle"]
         };
         openButton.Clicked += async (_, _) =>
@@ -138,29 +117,4 @@ public partial class WallsPage : ContentPage
         };
     }
 
-    private async void OnOpenSelectedWallDetailClicked(object? sender, EventArgs e)
-    {
-        if (app.GymSetupViewModel.SelectedWall is null)
-        {
-            return;
-        }
-
-        await Shell.Current.GoToAsync("gym-setup-page");
-    }
-
-    private static double ParsePositiveDouble(string? value, string errorMessage)
-    {
-        if (!double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var result) &&
-            !double.TryParse(value, NumberStyles.Float, CultureInfo.CurrentCulture, out result))
-        {
-            throw new InvalidOperationException(errorMessage);
-        }
-
-        if (result <= 0)
-        {
-            throw new InvalidOperationException(errorMessage);
-        }
-
-        return result;
-    }
 }

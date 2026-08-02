@@ -1,10 +1,10 @@
-using System.Net.Http.Headers;
+﻿using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using RuoteLab.Models;
+using RouteLab.Models;
 
-namespace RuoteLab.Services;
+namespace RouteLab.Services;
 
 public sealed class Esp32ApiClient : IEsp32ApiClient
 {
@@ -91,6 +91,16 @@ public sealed class Esp32ApiClient : IEsp32ApiClient
     public Task<Esp32ApiResponse<Esp32SimpleResultData>> StartRandomSequenceTestAsync(Esp32DeviceSettings settings, CancellationToken cancellationToken = default)
     {
         return SendAsync<Esp32SimpleResultData>(settings, HttpMethod.Post, "test/random-sequence", new { }, cancellationToken);
+    }
+
+    public Task<Esp32ApiResponse<Esp32SimpleResultData>> StartAllLedsTestAsync(Esp32DeviceSettings settings, CancellationToken cancellationToken = default)
+    {
+        return SendAsync<Esp32SimpleResultData>(settings, HttpMethod.Post, "test/all-leds", new Esp32AllLedsTestRequest
+        {
+            LedCount = settings.WallLedCount,
+            Brightness = settings.BrightnessLimit,
+            Color = "#FFFFFF"
+        }, cancellationToken);
     }
 
     public Task<Esp32ApiResponse<Esp32SimpleResultData>> StartRestFeedbackAsync(Esp32DeviceSettings settings, Esp32RestFeedbackStartRequest request, CancellationToken cancellationToken = default)
@@ -195,7 +205,7 @@ public sealed class Esp32ApiClient : IEsp32ApiClient
     {
         if (string.IsNullOrWhiteSpace(baseUrl))
         {
-            throw new InvalidOperationException("Inserisci il Base URL dell'ESP32.");
+            throw new InvalidOperationException("Inserisci il Base URL di RouteLab Hub.");
         }
 
         var normalized = baseUrl.Trim().TrimEnd('/');

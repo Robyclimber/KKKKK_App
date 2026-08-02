@@ -1,8 +1,16 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="RuoteLab.UtilityPage"
+             x:Class="RouteLab.UtilityPage"
              Title="Utility">
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Salva impostazioni RouteLab Hub"
+                     IconImageSource="save.svg"
+                     Order="Primary"
+                     Priority="0"
+                     Clicked="OnSaveEsp32SettingsClicked" />
+    </ContentPage.ToolbarItems>
+
     <ScrollView>
         <VerticalStackLayout Padding="20,16,20,24" Spacing="18">
             <VerticalStackLayout Spacing="4">
@@ -18,8 +26,8 @@
 
             <Border BackgroundColor="{StaticResource PanelBlackAlt}" Stroke="{StaticResource WarmGoldMuted}" StrokeShape="RoundRectangle 18" Padding="16">
                 <VerticalStackLayout Spacing="12">
-                    <Label Text="ESP32" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
-                    <Label Text="Pannello tecnico per testare le API HTTP dell'ESP32 direttamente dall'app."
+                    <Label Text="RouteLab Hub" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
+                    <Label Text="Pannello tecnico per configurare e verificare il controller della parete."
                            TextColor="{StaticResource MutedText}" />
                     <VerticalStackLayout Spacing="4">
                         <Label Text="Base URL dispositivo" TextColor="{StaticResource MutedText}" FontSize="13" />
@@ -28,7 +36,7 @@
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                         <VerticalStackLayout Spacing="4">
                             <Label Text="Controller ID" TextColor="{StaticResource MutedText}" FontSize="13" />
-                            <Entry x:Name="Esp32ControllerIdEntry" Placeholder="esp32-sala-1" />
+                            <Entry x:Name="Esp32ControllerIdEntry" Placeholder="routelab-hub-sala-1" />
                         </VerticalStackLayout>
                         <VerticalStackLayout Grid.Column="1" Spacing="4">
                             <Label Text="LED parete" TextColor="{StaticResource MutedText}" FontSize="13" />
@@ -39,8 +47,6 @@
                         <Label Text="Brightness limit" TextColor="{StaticResource MutedText}" FontSize="13" />
                         <Entry x:Name="Esp32BrightnessLimitEntry" Keyboard="Numeric" />
                     </VerticalStackLayout>
-                    <Button Text="Salva impostazioni ESP32"
-                            Clicked="OnSaveEsp32SettingsClicked" />
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
                         <Button Text="Health" Clicked="OnEsp32HealthClicked" />
                         <Button Grid.Column="1" Text="Status" Clicked="OnEsp32StatusClicked" />
@@ -69,7 +75,7 @@
                         <Button Text="Invia circuiti editoriali"
                                 Clicked="OnSyncEditorialCircuitsClicked" />
                         <Button Grid.Column="1"
-                                Text="Importa circuiti da ESP32"
+                                Text="Importa circuiti da RouteLab Hub"
                                 Clicked="OnImportEditorialCircuitsClicked" />
                     </Grid>
                     <Label Text="Attenzione: Sync circuiti sovrascrive i circuiti gia' presenti sul dispositivo per la parete selezionata."
@@ -96,11 +102,16 @@
                                 Text="Stop test random"
                                 Clicked="OnStopRandomSequenceTestClicked" />
                     </Grid>
+                    <Label Text="Verifica cablaggio: accende simultaneamente tutti i LED configurati. Usa Clear LED per spegnerli."
+                           TextColor="{StaticResource WarmGold}"
+                           FontSize="12" />
+                    <Button Text="Accendi tutti i LED"
+                            Clicked="OnAllLedsTestClicked" />
                     <Label Text="Assunzione attuale: ogni foro viene esportato su LED progressivo in ordine foro, partendo da 0."
                            TextColor="{StaticResource MutedText}"
                            FontSize="12" />
                     <Label x:Name="Esp32StatusLabel"
-                           Text="Nessuna chiamata ESP32 eseguita."
+                           Text="Nessuna chiamata a RouteLab Hub eseguita."
                            TextColor="{StaticResource MutedText}"
                            FontSize="12" />
                 </VerticalStackLayout>

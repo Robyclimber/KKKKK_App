@@ -1,5 +1,0 @@
-<Solution>
-  <Project Path="WallPanelPlanner.csproj">
-    <Deploy Solution="Debug|*" />
-  </Project>
-</Solution>

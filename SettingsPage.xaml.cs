@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using RouteLab.Models;
 
 namespace RouteLab;
@@ -623,4 +623,6 @@ public partial class SettingsPage : ContentPage
         return $"#{red:X2}{green:X2}{blue:X2}";
     }
 }
+
+
 

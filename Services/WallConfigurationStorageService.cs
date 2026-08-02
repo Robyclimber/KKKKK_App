@@ -1,6 +1,6 @@
-using RuoteLab.Models;
+﻿using RouteLab.Models;
 
-namespace RuoteLab.Services;
+namespace RouteLab.Services;
 
 public sealed class WallConfigurationStorageService : IWallConfigurationStorageService
 {
@@ -14,8 +14,17 @@ public sealed class WallConfigurationStorageService : IWallConfigurationStorageS
     public async Task<string> SaveAsync(WallDefinition wall, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(wall);
-        wall.ValidateHardwareMappings();
+        wall.AutoAssignLedIndicesByWallRouting();
         var wallId = await wallRepository.SaveAsync(wall, cancellationToken);
         return $"DB wall id: {wallId}";
+    }
+
+    public Task SaveHoleAsync(
+        WallDefinition wall,
+        WallHoleDefinition hole,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(wall);
+        return wallRepository.SaveHoleAsync(wall, hole, cancellationToken);
     }
 }

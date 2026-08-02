@@ -1,4 +1,4 @@
-namespace RuoteLab.Models;
+﻿namespace RouteLab.Models;
 
 public enum HoldSize
 {
@@ -9,3 +9,4 @@ public enum HoldSize
     Xl = 4,
     Xxl = 5
 }
+

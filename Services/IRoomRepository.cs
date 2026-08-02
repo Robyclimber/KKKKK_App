@@ -1,6 +1,6 @@
-using RuoteLab.Models;
+﻿using RouteLab.Models;
 
-namespace RuoteLab.Services;
+namespace RouteLab.Services;
 
 public interface IRoomRepository
 {
@@ -8,3 +8,4 @@ public interface IRoomRepository
 
     Task<int> SaveAsync(RoomDefinition room, CancellationToken cancellationToken = default);
 }
+

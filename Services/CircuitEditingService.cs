@@ -1,6 +1,6 @@
-using RuoteLab.Models;
+﻿using RouteLab.Models;
 
-namespace RuoteLab.Services;
+namespace RouteLab.Services;
 
 public sealed class CircuitEditingService : ICircuitEditingService
 {
@@ -16,33 +16,38 @@ public sealed class CircuitEditingService : ICircuitEditingService
         this.appSettingsService = appSettingsService;
     }
 
-    public CircuitDefinition CreateCircuit(string? name, string? difficulty, string? inclination, bool suggestNextHoldEnabled, CircuitGlobalsDefinition? globals, WallDefinition wall, string fallbackName)
+    public CircuitDefinition CreateCircuit(string? name, string? difficulty, string? inclination, string? climberProfileId, bool suggestNextHoldEnabled, CircuitGlobalsDefinition? globals, IReadOnlyList<WallDefinition> walls, string fallbackName)
     {
-        ArgumentNullException.ThrowIfNull(wall);
+        ArgumentNullException.ThrowIfNull(walls);
+        ValidateWalls(walls);
 
         var defaults = appSettingsService.Load().CircuitDefaults;
         var effectiveGlobals = globals is null ? defaults : CloneGlobals(globals);
+        var primaryWall = walls[0];
 
-        return new CircuitDefinition
+        var circuit = new CircuitDefinition
         {
             CircuitId = Guid.NewGuid().ToString("N"),
             Name = string.IsNullOrWhiteSpace(name) ? fallbackName : name.Trim(),
             Difficulty = difficulty?.Trim() ?? string.Empty,
             Inclination = inclination?.Trim() ?? string.Empty,
+            ClimberProfileId = NormalizeClimberProfileId(climberProfileId),
             SuggestNextHoldEnabled = suggestNextHoldEnabled,
-            RoomName = wall.RoomName,
-            WallName = wall.Name,
+            RoomName = primaryWall.RoomName,
             Globals = CloneGlobals(effectiveGlobals)
         };
+        circuit.SetWallNames(walls.Select(wall => wall.Name));
+        return circuit;
     }
 
-    public void UpdateCircuitMetadata(CircuitDefinition circuit, string? name, string? difficulty, string? inclination, bool suggestNextHoldEnabled, CircuitGlobalsDefinition? globals)
+    public void UpdateCircuitMetadata(CircuitDefinition circuit, string? name, string? difficulty, string? inclination, string? climberProfileId, bool suggestNextHoldEnabled, CircuitGlobalsDefinition? globals)
     {
         ArgumentNullException.ThrowIfNull(circuit);
 
         circuit.Name = string.IsNullOrWhiteSpace(name) ? circuit.Name : name.Trim();
         circuit.Difficulty = difficulty?.Trim() ?? string.Empty;
         circuit.Inclination = inclination?.Trim() ?? string.Empty;
+        circuit.ClimberProfileId = NormalizeClimberProfileId(climberProfileId);
         circuit.SuggestNextHoldEnabled = suggestNextHoldEnabled;
         if (globals is not null)
         {
@@ -50,12 +55,47 @@ public sealed class CircuitEditingService : ICircuitEditingService
         }
     }
 
+    public void UpdateCircuitWalls(CircuitDefinition circuit, IReadOnlyList<WallDefinition> walls)
+    {
+        ArgumentNullException.ThrowIfNull(circuit);
+        ArgumentNullException.ThrowIfNull(walls);
+        ValidateWalls(walls);
+
+        var selectedNames = walls
+            .Select(wall => wall.Name)
+            .ToHashSet(StringComparer.Ordinal);
+        var removedWallsWithMovements = circuit.Movements
+            .Where(movement => !selectedNames.Contains(movement.WallName))
+            .Select(movement => movement.WallName)
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(name => name)
+            .ToList();
+        if (removedWallsWithMovements.Count > 0)
+        {
+            throw new InvalidOperationException(
+                $"Non puoi rimuovere le pareti {string.Join(", ", removedWallsWithMovements)}: contengono movimenti del circuito.");
+        }
+
+        circuit.RoomName = walls[0].RoomName;
+        circuit.SetWallNames(walls.Select(wall => wall.Name));
+    }
+
     public void ToggleMovement(CircuitDefinition circuit, string wallName, WallHoleDefinition hole, HandSide hand, MovementRole role)
     {
         ArgumentNullException.ThrowIfNull(circuit);
 
+        if (role == MovementRole.Feet)
+        {
+            ToggleFootHold(circuit, wallName, hole);
+            return;
+        }
+
         var existing = circuit.Movements
-            .FirstOrDefault(m => m.WallName == wallName && m.HoleNumber == hole.Number && m.Hand == hand);
+            .FirstOrDefault(m =>
+                m.WallName == wallName &&
+                m.HoleNumber == hole.Number &&
+                m.Hand == hand &&
+                !m.IsFootHold);
 
         if (existing is not null)
         {
@@ -80,7 +120,18 @@ public sealed class CircuitEditingService : ICircuitEditingService
             }
         }
 
+        foreach (var footHold in circuit.Movements
+                     .Where(movement =>
+                         movement.WallName == wallName &&
+                         movement.HoleNumber == hole.Number &&
+                         movement.IsFootHold)
+                     .ToList())
+        {
+            circuit.Movements.Remove(footHold);
+        }
+
         var nextSequence = circuit.Movements
+            .Where(movement => !movement.IsFootHold)
             .Select(m => m.Sequence)
             .DefaultIfEmpty(0)
             .Max() + 1;
@@ -92,6 +143,42 @@ public sealed class CircuitEditingService : ICircuitEditingService
             Hand = hand,
             Role = role,
             Sequence = nextSequence
+        });
+
+        Resequence(circuit);
+    }
+
+    public void ToggleFootHold(CircuitDefinition circuit, string wallName, WallHoleDefinition hole)
+    {
+        ArgumentNullException.ThrowIfNull(circuit);
+
+        var existing = circuit.Movements.FirstOrDefault(movement =>
+            movement.WallName == wallName &&
+            movement.HoleNumber == hole.Number &&
+            movement.IsFootHold);
+        if (existing is not null)
+        {
+            circuit.Movements.Remove(existing);
+            Resequence(circuit);
+            return;
+        }
+
+        foreach (var movement in circuit.Movements
+                     .Where(movement =>
+                         movement.WallName == wallName &&
+                         movement.HoleNumber == hole.Number)
+                     .ToList())
+        {
+            circuit.Movements.Remove(movement);
+        }
+
+        circuit.Movements.Add(new CircuitMovementDefinition
+        {
+            WallName = wallName,
+            HoleNumber = hole.Number,
+            Hand = HandSide.Left,
+            Role = MovementRole.Feet,
+            Sequence = 0
         });
 
         Resequence(circuit);
@@ -113,13 +200,31 @@ public sealed class CircuitEditingService : ICircuitEditingService
 
     private static void Resequence(CircuitDefinition circuit)
     {
+        var footHolds = circuit.Movements
+            .Where(movement => movement.IsFootHold)
+            .OrderBy(movement => movement.WallName, StringComparer.Ordinal)
+            .ThenBy(movement => movement.HoleNumber)
+            .ToList();
         var orderedMovements = circuit.Movements
+            .Where(movement => !movement.IsFootHold)
             .OrderBy(movement => GetRoleOrder(movement.Role))
             .ThenBy(movement => movement.Sequence)
             .ThenBy(movement => movement.Hand)
             .ToList();
 
         circuit.Movements.Clear();
+
+        foreach (var footHold in footHolds)
+        {
+            circuit.Movements.Add(new CircuitMovementDefinition
+            {
+                WallName = footHold.WallName,
+                HoleNumber = footHold.HoleNumber,
+                Hand = HandSide.Left,
+                Role = MovementRole.Feet,
+                Sequence = 0
+            });
+        }
 
         for (var index = 0; index < orderedMovements.Count; index++)
         {
@@ -162,4 +267,29 @@ public sealed class CircuitEditingService : ICircuitEditingService
             HoldDurationMs = source.HoldDurationMs
         };
     }
+
+    private static string NormalizeClimberProfileId(string? climberProfileId)
+    {
+        return string.IsNullOrWhiteSpace(climberProfileId)
+            ? ClimberProfileDefinition.DefaultProfileId
+            : climberProfileId.Trim();
+    }
+
+    private static void ValidateWalls(IReadOnlyList<WallDefinition> walls)
+    {
+        if (walls.Count == 0)
+        {
+            throw new InvalidOperationException("Seleziona almeno una parete per il circuito.");
+        }
+
+        var roomNames = walls
+            .Select(wall => wall.RoomName)
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+        if (roomNames.Count > 1)
+        {
+            throw new InvalidOperationException("Le pareti di un circuito devono appartenere alla stessa sala.");
+        }
+    }
 }
+

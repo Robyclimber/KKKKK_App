@@ -1,6 +1,6 @@
-using SQLite;
+﻿using SQLite;
 
-namespace RuoteLab.Persistence;
+namespace RouteLab.Persistence;
 
 public interface ISqliteDatabaseFactory
 {
@@ -8,3 +8,4 @@ public interface ISqliteDatabaseFactory
 
     Task ResetAllDataAsync();
 }
+

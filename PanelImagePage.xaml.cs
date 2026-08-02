@@ -1,13 +1,16 @@
-using System.Globalization;
+﻿using System.Globalization;
 using Shapes = Microsoft.Maui.Controls.Shapes;
-using RuoteLab.Services;
-using RuoteLab.Ui;
-using RuoteLab.ViewModels;
+using RouteLab.Models;
+using RouteLab.Services;
+using RouteLab.Ui;
+using RouteLab.ViewModels;
 
-namespace RuoteLab;
+namespace RouteLab;
 
 public partial class PanelImagePage : ContentPage
 {
+    private const double MaximumPreviewHeight = 420d;
+
     private readonly App app;
     private readonly GymSetupViewModel viewModel;
     private readonly IWallImageService wallImageService;
@@ -33,29 +36,44 @@ public partial class PanelImagePage : ContentPage
     private void SyncView()
     {
         var panel = viewModel.SelectedPanel;
-        Title = panel is null ? "Immagine pannello" : $"Immagine · {panel.Name}";
+        Title = panel is null ? "Immagine pannello" : $"Immagine - {panel.Name}";
         PanelContextLabel.Text = panel is null
             ? "Nessun pannello selezionato."
             : $"Pannello selezionato: {panel.Name}";
+        PanelFormatLabel.Text = BuildPanelFormatText(panel);
         PanelImageInfoLabel.Text = panel is null
             ? "Seleziona un pannello dalla pagina parete."
             : string.IsNullOrWhiteSpace(panel.ImagePath)
                 ? $"Nessuna immagine associata al pannello {panel.Name}."
-                : $"Immagine del pannello {panel.Name}: {Path.GetFileName(panel.ImagePath)}";
+                : BuildImageInfoText(panel);
         SuggestedFlowLabel.Text = panel is null
             ? "Seleziona un pannello dalla pagina parete."
             : string.IsNullOrWhiteSpace(panel.ImagePath)
                 ? "Carica una foto del pannello per iniziare."
-                : "Apri ritaglio, poi usa auto allineamento o rifinitura manuale.";
+                : panel.IsImageRectified
+                    ? "La foto rettificata e' l'immagine attiva del pannello."
+                    : "Apri l'editor, definisci i quattro punti e conferma.";
+        SuggestedStepsLabel.Text = panel is null
+            ? "1. Seleziona pannello. 2. Carica foto. 3. Adatta e correggi."
+            : string.IsNullOrWhiteSpace(panel.ImagePath)
+                ? "1. Carica foto. 2. Apri editor."
+                : panel.IsImageRectified
+                    ? "Per cambiare il ritaglio riapri l'editor a quattro punti."
+                    : "1. Apri editor. 2. Posiziona i punti. 3. Conferma e usa.";
 
-        var enabled = panel is not null;
-        LoadImageButton.IsEnabled = enabled;
-        ClearImageButton.IsEnabled = enabled;
-        AnalyzeHoldsButton.IsEnabled = enabled;
-        AutoAlignButton.IsEnabled = enabled;
-        OpenCropEditorButton.IsEnabled = enabled;
-        ApplyAlignmentButton.IsEnabled = enabled;
-        ToggleAdvancedButton.IsEnabled = enabled;
+        var hasPanel = panel is not null;
+        var hasImage = hasPanel &&
+            !string.IsNullOrWhiteSpace(panel!.ImagePath) &&
+            File.Exists(panel.ImagePath);
+        LoadImageButton.IsEnabled = hasPanel;
+        ClearImageButton.IsEnabled = hasImage;
+        AnalyzeHoldsButton.IsEnabled = hasImage;
+        AutoAlignButton.IsEnabled = hasImage;
+        OpenCropEditorButton.IsEnabled = hasImage;
+        FitImageButton.IsEnabled = hasImage;
+        ApplyAlignmentButton.IsEnabled = hasImage;
+        ToggleAdvancedButton.IsEnabled = hasImage;
+        AdvancedSection.IsEnabled = hasImage;
 
         ImageOffsetXEntry.Text = ToEditorText(panel?.ImageOffsetX ?? 0d);
         ImageOffsetYEntry.Text = ToEditorText(panel?.ImageOffsetY ?? 0d);
@@ -66,7 +84,6 @@ public partial class PanelImagePage : ContentPage
         ImageCropRightEntry.Text = ToPercentEditorText(panel?.ImageCropRight ?? 0d);
         ImageCropBottomEntry.Text = ToPercentEditorText(panel?.ImageCropBottom ?? 0d);
 
-        var hasImage = panel is not null && !string.IsNullOrWhiteSpace(panel.ImagePath) && File.Exists(panel.ImagePath);
         ImagePreviewWarpHost.IsVisible = hasImage;
         ImagePreviewEmptyLabel.IsVisible = !hasImage;
 
@@ -74,7 +91,13 @@ public partial class PanelImagePage : ContentPage
         ToggleAdvancedButton.Text = isAdvancedVisible ? "Nascondi controlli avanzati" : "Mostra controlli avanzati";
 
         UpdateMeters();
+        UpdatePreviewViewportSize(panel);
         ApplyImagePreviewTransform();
+    }
+
+    private void OnImagePreviewFrameSizeChanged(object? sender, EventArgs e)
+    {
+        UpdatePreviewViewportSize(viewModel.SelectedPanel);
     }
 
     private void OnImagePreviewHostSizeChanged(object? sender, EventArgs e)
@@ -82,8 +105,41 @@ public partial class PanelImagePage : ContentPage
         ApplyImagePreviewTransform();
     }
 
+    private void UpdatePreviewViewportSize(PanelDefinition? panel)
+    {
+        var availableWidth = ImagePreviewFrame.Width - ImagePreviewFrame.Padding.HorizontalThickness;
+        if (availableWidth <= 1d)
+        {
+            return;
+        }
+
+        var panelAspect = panel is not null && panel.Width > 0d && panel.Height > 0d
+            ? panel.Width / panel.Height
+            : 1d;
+        var previewWidth = availableWidth;
+        var previewHeight = previewWidth / panelAspect;
+
+        if (previewHeight > MaximumPreviewHeight)
+        {
+            previewHeight = MaximumPreviewHeight;
+            previewWidth = previewHeight * panelAspect;
+        }
+
+        previewWidth = Math.Max(1d, previewWidth);
+        previewHeight = Math.Max(1d, previewHeight);
+        if (Math.Abs(ImagePreviewHost.WidthRequest - previewWidth) < 0.5d &&
+            Math.Abs(ImagePreviewHost.HeightRequest - previewHeight) < 0.5d)
+        {
+            return;
+        }
+
+        ImagePreviewHost.WidthRequest = previewWidth;
+        ImagePreviewHost.HeightRequest = previewHeight;
+    }
+
     private async void OnLoadImageClicked(object? sender, EventArgs e)
     {
+        using var busy = AppBusy.Show("Caricamento immagine...");
         try
         {
             EnsurePanelSelected();
@@ -91,6 +147,12 @@ public partial class PanelImagePage : ContentPage
             if (!string.IsNullOrWhiteSpace(importedPath))
             {
                 viewModel.SetSelectedPanelImage(importedPath);
+                var panel = viewModel.SelectedPanel!;
+                var imageSize = ImageFileSizeReader.TryGetPixelSize(importedPath);
+                if (imageSize is not null && imageSize.Value.Width > 0 && imageSize.Value.Height > 0)
+                {
+                    FitImageCropToPanel(panel, imageSize.Value);
+                }
             }
 
             SyncView();
@@ -115,6 +177,32 @@ public partial class PanelImagePage : ContentPage
         }
     }
 
+    private async void OnFitImageClicked(object? sender, EventArgs e)
+    {
+        try
+        {
+            EnsurePanelSelected();
+            var panel = viewModel.SelectedPanel!;
+            if (string.IsNullOrWhiteSpace(panel.ImagePath) || !File.Exists(panel.ImagePath))
+            {
+                throw new InvalidOperationException("Carica prima una foto del pannello.");
+            }
+
+            var imageSize = ImageFileSizeReader.TryGetPixelSize(panel.ImagePath);
+            if (imageSize is null || imageSize.Value.Width <= 0 || imageSize.Value.Height <= 0)
+            {
+                throw new InvalidOperationException("Non riesco a leggere il formato della foto per adattarla al pannello.");
+            }
+
+            FitImageCropToPanel(panel, imageSize.Value);
+            SyncView();
+        }
+        catch (InvalidOperationException ex)
+        {
+            await DisplayAlertAsync("Immagine pannello", ex.Message, "OK");
+        }
+    }
+
     private async void OnAnalyzeHoldsClicked(object? sender, EventArgs e)
     {
         try
@@ -130,7 +218,10 @@ public partial class PanelImagePage : ContentPage
                 throw new InvalidOperationException("Carica prima una foto del pannello.");
             }
 
-            await Navigation.PushAsync(new HoldAnalysisPage(viewModel, app.WallConfigurationStorageService, viewModel.SelectedWall));
+            await Navigation.PushAsync(new HoldAnalysisPage(
+                app.WallConfigurationStorageService,
+                viewModel.SelectedWall,
+                viewModel.SelectedPanel!));
         }
         catch (InvalidOperationException ex)
         {
@@ -140,6 +231,7 @@ public partial class PanelImagePage : ContentPage
 
     private async void OnAutoAlignClicked(object? sender, EventArgs e)
     {
+        using var busy = AppBusy.Show("Analisi immagine...");
         try
         {
             EnsurePanelSelected();
@@ -267,6 +359,20 @@ public partial class PanelImagePage : ContentPage
                 return;
             }
 
+            if (panel.IsImageRectified)
+            {
+                PerspectiveImageLayoutHelper.Render(
+                    ImagePreviewWarpHost,
+                    panel.ImagePath!,
+                    panel.ImageOpacity <= 0 ? 0.55d : panel.ImageOpacity,
+                    new Rect(0d, 0d, ImagePreviewHost.Width, ImagePreviewHost.Height),
+                    new Rect(0d, 0d, ImagePreviewHost.Width, ImagePreviewHost.Height),
+                    panel);
+                ImagePreviewHost.Clip = new Shapes.RectangleGeometry(
+                    new Rect(0d, 0d, ImagePreviewHost.Width, ImagePreviewHost.Height));
+                return;
+            }
+
             var imageBounds = GetImageBounds(panel.ImagePath, ImagePreviewHost.Width, ImagePreviewHost.Height);
             var cropWidthFactor = panel.EffectiveImageCropWidthFactor;
             var cropHeightFactor = panel.EffectiveImageCropHeightFactor;
@@ -292,7 +398,7 @@ public partial class PanelImagePage : ContentPage
 
     private static Rect GetImageBounds(string imagePath, double viewportWidth, double viewportHeight)
     {
-        var pixelSize = TryGetImagePixelSize(imagePath);
+        var pixelSize = ImageFileSizeReader.TryGetPixelSize(imagePath);
         if (pixelSize is null || pixelSize.Value.Width <= 0 || pixelSize.Value.Height <= 0)
         {
             return new Rect(0d, 0d, viewportWidth, viewportHeight);
@@ -311,25 +417,6 @@ public partial class PanelImagePage : ContentPage
         var fittedHeight = viewportHeight;
         var fittedWidth = fittedHeight * sourceAspect;
         return new Rect((viewportWidth - fittedWidth) / 2d, 0d, fittedWidth, fittedHeight);
-    }
-
-    private static Size? TryGetImagePixelSize(string imagePath)
-    {
-#if ANDROID
-        try
-        {
-            var options = new Android.Graphics.BitmapFactory.Options { InJustDecodeBounds = true };
-            Android.Graphics.BitmapFactory.DecodeFile(imagePath, options);
-            if (options.OutWidth > 0 && options.OutHeight > 0)
-            {
-                return new Size(options.OutWidth, options.OutHeight);
-            }
-        }
-        catch
-        {
-        }
-#endif
-        return null;
     }
 
     private void EnsurePanelSelected()
@@ -364,5 +451,67 @@ public partial class PanelImagePage : ContentPage
         }
 
         return value;
+    }
+
+    private void FitImageCropToPanel(PanelDefinition panel, Size imageSize)
+    {
+        var panelAspect = panel.Width / Math.Max(1d, panel.Height);
+        var imageAspect = imageSize.Width / Math.Max(1d, imageSize.Height);
+
+        if (panelAspect <= 0 || imageAspect <= 0)
+        {
+            throw new InvalidOperationException("Formato pannello o immagine non valido.");
+        }
+
+        if (Math.Abs(panelAspect - imageAspect) < 0.0001d)
+        {
+            viewModel.UpdateSelectedPanelImageCrop(0d, 0d, 0d, 0d);
+            return;
+        }
+
+        if (imageAspect > panelAspect)
+        {
+            var keptWidthRatio = panelAspect / imageAspect;
+            var cropHorizontal = (1d - keptWidthRatio) / 2d;
+            viewModel.UpdateSelectedPanelImageCrop(cropHorizontal, 0d, cropHorizontal, 0d);
+            return;
+        }
+
+        var keptHeightRatio = imageAspect / panelAspect;
+        var cropVertical = (1d - keptHeightRatio) / 2d;
+        viewModel.UpdateSelectedPanelImageCrop(0d, cropVertical, 0d, cropVertical);
+    }
+
+    private static string BuildPanelFormatText(PanelDefinition? panel)
+    {
+        if (panel is null)
+        {
+            return "Formato pannello non disponibile.";
+        }
+
+        return $"Pannello: {panel.Width:0.#} x {panel.Height:0.#} mm - {GetOrientationLabel(panel.Width, panel.Height)}";
+    }
+
+    private static string BuildImageInfoText(PanelDefinition panel)
+    {
+        var fileName = Path.GetFileName(panel.ImagePath);
+        var imageSize = ImageFileSizeReader.TryGetPixelSize(panel.ImagePath!);
+        var status = panel.IsImageRectified ? "Rettificata" : "Originale";
+        if (imageSize is null)
+        {
+            return $"{status} - {fileName}";
+        }
+
+        return $"{status} - {fileName} - {imageSize.Value.Width:0} x {imageSize.Value.Height:0} px - {GetOrientationLabel(imageSize.Value.Width, imageSize.Value.Height)}";
+    }
+
+    private static string GetOrientationLabel(double width, double height)
+    {
+        if (Math.Abs(width - height) < 0.01d)
+        {
+            return "quadrato";
+        }
+
+        return width > height ? "orizzontale" : "verticale";
     }
 }

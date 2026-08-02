@@ -1,4 +1,4 @@
-namespace RuoteLab.Models;
+﻿namespace RouteLab.Models;
 
 public sealed class WallEditorState
 {
@@ -12,3 +12,4 @@ public sealed class WallEditorState
 
     public string WallHeightText { get; init; } = "2800";
 }
+

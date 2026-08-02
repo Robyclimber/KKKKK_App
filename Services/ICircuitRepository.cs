@@ -1,6 +1,6 @@
-using RuoteLab.Models;
+﻿using RouteLab.Models;
 
-namespace RuoteLab.Services;
+namespace RouteLab.Services;
 
 public interface ICircuitRepository
 {
@@ -10,3 +10,4 @@ public interface ICircuitRepository
 
     Task DeleteAsync(int circuitId, CancellationToken cancellationToken = default);
 }
+

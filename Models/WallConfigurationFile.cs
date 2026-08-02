@@ -1,4 +1,4 @@
-namespace RuoteLab.Models;
+﻿namespace RouteLab.Models;
 
 public sealed class WallConfigurationFile
 {
@@ -20,3 +20,4 @@ public sealed class WallConfigurationFile
 
     public required List<PanelConfigurationFile> Panels { get; init; }
 }
+

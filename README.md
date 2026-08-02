@@ -1,4 +1,4 @@
-# RuoteLab
+﻿# RouteLab
 
 App .NET MAUI per Android dedicata alla configurazione di una palestra di arrampicata, alla definizione delle pareti e dei pannelli, alla gestione dei fori, alla creazione dei circuiti e alla loro esecuzione su ESP32.
 
@@ -65,7 +65,7 @@ Oggi il progetto copre gia:
 Compilazione:
 
 ```powershell
-dotnet build "C:\TMP\Prova\GF\WallPanelPlanner\WallPanelPlanner.csproj"
+dotnet build ".\RouteLab.csproj"
 ```
 
 Per il dettaglio operativo guarda:
@@ -74,3 +74,4 @@ Per il dettaglio operativo guarda:
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - [docs/ROADMAP.md](docs/ROADMAP.md)
 - [docs/TESTING.md](docs/TESTING.md)
+

@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 
-namespace RuoteLab;
+namespace RouteLab;
 
 public static class MauiProgram
 {
@@ -22,3 +22,4 @@ public static class MauiProgram
 		return builder.Build();
 	}
 }
+

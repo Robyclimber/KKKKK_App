@@ -1,4 +1,4 @@
-namespace RuoteLab.Models;
+﻿namespace RouteLab.Models;
 
 public sealed class PanelImageAlignmentSuggestion
 {
@@ -12,3 +12,4 @@ public sealed class PanelImageAlignmentSuggestion
 
     public double Confidence { get; init; }
 }
+

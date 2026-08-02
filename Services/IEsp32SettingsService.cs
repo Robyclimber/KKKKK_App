@@ -1,6 +1,6 @@
-using RuoteLab.Models;
+﻿using RouteLab.Models;
 
-namespace RuoteLab.Services;
+namespace RouteLab.Services;
 
 public interface IEsp32SettingsService
 {
@@ -8,3 +8,4 @@ public interface IEsp32SettingsService
 
     void Save(Esp32DeviceSettings settings);
 }
+

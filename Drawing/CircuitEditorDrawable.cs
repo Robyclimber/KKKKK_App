@@ -1,7 +1,7 @@
-using Microsoft.Maui.Graphics;
-using RuoteLab.Models;
+﻿using Microsoft.Maui.Graphics;
+using RouteLab.Models;
 
-namespace RuoteLab.Drawing;
+namespace RouteLab.Drawing;
 
 public sealed class CircuitEditorDrawable : IDrawable
 {
@@ -230,6 +230,7 @@ public sealed class CircuitEditorDrawable : IDrawable
         {
             MovementRole.Start => Color.FromArgb("#2E8B57"),
             MovementRole.Top => Color.FromArgb("#F2C94C"),
+            MovementRole.Feet => Color.FromArgb("#7FDBFF"),
             _ => movement.Hand == HandSide.Left
                 ? Color.FromArgb("#247BA0")
                 : Color.FromArgb("#C44536")
@@ -240,11 +241,18 @@ public sealed class CircuitEditorDrawable : IDrawable
     {
         var hasStart = movements.Any(movement => movement.Role == MovementRole.Start);
         var hasTop = movements.Any(movement => movement.Role == MovementRole.Top);
+        var hasFeet = movements.Any(movement => movement.IsFootHold);
 
         if (hasStart)
         {
             canvas.FillColor = Color.FromArgb("#2E8B57").WithAlpha(0.18f);
             canvas.FillCircle(holeX, holeY, Math.Max(9f, scale * 5.1f));
+        }
+
+        if (hasFeet)
+        {
+            canvas.FillColor = Color.FromArgb("#7FDBFF").WithAlpha(0.28f);
+            canvas.FillCircle(holeX, holeY, Math.Max(10f, scale * 5.6f));
         }
 
         if (hasTop)
@@ -279,6 +287,7 @@ public sealed class CircuitEditorDrawable : IDrawable
         {
             MovementRole.Start => movement.Hand == HandSide.Right ? $"SDX {movement.Sequence:00}" : $"SSX {movement.Sequence:00}",
             MovementRole.Top => movement.Hand == HandSide.Right ? $"TDX {movement.Sequence:00}" : $"TSX {movement.Sequence:00}",
+            MovementRole.Feet => "PIEDI",
             _ => movement.Hand == HandSide.Right ? $"DX {movement.Sequence:00}" : $"SX {movement.Sequence:00}"
         };
 
@@ -294,8 +303,11 @@ public sealed class CircuitEditorDrawable : IDrawable
         canvas.StrokeColor = Color.FromArgb("#12100C");
         canvas.StrokeSize = 1.2f;
         canvas.DrawRoundedRectangle(baseX, tagY - (tagHeight / 2f), tagWidth, tagHeight, 6f);
-        canvas.FontColor = movement.Role == MovementRole.Top ? Color.FromArgb("#14110B") : Color.FromArgb("#F8E7A8");
+        canvas.FontColor = movement.Role is MovementRole.Top or MovementRole.Feet
+            ? Color.FromArgb("#14110B")
+            : Color.FromArgb("#F8E7A8");
         canvas.FontSize = Math.Max(7.5f, scale * 2.5f);
         canvas.DrawString(text, baseX + 4f, tagY - (tagHeight / 2f), tagWidth - 8f, tagHeight, HorizontalAlignment.Left, VerticalAlignment.Center);
     }
 }
+

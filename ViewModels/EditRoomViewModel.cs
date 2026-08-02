@@ -1,8 +1,8 @@
-using System.Collections.ObjectModel;
-using RuoteLab.Models;
-using RuoteLab.Services;
+﻿using System.Collections.ObjectModel;
+using RouteLab.Models;
+using RouteLab.Services;
 
-namespace RuoteLab.ViewModels;
+namespace RouteLab.ViewModels;
 
 public class GymSetupViewModel
 {
@@ -166,7 +166,7 @@ public class GymSetupViewModel
         var panel = gymSetupService.CreatePanel(input, SelectedWall!, null);
         SelectedWall!.Panels.Add(panel);
         SelectedWall.RegenerateHoleLayoutFromPanels();
-        SelectedPanel = null;
+        SelectedPanel = panel;
     }
 
     public void SelectPanel(PanelDefinition panel)
@@ -263,6 +263,12 @@ public class GymSetupViewModel
         gymSetupService.SetPanelImage(SelectedPanel!, imagePath);
     }
 
+    public void SetSelectedPanelRectifiedImage(string sourceImagePath, string rectifiedImagePath)
+    {
+        EnsurePanelSelected();
+        gymSetupService.SetPanelRectifiedImage(SelectedPanel!, sourceImagePath, rectifiedImagePath);
+    }
+
     public void ClearSelectedPanelImage()
     {
         EnsurePanelSelected();
@@ -310,6 +316,34 @@ public class GymSetupViewModel
         SelectedWall!.UpdateHoleHardware(holeNumber, pointId, ledIndex, isEnabled);
     }
 
+    public IReadOnlyList<WallHoleDefinition> GetSelectedPanelHoles()
+    {
+        EnsureWallSelected();
+        EnsurePanelSelected();
+        return SelectedWall!.GetOrderedHolesForPanel(SelectedPanel!.Name);
+    }
+
+    public void AddManualHoleToSelectedPanel(double relativeX, double relativeY)
+    {
+        EnsureWallSelected();
+        EnsurePanelSelected();
+        SelectedWall!.AddManualHole(SelectedPanel!.Name, relativeX, relativeY);
+    }
+
+    public void RemoveHoleFromSelectedPanel(int holeNumber)
+    {
+        EnsureWallSelected();
+        EnsurePanelSelected();
+        SelectedWall!.RemoveHoleFromPanel(SelectedPanel!.Name, holeNumber);
+    }
+
+    public void RestoreGeneratedHolesForSelectedPanel()
+    {
+        EnsureWallSelected();
+        EnsurePanelSelected();
+        SelectedWall!.RestoreSuppressedGeneratedHoles(SelectedPanel!.Name);
+    }
+
     public bool IsPanelSelected(PanelDefinition panel)
     {
         return ReferenceEquals(panel, SelectedPanel);
@@ -343,3 +377,4 @@ public sealed class EditRoomViewModel : GymSetupViewModel
     {
     }
 }
+

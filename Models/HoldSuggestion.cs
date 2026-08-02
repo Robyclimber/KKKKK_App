@@ -1,4 +1,4 @@
-namespace RuoteLab.Models;
+﻿namespace RouteLab.Models;
 
 public sealed class HoldSuggestion
 {
@@ -10,3 +10,4 @@ public sealed class HoldSuggestion
 
     public string Reason { get; init; } = string.Empty;
 }
+

@@ -1,4 +1,4 @@
-namespace RuoteLab.Models;
+﻿namespace RouteLab.Models;
 
 public sealed class CircuitPageState
 {
@@ -34,3 +34,4 @@ public sealed class CircuitPageState
 
     public string InteractionHintText { get; init; } = string.Empty;
 }
+

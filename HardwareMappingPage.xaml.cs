@@ -1,9 +1,9 @@
-using System.Globalization;
+﻿using System.Globalization;
 using Microsoft.Maui.Controls.Shapes;
-using RuoteLab.Models;
-using RuoteLab.ViewModels;
+using RouteLab.Models;
+using RouteLab.ViewModels;
 
-namespace RuoteLab;
+namespace RouteLab;
 
 public partial class HardwareMappingPage : ContentPage
 {
@@ -30,6 +30,8 @@ public partial class HardwareMappingPage : ContentPage
     private const int HoleMappingBatchSize = 40;
 
     private readonly GymSetupViewModel viewModel;
+    private readonly IReadOnlyList<LedStartDirection> availableWallLedDirections =
+        [LedStartDirection.TopToBottom, LedStartDirection.BottomToTop];
     private readonly List<HoleMappingEditor> holeMappingEditors = new();
     private bool isSyncingSelection;
     private bool showOnlyHoleMappingConflicts;
@@ -40,12 +42,16 @@ public partial class HardwareMappingPage : ContentPage
         InitializeComponent();
         viewModel = ((App)Application.Current!).GymSetupViewModel;
         RoomsPicker.ItemsSource = viewModel.Rooms;
+        WallLedDirectionPicker.ItemsSource = availableWallLedDirections
+            .Select(GetWallLedDirectionLabel)
+            .ToList();
         Loaded += OnPageLoaded;
     }
 
     private async void OnPageLoaded(object? sender, EventArgs e)
     {
         Loaded -= OnPageLoaded;
+        using var busy = AppBusy.Show("Caricamento mapping...");
         await InitializeAsync();
     }
 
@@ -93,13 +99,17 @@ public partial class HardwareMappingPage : ContentPage
         RoomsPicker.SelectedItem = viewModel.SelectedRoom;
         WallsPicker.ItemsSource = viewModel.GetWallsForSelectedRoom().ToList();
         WallsPicker.SelectedItem = viewModel.SelectedWall;
+        WallLedDirectionPicker.SelectedIndex = viewModel.SelectedWall is null
+            ? -1
+            : GetWallLedDirectionIndex(viewModel.SelectedWall.LedVerticalDirection);
+        WallLedDirectionPicker.IsEnabled = viewModel.SelectedWall is not null;
         isSyncingSelection = false;
 
         var wall = viewModel.SelectedWall;
         WallInfoLabel.Text = wall is null
             ? "Nessuna parete selezionata."
             : $"{wall.DisplayLabel} - fori: {wall.GetOrderedHoles().Count}";
-        SaveWallButton.IsEnabled = wall is not null;
+        SaveToolbarItem.IsEnabled = wall is not null;
         RebuildHoleMappingsList();
     }
 
@@ -187,6 +197,7 @@ public partial class HardwareMappingPage : ContentPage
         {
             Text = hole.LedIndex.ToString(CultureInfo.InvariantCulture),
             Keyboard = Keyboard.Numeric,
+            IsReadOnly = true,
             WidthRequest = 90
         };
 
@@ -219,9 +230,6 @@ public partial class HardwareMappingPage : ContentPage
         };
         pointIdEntry.Completed += async (_, _) => await ApplyAsync();
         pointIdEntry.Unfocused += async (_, _) => await ApplyAsync();
-        ledIndexEntry.Completed += async (_, _) => await ApplyAsync();
-        ledIndexEntry.Unfocused += async (_, _) => await ApplyAsync();
-
         var hardwareGrid = new Grid
         {
             ColumnDefinitions =
@@ -378,8 +386,22 @@ public partial class HardwareMappingPage : ContentPage
             return;
         }
 
-        wall.AutoAssignLedIndicesByPanelRouting();
+        wall.LedVerticalDirection = GetSelectedWallLedDirection();
+        wall.AutoAssignLedIndicesByWallRouting();
         SyncViewFromState();
+    }
+
+    private void OnWallLedDirectionChanged(object? sender, EventArgs e)
+    {
+        if (isSyncingSelection || viewModel.SelectedWall is not { } wall)
+        {
+            return;
+        }
+
+        wall.LedVerticalDirection = GetSelectedWallLedDirection();
+        wall.AutoAssignLedIndicesByWallRouting();
+        visibleHoleMappingCount = HoleMappingBatchSize;
+        RebuildHoleMappingsList();
     }
 
     private void OnLoadMoreHoleMappingsClicked(object? sender, EventArgs e)
@@ -390,6 +412,7 @@ public partial class HardwareMappingPage : ContentPage
 
     private async void OnSaveWallClicked(object? sender, EventArgs e)
     {
+        using var busy = AppBusy.Show("Salvataggio mapping...");
         try
         {
             var result = await viewModel.SaveSelectedWallAsync();
@@ -403,6 +426,7 @@ public partial class HardwareMappingPage : ContentPage
 
     private async void OnRefreshClicked(object? sender, EventArgs e)
     {
+        using var busy = AppBusy.Show("Aggiornamento mapping...");
         await InitializeAsync();
     }
 
@@ -422,5 +446,28 @@ public partial class HardwareMappingPage : ContentPage
         return int.TryParse(text?.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var value) && value > 0
             ? value
             : null;
+    }
+
+    private LedStartDirection GetSelectedWallLedDirection()
+    {
+        return WallLedDirectionPicker.SelectedIndex >= 0 &&
+               WallLedDirectionPicker.SelectedIndex < availableWallLedDirections.Count
+            ? availableWallLedDirections[WallLedDirectionPicker.SelectedIndex]
+            : LedStartDirection.TopToBottom;
+    }
+
+    private static string GetWallLedDirectionLabel(LedStartDirection direction)
+    {
+        return direction == LedStartDirection.BottomToTop
+            ? "Dal basso verso l'alto"
+            : "Dall'alto verso il basso";
+    }
+
+    private int GetWallLedDirectionIndex(LedStartDirection direction)
+    {
+        return availableWallLedDirections
+            .Select((value, index) => (value, index))
+            .FirstOrDefault(item => item.value == direction)
+            .index;
     }
 }

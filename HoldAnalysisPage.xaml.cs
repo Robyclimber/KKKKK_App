@@ -1,30 +1,52 @@
-using Microsoft.Maui.Controls.Shapes;
-using RuoteLab.Models;
-using RuoteLab.Services;
-using RuoteLab.ViewModels;
+﻿using Microsoft.Maui.Controls.Shapes;
+using RouteLab.Models;
+using RouteLab.Services;
 
-namespace RuoteLab;
+namespace RouteLab;
 
 public partial class HoldAnalysisPage : ContentPage
 {
+    private sealed class HoldEditor
+    {
+        public required int HoleNumber { get; init; }
+
+        public required Switch HoldSwitch { get; init; }
+
+        public required Picker SizePicker { get; init; }
+
+        public required Picker TypePicker { get; init; }
+
+        public required Label MetadataLabel { get; init; }
+
+        public required Label SuggestionLabel { get; init; }
+
+        public required Button SaveButton { get; init; }
+
+        public required Label SaveStatusLabel { get; init; }
+    }
+
     private const int HoleBatchSize = 24;
     private readonly IHoldAnalysisSuggestionService suggestionService;
     private readonly IWallConfigurationStorageService storageService;
     private readonly WallDefinition wall;
+    private readonly PanelDefinition panel;
     private IReadOnlyList<WallHoleDefinition> orderedHoles = Array.Empty<WallHoleDefinition>();
     private int renderedHoleCount;
-    private bool isApplyingSuggestions;
 
-    public HoldAnalysisPage(GymSetupViewModel viewModel, IWallConfigurationStorageService storageService, WallDefinition wall)
+    public HoldAnalysisPage(
+        IWallConfigurationStorageService storageService,
+        WallDefinition wall,
+        PanelDefinition panel)
     {
         InitializeComponent();
         suggestionService = ((App)Application.Current!).HoldAnalysisSuggestionService;
         this.storageService = storageService;
         this.wall = wall;
-        orderedHoles = wall.GetOrderedHoles();
+        this.panel = panel;
+        orderedHoles = GetPanelHoles();
 
-        PageTitleLabel.Text = $"Analisi prese - {wall.Name}";
-        PageSubtitleLabel.Text = $"Fori totali: {orderedHoles.Count} - Sala {wall.RoomName}";
+        PageTitleLabel.Text = $"Analisi prese - {panel.Name}";
+        PageSubtitleLabel.Text = $"{wall.RoomName} / {wall.Name} - Fori del pannello: {orderedHoles.Count}";
         RebuildHoleCards(reset: true);
     }
 
@@ -52,11 +74,18 @@ public partial class HoldAnalysisPage : ContentPage
 
     private View CreateHoleCard(WallHoleDefinition hole)
     {
+        var suggestion = hole.HasEstimatedHoldMetadata
+            ? suggestionService.Suggest(wall, hole)
+            : null;
+        var displayedHasHold = suggestion?.HasHold ?? hole.HasHold;
+        var displayedHoldSize = suggestion?.HoldSize ?? hole.HoldSize;
+        var displayedHoldType = suggestion?.HoldType ?? hole.HoldType;
+
         var holdSwitch = new Switch
         {
-            IsToggled = hole.HasHold,
+            IsToggled = displayedHasHold,
             OnColor = Color.FromArgb("#F2C94C"),
-            ThumbColor = hole.HasHold ? Color.FromArgb("#14110B") : Color.FromArgb("#B9AA79")
+            ThumbColor = displayedHasHold ? Color.FromArgb("#14110B") : Color.FromArgb("#B9AA79")
         };
 
         var sizePicker = new Picker
@@ -65,8 +94,8 @@ public partial class HoldAnalysisPage : ContentPage
             ItemsSource = Enum.GetValues<HoldSize>()
                 .Select(value => WallHoleDefinition.GetHoldSizeLabel(value))
                 .ToList(),
-            SelectedIndex = (int)hole.HoldSize,
-            IsEnabled = hole.HasHold
+            SelectedIndex = (int)displayedHoldSize,
+            IsEnabled = displayedHasHold
         };
 
         var typePicker = new Picker
@@ -75,51 +104,61 @@ public partial class HoldAnalysisPage : ContentPage
             ItemsSource = Enum.GetValues<HoldType>()
                 .Select(value => WallHoleDefinition.GetHoldTypeLabel(value))
                 .ToList(),
-            SelectedIndex = (int)hole.HoldType,
-            IsEnabled = hole.HasHold
+            SelectedIndex = (int)displayedHoldType,
+            IsEnabled = displayedHasHold
         };
 
-        var suggestion = suggestionService.Suggest(wall, hole);
         var suggestionLabel = new Label
         {
-            Text = $"Suggerito: {(suggestion.HasHold ? $"{WallHoleDefinition.GetHoldSizeLabel(suggestion.HoldSize)} - {WallHoleDefinition.GetHoldTypeLabel(suggestion.HoldType)}" : "Foro vuoto")} | {suggestion.Reason}",
+            Text = suggestion is null
+                ? string.Empty
+                : $"Suggerimento iniziale: {(suggestion.HasHold ? $"{WallHoleDefinition.GetHoldSizeLabel(suggestion.HoldSize)} - {WallHoleDefinition.GetHoldTypeLabel(suggestion.HoldType)}" : "Foro vuoto")} | {suggestion.Reason}",
             FontSize = 11,
-            TextColor = Color.FromArgb("#B9AA79")
+            TextColor = Color.FromArgb("#B9AA79"),
+            IsVisible = suggestion is not null
         };
 
         var metadataLabel = new Label
         {
-            Text = hole.HasHold
-                ? $"Stato presa: {hole.HoldSummary}"
+            Text = displayedHasHold
+                ? $"Stato presa: {WallHoleDefinition.GetHoldSizeLabel(displayedHoldSize)} - {WallHoleDefinition.GetHoldTypeLabel(displayedHoldType)}"
                 : "Stato presa: Foro vuoto",
             FontSize = 11,
             TextColor = hole.HasEstimatedHoldMetadata ? Color.FromArgb("#F2C94C") : Color.FromArgb("#7ED6A1")
         };
 
-        var applySuggestionButton = new Button
+        var saveHoldButton = new Button
         {
-            Text = "Applica suggerimento",
+            Text = "Salva presa",
             FontSize = 12
         };
-
-        applySuggestionButton.Clicked += (_, _) =>
+        var saveStatusLabel = new Label
         {
-            ApplySuggestion(hole.Number, suggestion, holdSwitch, sizePicker, typePicker);
+            Text = "Nessuna modifica da salvare.",
+            FontSize = 11,
+            TextColor = Color.FromArgb("#B9AA79")
         };
 
-        holdSwitch.Toggled += (_, args) =>
+        var editor = new HoldEditor
         {
-            if (args.Value)
-            {
-                wall.SetHoleHold(hole.Number, (HoldSize)Math.Max(0, sizePicker.SelectedIndex), (HoldType)Math.Max(0, typePicker.SelectedIndex));
-            }
-            else
-            {
-                wall.ClearHoleHold(hole.Number);
-            }
+            HoleNumber = hole.Number,
+            HoldSwitch = holdSwitch,
+            SizePicker = sizePicker,
+            TypePicker = typePicker,
+            MetadataLabel = metadataLabel,
+            SuggestionLabel = suggestionLabel,
+            SaveButton = saveHoldButton,
+            SaveStatusLabel = saveStatusLabel
+        };
 
-            sizePicker.IsEnabled = args.Value;
-            typePicker.IsEnabled = args.Value;
+        saveHoldButton.Clicked += async (_, _) =>
+        {
+            await SaveHoldEditorAsync(editor);
+        };
+
+        holdSwitch.Toggled += (_, _) =>
+        {
+            ApplyHoldEditor(editor);
         };
 
         sizePicker.SelectedIndexChanged += (_, _) =>
@@ -129,7 +168,7 @@ public partial class HoldAnalysisPage : ContentPage
                 return;
             }
 
-            wall.SetHoleHold(hole.Number, (HoldSize)sizePicker.SelectedIndex, (HoldType)Math.Max(0, typePicker.SelectedIndex));
+            ApplyHoldEditor(editor);
         };
 
         typePicker.SelectedIndexChanged += (_, _) =>
@@ -139,7 +178,7 @@ public partial class HoldAnalysisPage : ContentPage
                 return;
             }
 
-            wall.SetHoleHold(hole.Number, (HoldSize)Math.Max(0, sizePicker.SelectedIndex), (HoldType)typePicker.SelectedIndex);
+            ApplyHoldEditor(editor);
         };
 
         var content = new Grid
@@ -191,9 +230,10 @@ public partial class HoldAnalysisPage : ContentPage
                         holdSwitch
                     }
                 },
-                applySuggestionButton,
                 sizePicker,
-                typePicker
+                typePicker,
+                saveHoldButton,
+                saveStatusLabel
             }
         }, 1);
 
@@ -356,77 +396,75 @@ public partial class HoldAnalysisPage : ContentPage
         return null;
     }
 
-    private async void OnSaveClicked(object? sender, EventArgs e)
+    private void ApplyHoldEditor(HoldEditor editor)
     {
+        editor.SuggestionLabel.IsVisible = false;
+        editor.SizePicker.IsEnabled = editor.HoldSwitch.IsToggled;
+        editor.TypePicker.IsEnabled = editor.HoldSwitch.IsToggled;
+        editor.HoldSwitch.ThumbColor = editor.HoldSwitch.IsToggled
+            ? Color.FromArgb("#14110B")
+            : Color.FromArgb("#B9AA79");
+
+        if (!editor.HoldSwitch.IsToggled)
+        {
+            wall.ClearHoleHold(editor.HoleNumber);
+            editor.MetadataLabel.Text = "Stato presa: Foro vuoto";
+            editor.MetadataLabel.TextColor = Color.FromArgb("#7ED6A1");
+            MarkEditorAsModified(editor);
+            return;
+        }
+
+        var holdSize = (HoldSize)Math.Clamp(
+            editor.SizePicker.SelectedIndex,
+            0,
+            Enum.GetValues<HoldSize>().Length - 1);
+        var holdType = (HoldType)Math.Clamp(
+            editor.TypePicker.SelectedIndex,
+            0,
+            Enum.GetValues<HoldType>().Length - 1);
+
+        wall.SetHoleHold(editor.HoleNumber, holdSize, holdType);
+        editor.MetadataLabel.Text =
+            $"Stato presa: {WallHoleDefinition.GetHoldSizeLabel(holdSize)} - {WallHoleDefinition.GetHoldTypeLabel(holdType)}";
+        editor.MetadataLabel.TextColor = Color.FromArgb("#7ED6A1");
+        MarkEditorAsModified(editor);
+    }
+
+    private async Task SaveHoldEditorAsync(HoldEditor editor)
+    {
+        using var busy = AppBusy.Show("Salvataggio presa...");
+        editor.SaveButton.IsEnabled = false;
         try
         {
-            var result = await storageService.SaveAsync(wall);
-            await DisplayAlertAsync("Analisi prese", $"Prese salvate.\n{result}", "OK");
+            ApplyHoldEditor(editor);
+            var hole = wall.GetOrderedHoles()
+                .FirstOrDefault(current => current.Number == editor.HoleNumber);
+            if (hole.Number == 0)
+            {
+                throw new InvalidOperationException("Foro non trovato.");
+            }
+
+            await storageService.SaveHoleAsync(wall, hole);
+            editor.SaveStatusLabel.Text = "Presa salvata.";
+            editor.SaveStatusLabel.TextColor = Color.FromArgb("#7ED6A1");
+            orderedHoles = GetPanelHoles();
         }
         catch (Exception ex)
         {
-            await DisplayAlertAsync("Analisi prese", $"Errore salvataggio prese: {ex.Message}", "OK");
-        }
-    }
-
-    private async void OnApplySuggestionsClicked(object? sender, EventArgs e)
-    {
-        if (isApplyingSuggestions)
-        {
-            return;
-        }
-
-        isApplyingSuggestions = true;
-        if (sender is Button button)
-        {
-            button.IsEnabled = false;
-        }
-
-        try
-        {
-            var processed = 0;
-            foreach (var hole in orderedHoles.Where(hole => !hole.HasHold))
-            {
-                var suggestion = suggestionService.Suggest(wall, hole);
-                if (suggestion.HasHold)
-                {
-                    wall.SetHoleHold(hole.Number, suggestion.HoldSize, suggestion.HoldType);
-                }
-
-                processed++;
-                if (processed % 8 == 0)
-                {
-                    RenderProgressLabel.Text = $"Analisi in corso: {processed}/{orderedHoles.Count}";
-                    await Task.Yield();
-                }
-            }
-
-            orderedHoles = wall.GetOrderedHoles();
-            RebuildHoleCards(reset: true);
+            editor.SaveStatusLabel.Text = "Salvataggio non riuscito.";
+            editor.SaveStatusLabel.TextColor = Color.FromArgb("#F08A7E");
+            await DisplayAlertAsync("Analisi prese", $"Errore salvataggio presa: {ex.Message}", "OK");
         }
         finally
         {
-            isApplyingSuggestions = false;
-            if (sender is Button buttonToEnable)
-            {
-                buttonToEnable.IsEnabled = true;
-            }
+            editor.SaveButton.IsEnabled = true;
         }
     }
 
-    private void ApplySuggestion(int holeNumber, HoldSuggestion suggestion, Switch holdSwitch, Picker sizePicker, Picker typePicker)
+    private static void MarkEditorAsModified(HoldEditor editor)
     {
-        if (!suggestion.HasHold)
-        {
-            wall.ClearHoleHold(holeNumber);
-            holdSwitch.IsToggled = false;
-            return;
-        }
-
-        wall.SetHoleHold(holeNumber, suggestion.HoldSize, suggestion.HoldType);
-        holdSwitch.IsToggled = true;
-        sizePicker.SelectedIndex = (int)suggestion.HoldSize;
-        typePicker.SelectedIndex = (int)suggestion.HoldType;
+        editor.SaveStatusLabel.Text = "Modifiche da salvare.";
+        editor.SaveStatusLabel.TextColor = Color.FromArgb("#F2C94C");
     }
 
     private void OnLoadMoreClicked(object? sender, EventArgs e)
@@ -443,6 +481,11 @@ public partial class HoldAnalysisPage : ContentPage
     {
         RenderProgressLabel.Text = $"Fori caricati: {renderedHoleCount}/{orderedHoles.Count}";
         LoadMoreButton.IsVisible = renderedHoleCount < orderedHoles.Count;
-        LoadMoreButton.IsEnabled = !isApplyingSuggestions;
+        LoadMoreButton.IsEnabled = true;
+    }
+
+    private IReadOnlyList<WallHoleDefinition> GetPanelHoles()
+    {
+        return wall.GetOrderedHolesForPanel(panel.Name);
     }
 }

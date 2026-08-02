@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="RuoteLab.HoldAnalysisPage"
+             x:Class="RouteLab.HoldAnalysisPage"
              Title="Analisi prese">
     <ScrollView>
         <VerticalStackLayout Padding="20,16,20,24" Spacing="18">
@@ -22,16 +22,9 @@
                            FontSize="18"
                            TextColor="{StaticResource WarmGold}"
                            FontFamily="OpenSansSemibold" />
-                    <Label Text="Per ogni foro puoi lasciare vuoto oppure indicare dimensione e tipo della presa. Il ritaglio e' centrato sul foro selezionato."
+                    <Label Text="Ogni scheda salva una sola presa. Imposta presenza, dimensione e tipo, quindi usa Salva presa."
                            TextColor="{StaticResource MutedText}"
                            FontSize="12" />
-                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                        <Button Text="Applica suggerimenti iniziali"
-                                Clicked="OnApplySuggestionsClicked" />
-                        <Button Grid.Column="1"
-                                Text="Salva prese parete"
-                                Clicked="OnSaveClicked" />
-                    </Grid>
                     <Label x:Name="RenderProgressLabel"
                            Text="Fori caricati: 0"
                            TextColor="{StaticResource MutedText}"
