@@ -39,7 +39,11 @@ public sealed class CircuitEditorDrawable : IDrawable
         var wallHeight = (float)Wall.Height * scale;
         var originX = Padding;
         var originY = Padding;
-        var labelZoom = Math.Max(1f, ZoomFactor);
+        // Le etichette devono restare leggibili quando si ingrandisce, ma non
+        // devono mai coprire le colonne vicine: la geometria della parete usa
+        // gia' ZoomFactor dentro scale, quindi qui applichiamo solo un aumento
+        // visivo lieve e limitato.
+        var labelZoom = Math.Clamp(1f + ((ZoomFactor - 1f) * 0.2f), 1f, 1.6f);
 
         canvas.FillColor = Color.FromArgb("#191611");
         canvas.FillRoundedRectangle(originX, originY, wallWidth, wallHeight, 12f);
