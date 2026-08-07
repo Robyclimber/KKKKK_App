@@ -493,6 +493,15 @@ public partial class HardwareMappingPage : ContentPage
         UpdateManualOrderPreview();
     }
 
+    private void OnOpenManualOrderImageClicked(object? sender, EventArgs e)
+    {
+        OpenManualOrderImageButton.IsVisible = false;
+        ManualOrderImageControls.IsVisible = true;
+        ManualOrderViewport.IsVisible = true;
+        ManualOrderSelectedHoleLabel.IsVisible = true;
+        Dispatcher.Dispatch(UpdateManualOrderPreview);
+    }
+
     private void OnManualOrderZoomInClicked(object? sender, EventArgs e)
     {
         manualOrderZoom = Math.Clamp(manualOrderZoom + 0.25d, 1d, 4d);
@@ -554,7 +563,7 @@ public partial class HardwareMappingPage : ContentPage
     private void UpdateManualOrderPreview()
     {
         var wall = viewModel.SelectedWall;
-        if (wall is null || !ManualOrderCanvas.IsLoaded)
+        if (wall is null || !ManualOrderViewport.IsVisible || !ManualOrderCanvas.IsLoaded)
         {
             return;
         }

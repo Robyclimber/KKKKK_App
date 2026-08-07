@@ -95,7 +95,11 @@
                                         Style="{StaticResource SecondaryActionButtonStyle}"
                                         Clicked="OnShowManualOrderClicked" />
                             </Grid>
-                            <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
+                            <Button x:Name="OpenManualOrderImageButton"
+                                    Text="Apri immagine zoomabile per definire l'ordine"
+                                    Style="{StaticResource SecondaryActionButtonStyle}"
+                                    Clicked="OnOpenManualOrderImageClicked" />
+                            <Grid x:Name="ManualOrderImageControls" IsVisible="False" ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
                                 <Label Text="Parete: definisci l'ordine"
                                        TextColor="{StaticResource WarmGold}"
                                        FontFamily="OpenSansSemibold"
@@ -104,7 +108,7 @@
                                 <Button Grid.Column="2" Text="Reset" Padding="10,4" Clicked="OnManualOrderZoomResetClicked" />
                                 <Button Grid.Column="3" Text="+" Padding="10,4" Clicked="OnManualOrderZoomInClicked" />
                             </Grid>
-                            <Grid x:Name="ManualOrderViewport" HeightRequest="420" SizeChanged="OnManualOrderViewportSizeChanged">
+                            <Grid x:Name="ManualOrderViewport" IsVisible="False" HeightRequest="420" SizeChanged="OnManualOrderViewportSizeChanged">
                                 <ScrollView Orientation="Both">
                                     <AbsoluteLayout x:Name="ManualOrderLayer">
                                         <GraphicsView x:Name="ManualOrderCanvas"
@@ -123,6 +127,7 @@
                                 </ScrollView>
                             </Grid>
                             <Label x:Name="ManualOrderSelectedHoleLabel"
+                                   IsVisible="False"
                                    Text="Ingrandisci con due dita, poi tocca il foro da assegnare al prossimo numero."
                                    TextColor="{StaticResource MutedText}"
                                    FontSize="12" />
