@@ -213,6 +213,7 @@ public partial class HardwareMappingPage : ContentPage
             {
                 var ledIndex = ParsePositiveDouble(ledIndexEntry.Text, "Inserisci un indice LED valido.");
                 viewModel.UpdateHoleHardware(hole.Number, pointIdEntry.Text, (int)Math.Round(ledIndex), enabledSwitch.IsToggled);
+                await viewModel.SaveSelectedWallAsync();
                 SyncViewFromState();
             }
             catch (InvalidOperationException ex)
@@ -250,7 +251,7 @@ public partial class HardwareMappingPage : ContentPage
         hardwareGrid.Add(ledIndexEntry, 1, 0);
         hardwareGrid.Add(new Label
         {
-            Text = "Attivo",
+            Text = "Funzionante",
             VerticalOptions = LayoutOptions.Center,
             HorizontalOptions = LayoutOptions.End,
             TextColor = Color.FromArgb("#D8A72D")
@@ -278,7 +279,7 @@ public partial class HardwareMappingPage : ContentPage
                 {
                     new Label
                     {
-                        Text = $"Foro {hole.Number} - {hole.PanelName}",
+                        Text = $"Foro {hole.Number} - {hole.PanelName}{(hole.IsEnabled ? string.Empty : " - GUASTO")}",
                         FontSize = 15,
                         TextColor = Color.FromArgb("#F8E7A8")
                     },

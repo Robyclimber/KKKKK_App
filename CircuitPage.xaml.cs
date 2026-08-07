@@ -1236,7 +1236,8 @@ public partial class CircuitPage : ContentPage
             return null;
         }
 
-        return previewDrawable.FindNearestHole(position.Value);
+        var hole = previewDrawable.FindNearestHole(position.Value);
+        return hole is { IsEnabled: true } ? hole : null;
     }
 
     private void HighlightHoleOnly(TappedEventArgs e)
@@ -1515,6 +1516,7 @@ public partial class CircuitPage : ContentPage
         var canEditHighlightedHole =
             highlightedHole is WallHoleDefinition hole &&
             hole.Number > 0 &&
+            hole.IsEnabled &&
             viewModel.SelectedCircuit is not null;
 
         SelectedHoleActionsHost.IsVisible = canEditHighlightedHole;

@@ -160,7 +160,7 @@ public sealed class WallDefinition
             throw new InvalidOperationException("Foro non trovato.");
         }
 
-        if (ledIndex <= 0)
+        if (isEnabled && ledIndex <= 0)
         {
             throw new InvalidOperationException("L'indice LED deve essere maggiore di zero.");
         }
@@ -172,7 +172,7 @@ public sealed class WallDefinition
         ReplaceHoleMetadata(targetHole with
         {
             PointId = normalizedPointId,
-            LedIndex = ledIndex,
+            LedIndex = ledIndex > 0 ? ledIndex : targetHole.LedIndex,
             IsEnabled = isEnabled
         });
 

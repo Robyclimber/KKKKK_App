@@ -54,6 +54,9 @@
                     <Label Text="La numerazione LED è unica per tutta la parete e percorre verticalmente i pannelli senza ripartire da 1."
                            TextColor="{StaticResource MutedText}"
                            FontSize="12" />
+                    <Label Text="Per segnare un foro guasto, disattiva l'interruttore Funzionante: la scelta viene salvata subito e quel foro non potrà essere usato nei circuiti o nella simulazione."
+                           TextColor="{StaticResource MutedText}"
+                           FontSize="12" />
                     <VerticalStackLayout Spacing="4">
                         <Label Text="Verso iniziale della parete"
                                TextColor="{StaticResource MutedText}"
