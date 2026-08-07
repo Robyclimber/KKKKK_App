@@ -95,6 +95,15 @@
                                         Style="{StaticResource SecondaryActionButtonStyle}"
                                         Clicked="OnShowManualOrderClicked" />
                             </Grid>
+                            <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
+                                <Label Text="Parete: definisci l'ordine"
+                                       TextColor="{StaticResource WarmGold}"
+                                       FontFamily="OpenSansSemibold"
+                                       VerticalOptions="Center" />
+                                <Button Grid.Column="1" Text="-" Padding="10,4" Clicked="OnManualOrderZoomOutClicked" />
+                                <Button Grid.Column="2" Text="Reset" Padding="10,4" Clicked="OnManualOrderZoomResetClicked" />
+                                <Button Grid.Column="3" Text="+" Padding="10,4" Clicked="OnManualOrderZoomInClicked" />
+                            </Grid>
                             <Grid x:Name="ManualOrderViewport" HeightRequest="420" SizeChanged="OnManualOrderViewportSizeChanged">
                                 <ScrollView Orientation="Both">
                                     <AbsoluteLayout x:Name="ManualOrderLayer">

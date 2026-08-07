@@ -493,6 +493,27 @@ public partial class HardwareMappingPage : ContentPage
         UpdateManualOrderPreview();
     }
 
+    private void OnManualOrderZoomInClicked(object? sender, EventArgs e)
+    {
+        manualOrderZoom = Math.Clamp(manualOrderZoom + 0.25d, 1d, 4d);
+        manualOrderZoomStart = manualOrderZoom;
+        UpdateManualOrderPreview();
+    }
+
+    private void OnManualOrderZoomOutClicked(object? sender, EventArgs e)
+    {
+        manualOrderZoom = Math.Clamp(manualOrderZoom - 0.25d, 1d, 4d);
+        manualOrderZoomStart = manualOrderZoom;
+        UpdateManualOrderPreview();
+    }
+
+    private void OnManualOrderZoomResetClicked(object? sender, EventArgs e)
+    {
+        manualOrderZoom = 1d;
+        manualOrderZoomStart = manualOrderZoom;
+        UpdateManualOrderPreview();
+    }
+
     private void OnManualOrderPinchUpdated(object? sender, PinchGestureUpdatedEventArgs e)
     {
         if (e.Status == GestureStatus.Started)
