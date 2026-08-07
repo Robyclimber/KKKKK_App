@@ -6,6 +6,7 @@ namespace RouteLab.Persistence;
 public sealed class SqliteDatabaseFactory : ISqliteDatabaseFactory
 {
     private const string CircuitHoleNumberMigrationKey = "routelab.circuit-hole-numbering-v2";
+    private const string CircuitColumnNumberMigrationKey = "routelab.circuit-hole-numbering-v3";
     private const string CurrentDatabaseFileName = "ruotelab.db3";
     private const string LegacyDatabaseFileName = "kkkk-konki-kingkong.db3";
     private readonly SemaphoreSlim semaphore = new(1, 1);
@@ -85,6 +86,7 @@ public sealed class SqliteDatabaseFactory : ISqliteDatabaseFactory
             await EnsureColumnAsync("wall_holes", "IsEnabled", "INTEGER NOT NULL DEFAULT 1");
             await EnsureDefaultRoomAsync();
             await MigrateCircuitHoleNumbersAsync();
+            await MigrateCircuitNumbersToVerticalSerpentineAsync();
 
             return connection;
         }
@@ -235,6 +237,71 @@ public sealed class SqliteDatabaseFactory : ISqliteDatabaseFactory
                 yield return hole;
             }
         }
+    }
+
+    private async Task MigrateCircuitNumbersToVerticalSerpentineAsync()
+    {
+        if (connection is null || Microsoft.Maui.Storage.Preferences.Default.Get(CircuitColumnNumberMigrationKey, false)) return;
+
+        var circuits = await connection.Table<CircuitEntity>().ToListAsync();
+        var walls = await connection.Table<WallEntity>().ToListAsync();
+        var holes = await connection.Table<WallHoleEntity>().ToListAsync();
+        var movements = await connection.Table<CircuitMovementEntity>().ToListAsync();
+        var changed = new List<CircuitMovementEntity>();
+
+        foreach (var circuit in circuits)
+        {
+            foreach (var wall in walls.Where(wall => wall.RoomName == circuit.RoomName))
+            {
+                var wallMovements = movements.Where(movement => movement.CircuitId == circuit.Id && movement.WallName == wall.Name).ToList();
+                var wallHoles = holes.Where(hole => hole.WallId == wall.Id).ToList();
+                var previousOrder = GetBottomToTopRowsOrder(wallHoles).ToList();
+                var newOrder = GetVerticalSerpentineOrder(wallHoles).ToList();
+                var newNumbers = newOrder.Select((hole, index) => (hole.Id, number: index + 1)).ToDictionary(item => item.Id, item => item.number);
+
+                foreach (var movement in wallMovements)
+                {
+                    if (movement.HoleNumber <= 0 || movement.HoleNumber > previousOrder.Count) continue;
+                    var replacement = newNumbers[previousOrder[movement.HoleNumber - 1].Id];
+                    if (replacement == movement.HoleNumber) continue;
+                    movement.HoleNumber = replacement;
+                    changed.Add(movement);
+                }
+            }
+        }
+
+        if (changed.Count > 0)
+        {
+            await connection.RunInTransactionAsync(transaction =>
+            {
+                foreach (var movement in changed) transaction.Update(movement);
+            });
+        }
+
+        Microsoft.Maui.Storage.Preferences.Default.Set(CircuitColumnNumberMigrationKey, true);
+    }
+
+    private static IEnumerable<WallHoleEntity> GetBottomToTopRowsOrder(IEnumerable<WallHoleEntity> holes)
+    {
+        const double tolerance = 0.0001d;
+        return holes
+            .GroupBy(hole => Math.Round(hole.AbsoluteY / tolerance) * tolerance)
+            .OrderByDescending(group => group.Key)
+            .SelectMany(group => group.OrderBy(hole => hole.AbsoluteX).ThenBy(hole => hole.Id));
+    }
+
+    private static IEnumerable<WallHoleEntity> GetVerticalSerpentineOrder(IEnumerable<WallHoleEntity> holes)
+    {
+        const double tolerance = 0.0001d;
+        var columns = holes
+            .GroupBy(hole => Math.Round(hole.AbsoluteX / tolerance) * tolerance)
+            .OrderBy(group => group.Key)
+            .ToList();
+
+        return columns.SelectMany((column, index) =>
+            index % 2 == 0
+                ? column.OrderByDescending(hole => hole.AbsoluteY).ThenBy(hole => hole.Id)
+                : column.OrderBy(hole => hole.AbsoluteY).ThenBy(hole => hole.Id));
     }
 
     private static string EnsureDatabasePath()

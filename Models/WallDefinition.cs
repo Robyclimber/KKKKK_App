@@ -507,15 +507,18 @@ public sealed class WallDefinition
     private static IEnumerable<WallHoleDefinition> GetHolesInWallNumberOrder(IEnumerable<WallHoleDefinition> holes)
     {
         // Il numero identifica fisicamente il foro nella parete, non il suo LED:
-        // parte dal basso e prosegue verso l'alto su tutti i pannelli insieme.
+        // parte dal basso a sinistra e percorre verticalmente tutta la parete,
+        // alternando il verso a ogni colonna come una serpentina continua.
         const double tolerance = 0.0001d;
-        return holes
-            .GroupBy(hole => Math.Round(hole.AbsoluteY / tolerance) * tolerance)
-            .OrderByDescending(group => group.Key)
-            .SelectMany(group => group
-                .OrderBy(hole => hole.AbsoluteX)
-                .ThenBy(hole => hole.PanelName, StringComparer.Ordinal)
-                .ThenBy(hole => hole.RelativeX));
+        var columns = holes
+            .GroupBy(hole => Math.Round(hole.AbsoluteX / tolerance) * tolerance)
+            .OrderBy(group => group.Key)
+            .ToList();
+
+        return columns.SelectMany((column, columnIndex) =>
+            columnIndex % 2 == 0
+                ? column.OrderByDescending(hole => hole.AbsoluteY).ThenBy(hole => hole.PanelName, StringComparer.Ordinal).ThenByDescending(hole => hole.RelativeY)
+                : column.OrderBy(hole => hole.AbsoluteY).ThenBy(hole => hole.PanelName, StringComparer.Ordinal).ThenBy(hole => hole.RelativeY));
     }
 
     private void ReplaceHoleMetadata(WallHoleDefinition replacement)
