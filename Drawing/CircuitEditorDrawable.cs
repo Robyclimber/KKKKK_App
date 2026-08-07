@@ -39,6 +39,7 @@ public sealed class CircuitEditorDrawable : IDrawable
         var wallHeight = (float)Wall.Height * scale;
         var originX = Padding;
         var originY = Padding;
+        var labelZoom = Math.Max(1f, ZoomFactor);
 
         canvas.FillColor = Color.FromArgb("#191611");
         canvas.FillRoundedRectangle(originX, originY, wallWidth, wallHeight, 12f);
@@ -60,8 +61,8 @@ public sealed class CircuitEditorDrawable : IDrawable
             canvas.DrawRectangle(panelX, panelY, panelWidth, panelHeight);
 
             canvas.FontColor = Color.FromArgb("#F8E7A8");
-            canvas.FontSize = 11f;
-            canvas.DrawString(panel.Name, panelX + 4f, panelY + 4f, panelWidth - 8f, 16f, HorizontalAlignment.Left, VerticalAlignment.Top);
+            canvas.FontSize = 11f * labelZoom;
+            canvas.DrawString(panel.Name, panelX + (4f * labelZoom), panelY + (4f * labelZoom), panelWidth - (8f * labelZoom), 16f * labelZoom, HorizontalAlignment.Left, VerticalAlignment.Top);
         }
 
         var holes = Wall.GetOrderedHoles();
@@ -76,13 +77,13 @@ public sealed class CircuitEditorDrawable : IDrawable
             if (ZoomFactor >= 1.2f)
             {
                 canvas.FontColor = Color.FromArgb("#F2C94C");
-                canvas.FontSize = Math.Max(9f, scale * 4.2f);
-                var labelWidth = Math.Max(28f, scale * 14f);
-                var labelHeight = Math.Max(14f, scale * 6f);
+                canvas.FontSize = Math.Max(9f, scale * 4.2f) * labelZoom;
+                var labelWidth = Math.Max(28f, scale * 14f) * labelZoom;
+                var labelHeight = Math.Max(14f, scale * 6f) * labelZoom;
                 canvas.DrawString(
                     hole.Number.ToString(),
                     holeX - (labelWidth / 2f),
-                    holeY - Math.Max(20f, scale * 9f),
+                    holeY - (Math.Max(20f, scale * 9f) * labelZoom),
                     labelWidth,
                     labelHeight,
                     HorizontalAlignment.Center,
@@ -150,7 +151,7 @@ public sealed class CircuitEditorDrawable : IDrawable
 
                 var holeX = originX + (float)hole.AbsoluteX * scale;
                 var holeY = originY + (float)hole.AbsoluteY * scale;
-                DrawMovementGroup(canvas, movementGroup.ToList(), holeX, holeY, scale);
+                DrawMovementGroup(canvas, movementGroup.ToList(), holeX, holeY, scale, labelZoom);
             }
         }
 
@@ -237,7 +238,7 @@ public sealed class CircuitEditorDrawable : IDrawable
         };
     }
 
-    private static void DrawMovementGroup(ICanvas canvas, IReadOnlyList<CircuitMovementDefinition> movements, float holeX, float holeY, float scale)
+    private static void DrawMovementGroup(ICanvas canvas, IReadOnlyList<CircuitMovementDefinition> movements, float holeX, float holeY, float scale, float labelZoom)
     {
         var hasStart = movements.Any(movement => movement.Role == MovementRole.Start);
         var hasTop = movements.Any(movement => movement.Role == MovementRole.Top);
@@ -276,11 +277,11 @@ public sealed class CircuitEditorDrawable : IDrawable
 
         for (var index = 0; index < orderedMovements.Count; index++)
         {
-            DrawMovementTag(canvas, orderedMovements[index], holeX, holeY, scale, index, orderedMovements.Count);
+            DrawMovementTag(canvas, orderedMovements[index], holeX, holeY, scale, labelZoom, index, orderedMovements.Count);
         }
     }
 
-    private static void DrawMovementTag(ICanvas canvas, CircuitMovementDefinition movement, float holeX, float holeY, float scale, int index, int totalCount)
+    private static void DrawMovementTag(ICanvas canvas, CircuitMovementDefinition movement, float holeX, float holeY, float scale, float labelZoom, int index, int totalCount)
     {
         var color = GetMovementColor(movement);
         var text = movement.Role switch
@@ -291,10 +292,10 @@ public sealed class CircuitEditorDrawable : IDrawable
             _ => movement.Hand == HandSide.Right ? $"DX {movement.Sequence:00}" : $"SX {movement.Sequence:00}"
         };
 
-        var spacingY = Math.Max(12f, scale * 5.6f);
-        var tagHeight = Math.Max(11f, scale * 4.8f);
-        var tagWidth = Math.Max(34f, scale * 18f);
-        var baseX = holeX + Math.Max(10f, scale * 5.2f);
+        var spacingY = Math.Max(12f, scale * 5.6f) * labelZoom;
+        var tagHeight = Math.Max(11f, scale * 4.8f) * labelZoom;
+        var tagWidth = Math.Max(34f, scale * 18f) * labelZoom;
+        var baseX = holeX + (Math.Max(10f, scale * 5.2f) * labelZoom);
         var startY = holeY - (((totalCount - 1) * spacingY) / 2f);
         var tagY = startY + (index * spacingY);
 
@@ -306,8 +307,8 @@ public sealed class CircuitEditorDrawable : IDrawable
         canvas.FontColor = movement.Role is MovementRole.Top or MovementRole.Feet
             ? Color.FromArgb("#14110B")
             : Color.FromArgb("#F8E7A8");
-        canvas.FontSize = Math.Max(7.5f, scale * 2.5f);
-        canvas.DrawString(text, baseX + 4f, tagY - (tagHeight / 2f), tagWidth - 8f, tagHeight, HorizontalAlignment.Left, VerticalAlignment.Center);
+        canvas.FontSize = Math.Max(7.5f, scale * 2.5f) * labelZoom;
+        canvas.DrawString(text, baseX + (4f * labelZoom), tagY - (tagHeight / 2f), tagWidth - (8f * labelZoom), tagHeight, HorizontalAlignment.Left, VerticalAlignment.Center);
     }
 }
 
