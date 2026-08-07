@@ -55,7 +55,7 @@ public sealed class WallDefinition
 
         var numbered = new List<WallHoleDefinition>(allHoles.Count);
         var number = 1;
-        foreach (var hole in GetHolesInWallLedOrder(allHoles))
+        foreach (var hole in GetHolesInWallNumberOrder(allHoles))
         {
             var assignedNumber = number++;
             numbered.Add(hole with
@@ -502,6 +502,20 @@ public sealed class WallDefinition
                 yield return hole;
             }
         }
+    }
+
+    private static IEnumerable<WallHoleDefinition> GetHolesInWallNumberOrder(IEnumerable<WallHoleDefinition> holes)
+    {
+        // Il numero identifica fisicamente il foro nella parete, non il suo LED:
+        // parte dal basso e prosegue verso l'alto su tutti i pannelli insieme.
+        const double tolerance = 0.0001d;
+        return holes
+            .GroupBy(hole => Math.Round(hole.AbsoluteY / tolerance) * tolerance)
+            .OrderByDescending(group => group.Key)
+            .SelectMany(group => group
+                .OrderBy(hole => hole.AbsoluteX)
+                .ThenBy(hole => hole.PanelName, StringComparer.Ordinal)
+                .ThenBy(hole => hole.RelativeX));
     }
 
     private void ReplaceHoleMetadata(WallHoleDefinition replacement)
