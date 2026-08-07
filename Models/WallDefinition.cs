@@ -100,7 +100,8 @@ public sealed class WallDefinition
                     HoldSize = existingHole.HoldSize,
                     HoldType = existingHole.HoldType,
                     HasEstimatedHoldMetadata = existingHole.HasEstimatedHoldMetadata,
-                    SourceKind = WallHoleSourceKind.Generated
+                    SourceKind = WallHoleSourceKind.Generated,
+                    ManualOrder = existingHole.ManualOrder
                 });
                 continue;
             }

@@ -94,6 +94,12 @@ public partial class HardwareMappingPage : ContentPage
                 }
             }
 
+            if (viewModel.SelectedWall is not null)
+            {
+                viewModel.SelectedWall.RegenerateHoleLayoutFromPanels();
+                await viewModel.SaveSelectedWallAsync();
+            }
+
             SyncViewFromState();
         }
         catch (Exception ex)
