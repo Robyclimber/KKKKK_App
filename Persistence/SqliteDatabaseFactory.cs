@@ -8,6 +8,7 @@ public sealed class SqliteDatabaseFactory : ISqliteDatabaseFactory
     private const string CircuitHoleNumberMigrationKey = "routelab.circuit-hole-numbering-v2";
     private const string CircuitColumnNumberMigrationKey = "routelab.circuit-hole-numbering-v3";
     private const string CircuitPanelNumberMigrationKey = "routelab.circuit-hole-numbering-v4";
+    private const string CircuitPanelColumnNumberMigrationKey = "routelab.circuit-hole-numbering-v5";
     private const string CurrentDatabaseFileName = "ruotelab.db3";
     private const string LegacyDatabaseFileName = "kkkk-konki-kingkong.db3";
     private readonly SemaphoreSlim semaphore = new(1, 1);
@@ -89,6 +90,7 @@ public sealed class SqliteDatabaseFactory : ISqliteDatabaseFactory
             await MigrateCircuitHoleNumbersAsync();
             await MigrateCircuitNumbersToVerticalSerpentineAsync();
             await MigrateCircuitNumbersToPanelOrderAsync();
+            await MigrateCircuitNumbersToPanelColumnOrderAsync();
 
             return connection;
         }
@@ -341,6 +343,81 @@ public sealed class SqliteDatabaseFactory : ISqliteDatabaseFactory
             .ThenByDescending(group => GetPanelOrdinal(group.Key))
             .SelectMany(group => group.GroupBy(hole => Math.Round(hole.RelativeX / tolerance) * tolerance).OrderBy(column => column.Key)
                 .SelectMany((column, index) => index % 2 == 0 ? column.OrderByDescending(hole => hole.RelativeY).ThenBy(hole => hole.Id) : column.OrderBy(hole => hole.RelativeY).ThenBy(hole => hole.Id)));
+    }
+
+    private async Task MigrateCircuitNumbersToPanelColumnOrderAsync()
+    {
+        if (connection is null || Microsoft.Maui.Storage.Preferences.Default.Get(CircuitPanelColumnNumberMigrationKey, false)) return;
+
+        var walls = await connection.Table<WallEntity>().ToListAsync();
+        var holes = await connection.Table<WallHoleEntity>().ToListAsync();
+        var movements = await connection.Table<CircuitMovementEntity>().ToListAsync();
+        var changed = new List<CircuitMovementEntity>();
+
+        foreach (var wall in walls)
+        {
+            var wallHoles = holes.Where(hole => hole.WallId == wall.Id).ToList();
+            var oldOrder = GetSharedRelativeXPanelColumnOrder(wallHoles).ToList();
+            var newOrder = GetOrdinalPanelColumnOrder(wallHoles).ToList();
+            var newNumbers = newOrder.Select((hole, index) => (hole.Id, index: index + 1)).ToDictionary(item => item.Id, item => item.index);
+
+            foreach (var movement in movements.Where(movement => movement.WallName == wall.Name && movement.HoleNumber > 0 && movement.HoleNumber <= oldOrder.Count))
+            {
+                var replacement = newNumbers[oldOrder[movement.HoleNumber - 1].Id];
+                if (replacement == movement.HoleNumber) continue;
+                movement.HoleNumber = replacement;
+                changed.Add(movement);
+            }
+        }
+
+        if (changed.Count > 0) await connection.RunInTransactionAsync(transaction => { foreach (var movement in changed) transaction.Update(movement); });
+        Microsoft.Maui.Storage.Preferences.Default.Set(CircuitPanelColumnNumberMigrationKey, true);
+    }
+
+    private static IEnumerable<WallHoleEntity> GetSharedRelativeXPanelColumnOrder(IEnumerable<WallHoleEntity> holes)
+    {
+        return holes.GroupBy(hole => hole.PanelName, StringComparer.OrdinalIgnoreCase)
+            .GroupBy(panel => (GetPanelOrdinal(panel.Key) - 1) / 6)
+            .OrderBy(column => column.Key)
+            .SelectMany(wallColumn =>
+            {
+                var panels = wallColumn.ToList();
+                var columns = panels.SelectMany(panel => panel.Select(hole => Math.Round(hole.RelativeX, 4))).Distinct().OrderBy(x => x).ToList();
+                return columns.SelectMany((x, index) =>
+                {
+                    var bottomToTop = index % 2 == 0;
+                    var orderedPanels = bottomToTop ? panels.OrderByDescending(panel => GetPanelOrdinal(panel.Key)) : panels.OrderBy(panel => GetPanelOrdinal(panel.Key));
+                    return orderedPanels.SelectMany(panel =>
+                    {
+                        var panelHoles = panel.Where(hole => Math.Abs(Math.Round(hole.RelativeX, 4) - x) < 0.0001d);
+                        return bottomToTop ? panelHoles.OrderByDescending(hole => hole.RelativeY) : panelHoles.OrderBy(hole => hole.RelativeY);
+                    });
+                });
+            });
+    }
+
+    private static IEnumerable<WallHoleEntity> GetOrdinalPanelColumnOrder(IEnumerable<WallHoleEntity> holes)
+    {
+        return holes.GroupBy(hole => hole.PanelName, StringComparer.OrdinalIgnoreCase)
+            .GroupBy(panel => (GetPanelOrdinal(panel.Key) - 1) / 6)
+            .OrderBy(column => column.Key)
+            .SelectMany(wallColumn =>
+            {
+                var panels = wallColumn.ToList();
+                var panelColumns = panels.ToDictionary(panel => panel.Key, panel => panel.GroupBy(hole => Math.Round(hole.RelativeX, 4)).OrderBy(column => column.Key).Select(column => column.ToList()).ToList(), StringComparer.OrdinalIgnoreCase);
+                var count = panelColumns.Values.Max(columns => columns.Count);
+                return Enumerable.Range(0, count).SelectMany(index =>
+                {
+                    var bottomToTop = index % 2 == 0;
+                    var orderedPanels = bottomToTop ? panels.OrderByDescending(panel => GetPanelOrdinal(panel.Key)) : panels.OrderBy(panel => GetPanelOrdinal(panel.Key));
+                    return orderedPanels.SelectMany(panel =>
+                    {
+                        var columns = panelColumns[panel.Key];
+                        if (index >= columns.Count) return Enumerable.Empty<WallHoleEntity>();
+                        return bottomToTop ? columns[index].OrderByDescending(hole => hole.RelativeY) : columns[index].OrderBy(hole => hole.RelativeY);
+                    });
+                });
+            });
     }
 
     private static int GetPanelOrdinal(string panelName)
