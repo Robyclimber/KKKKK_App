@@ -1178,7 +1178,26 @@ public partial class CircuitPage : ContentPage
         try
         {
             var app = (App)Application.Current!;
-            var response = await app.Esp32ApiClient.SimulatePointAsync(app.Esp32SettingsService.Load(), selectedHole.PointId);
+            var wall = viewModel.CurrentWall;
+            if (wall is null)
+            {
+                return;
+            }
+
+            var settings = app.Esp32SettingsService.Load();
+            var configResponse = await app.Esp32ApiClient.PostConfigAsync(
+                settings,
+                app.Esp32PayloadBuilderService.BuildWallConfig(
+                    wall,
+                    new RoomDefinition { Name = wall.RoomName },
+                    settings));
+            if (!configResponse.Success)
+            {
+                await DisplayAlertAsync("Simulazione", configResponse.Message ?? "Impossibile sincronizzare la mappa della parete.", "OK");
+                return;
+            }
+
+            var response = await app.Esp32ApiClient.SimulatePointAsync(settings, selectedHole.PointId);
             if (!response.Success)
             {
                 await DisplayAlertAsync("Simulazione", response.Message ?? "Impossibile accendere il LED selezionato.", "OK");
