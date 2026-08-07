@@ -1,5 +1,7 @@
 ﻿using System.Globalization;
 using Microsoft.Maui.Controls.Shapes;
+using Microsoft.Maui.Layouts;
+using RouteLab.Drawing;
 using RouteLab.Models;
 using RouteLab.ViewModels;
 
@@ -33,10 +35,17 @@ public partial class HardwareMappingPage : ContentPage
     private readonly IReadOnlyList<LedStartDirection> availableWallLedDirections =
         [LedStartDirection.TopToBottom, LedStartDirection.BottomToTop];
     private readonly List<HoleMappingEditor> holeMappingEditors = new();
+    private readonly CircuitEditorDrawable manualOrderDrawable = new();
+    private readonly Dictionary<string, Image> manualOrderPanelImages = new(StringComparer.Ordinal);
     private bool isSyncingSelection;
     private bool showOnlyHoleMappingConflicts;
     private bool showOnlyManualOrder;
     private int visibleHoleMappingCount = HoleMappingBatchSize;
+    private double manualOrderZoom = 1d;
+    private double manualOrderZoomStart = 1d;
+    private double manualOrderBaseWidth = 320d;
+    private double manualOrderBaseHeight = 320d;
+    private WallHoleDefinition? selectedManualOrderHole;
 
     public HardwareMappingPage()
     {
@@ -47,6 +56,7 @@ public partial class HardwareMappingPage : ContentPage
             .Select(GetWallLedDirectionLabel)
             .ToList();
         Loaded += OnPageLoaded;
+        ManualOrderCanvas.Drawable = manualOrderDrawable;
     }
 
     private async void OnPageLoaded(object? sender, EventArgs e)
@@ -111,6 +121,10 @@ public partial class HardwareMappingPage : ContentPage
             ? "Nessuna parete selezionata."
             : $"{wall.DisplayLabel} - fori: {wall.GetOrderedHoles().Count}";
         SaveToolbarItem.IsEnabled = wall is not null;
+        manualOrderDrawable.Wall = wall;
+        manualOrderDrawable.HighlightedHole = selectedManualOrderHole;
+        manualOrderDrawable.SelectedHoles = Array.Empty<WallHoleDefinition>();
+        UpdateManualOrderPreview();
         RebuildHoleMappingsList();
     }
 
@@ -469,6 +483,109 @@ public partial class HardwareMappingPage : ContentPage
         catch (InvalidOperationException ex)
         {
             await DisplayAlertAsync("Mapping hardware della parete", ex.Message, "OK");
+        }
+    }
+
+    private void OnManualOrderViewportSizeChanged(object? sender, EventArgs e)
+    {
+        manualOrderBaseWidth = Math.Max(280d, ManualOrderViewport.Width - 4d);
+        manualOrderBaseHeight = Math.Max(280d, ManualOrderViewport.Height - 4d);
+        UpdateManualOrderPreview();
+    }
+
+    private void OnManualOrderPinchUpdated(object? sender, PinchGestureUpdatedEventArgs e)
+    {
+        if (e.Status == GestureStatus.Started)
+        {
+            manualOrderZoomStart = manualOrderZoom;
+        }
+        else if (e.Status == GestureStatus.Running)
+        {
+            manualOrderZoom = Math.Clamp(manualOrderZoomStart * e.Scale, 1d, 4d);
+            UpdateManualOrderPreview();
+        }
+    }
+
+    private async void OnManualOrderHoleTapped(object? sender, TappedEventArgs e)
+    {
+        var position = e.GetPosition(ManualOrderCanvas);
+        var hole = position is null ? null : manualOrderDrawable.FindNearestHole(position.Value, 30d);
+        if (hole is null || viewModel.SelectedWall is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var nextOrder = viewModel.SelectedWall.GetNextManualOrder();
+            viewModel.SetManualHoleOrder(hole.Value.Number, nextOrder);
+            await viewModel.SaveSelectedWallAsync();
+            selectedManualOrderHole = viewModel.SelectedWall.GetOrderedHoles().FirstOrDefault(item => item.ManualOrder == nextOrder);
+            ManualOrderSelectedHoleLabel.Text = $"Foro assegnato come #{nextOrder}. Tocca ora il foro #{nextOrder + 1}.";
+            SyncViewFromState();
+        }
+        catch (InvalidOperationException ex)
+        {
+            await DisplayAlertAsync("Ordine manuale", ex.Message, "OK");
+        }
+    }
+
+    private void UpdateManualOrderPreview()
+    {
+        var wall = viewModel.SelectedWall;
+        if (wall is null || !ManualOrderCanvas.IsLoaded)
+        {
+            return;
+        }
+
+        var padding = 48d;
+        var availableWidth = Math.Max(1d, manualOrderBaseWidth - padding);
+        var availableHeight = Math.Max(1d, manualOrderBaseHeight - padding);
+        manualOrderDrawable.PixelsPerMillimeter = (float)Math.Max(0.01d, Math.Min(availableWidth / wall.Width, availableHeight / wall.Height));
+        manualOrderDrawable.ZoomFactor = (float)manualOrderZoom;
+        var desiredSize = manualOrderDrawable.GetDesiredSize(manualOrderZoom);
+        ManualOrderCanvas.WidthRequest = Math.Max(manualOrderBaseWidth, desiredSize.Width);
+        ManualOrderCanvas.HeightRequest = Math.Max(manualOrderBaseHeight, desiredSize.Height);
+        ManualOrderLayer.WidthRequest = ManualOrderCanvas.WidthRequest;
+        ManualOrderLayer.HeightRequest = ManualOrderCanvas.HeightRequest;
+        UpdateManualOrderImages();
+        ManualOrderCanvas.Invalidate();
+    }
+
+    private void UpdateManualOrderImages()
+    {
+        var wall = viewModel.SelectedWall;
+        if (wall is null) return;
+
+        var wallBounds = manualOrderDrawable.GetWallBounds();
+        var scale = Math.Max(0.01f, manualOrderDrawable.PixelsPerMillimeter * manualOrderDrawable.ZoomFactor);
+        var activeKeys = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var panel in wall.Panels.Where(panel => !string.IsNullOrWhiteSpace(panel.ImagePath) && File.Exists(panel.ImagePath)))
+        {
+            var key = FormattableString.Invariant($"{panel.Name}:{panel.ImagePath}:{File.GetLastWriteTimeUtc(panel.ImagePath!).Ticks}");
+            activeKeys.Add(key);
+            if (!manualOrderPanelImages.TryGetValue(key, out var image))
+            {
+                image = new Image { Source = ImageSource.FromFile(panel.ImagePath!), Aspect = Aspect.Fill, InputTransparent = true };
+                manualOrderPanelImages[key] = image;
+                ManualOrderPanelImagesHost.Children.Add(image);
+            }
+
+            var x = wallBounds.X + ((float)panel.X * scale);
+            var y = wallBounds.Y + ((float)panel.Y * scale);
+            var width = (float)panel.Width * scale;
+            var height = (float)panel.Height * scale;
+            image.Opacity = panel.ImageOpacity <= 0 ? 0.55d : panel.ImageOpacity;
+            AbsoluteLayout.SetLayoutBounds(image, new Rect(x, y, width, height));
+            AbsoluteLayout.SetLayoutFlags(image, AbsoluteLayoutFlags.None);
+        }
+
+        foreach (var key in manualOrderPanelImages.Keys.Where(key => !activeKeys.Contains(key)).ToList())
+        {
+            var image = manualOrderPanelImages[key];
+            image.Source = null;
+            ManualOrderPanelImagesHost.Children.Remove(image);
+            manualOrderPanelImages.Remove(key);
         }
     }
 
