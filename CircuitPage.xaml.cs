@@ -156,6 +156,12 @@ public partial class CircuitPage : ContentPage
         UpdateInteractionButtons();
     }
 
+    private void OnSimulationModeClicked(object? sender, EventArgs e)
+    {
+        interactionMode = CircuitInteractionMode.Simulation;
+        UpdateInteractionButtons();
+    }
+
     private async void OnCreateCircuitClicked(object? sender, EventArgs e)
     {
         using var busy = AppBusy.Show("Creazione circuito...");
@@ -393,6 +399,9 @@ public partial class CircuitPage : ContentPage
                 break;
             case CircuitInteractionMode.Feet:
                 await ToggleFootHoldFromTapAsync(e);
+                break;
+            case CircuitInteractionMode.Simulation:
+                await SimulateHighlightedHoleAsync(e);
                 break;
             default:
                 ToggleHoleForHand(e, HandSide.Right, MovementRole.Normal);
@@ -1155,6 +1164,32 @@ public partial class CircuitPage : ContentPage
         }
     }
 
+    private async Task SimulateHighlightedHoleAsync(TappedEventArgs e)
+    {
+        var hole = FindTappedHole(e);
+        if (hole is not { IsEnabled: true } selectedHole || string.IsNullOrWhiteSpace(selectedHole.PointId))
+        {
+            return;
+        }
+
+        highlightedHole = selectedHole;
+        SyncView();
+
+        try
+        {
+            var app = (App)Application.Current!;
+            var response = await app.Esp32ApiClient.SimulatePointAsync(app.Esp32SettingsService.Load(), selectedHole.PointId);
+            if (!response.Success)
+            {
+                await DisplayAlertAsync("Simulazione", response.Message ?? "Impossibile accendere il LED selezionato.", "OK");
+            }
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlertAsync("Simulazione", $"Impossibile raggiungere la scheda: {ex.Message}", "OK");
+        }
+    }
+
     private async Task RemoveHighlightedHoleAsync()
     {
         if (highlightedHole is not WallHoleDefinition hole || hole.Number <= 0)
@@ -1205,6 +1240,7 @@ public partial class CircuitPage : ContentPage
         SetModeVisual(StartModeButton, interactionMode == CircuitInteractionMode.Start);
         SetModeVisual(TopModeButton, interactionMode == CircuitInteractionMode.Top);
         SetModeVisual(FeetModeButton, interactionMode == CircuitInteractionMode.Feet);
+        SetModeVisual(SimulationModeButton, interactionMode == CircuitInteractionMode.Simulation);
         SetModeVisual(RemoveModeButton, interactionMode == CircuitInteractionMode.Remove);
         InteractionHintLabel.Text = pageStateService
             .Build(viewModel, interactionMode, specialModeHand, CircuitWallPicker.SelectedItem as WallDefinition)

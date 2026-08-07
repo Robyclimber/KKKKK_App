@@ -297,12 +297,13 @@
                     Padding="16">
                 <VerticalStackLayout Spacing="12">
                     <Label Text="Modalita selezione movimento" FontSize="20" TextColor="{StaticResource WarmGold}" FontFamily="OpenSansSemibold" />
-                    <Grid ColumnDefinitions="*,*,*,*,*" ColumnSpacing="10">
+                    <Grid ColumnDefinitions="*,*,*,*,*,*" ColumnSpacing="10">
                         <Button x:Name="SelectModeButton" Text="Sel" Clicked="OnSelectModeClicked" />
                         <Button x:Name="RightHandModeButton" Grid.Column="1" Text="DX" Clicked="OnRightHandModeClicked" />
                         <Button x:Name="LeftHandModeButton" Grid.Column="2" Text="SX" Clicked="OnLeftHandModeClicked" />
                         <Button x:Name="StartModeButton" Grid.Column="3" Text="S" Clicked="OnStartModeClicked" />
                         <Button x:Name="TopModeButton" Grid.Column="4" Text="T" Clicked="OnTopModeClicked" />
+                        <Button x:Name="SimulationModeButton" Grid.Column="5" Text="Simula" Clicked="OnSimulationModeClicked" />
                     </Grid>
                     <Button x:Name="FeetModeButton"
                             Text="Piedi"

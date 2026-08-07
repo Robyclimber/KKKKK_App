@@ -51,6 +51,7 @@ public sealed class CircuitPageStateService : ICircuitPageStateService
                 CircuitInteractionMode.Top => $"Tap sul foro per impostare TOP con mano {(specialModeHand == HandSide.Right ? "DX" : "SX")}.",
                 CircuitInteractionMode.Remove => "Tap sul foro per rimuovere la presa dal circuito.",
                 CircuitInteractionMode.Feet => "Modalita Piedi attiva: tocca tutti i fori da accendere insieme durante il circuito.",
+                CircuitInteractionMode.Simulation => "Modalita Simulazione attiva: tocca un foro per accendere soltanto il suo LED, senza modificare il circuito.",
                 CircuitInteractionMode.LeftHand => "Tap sul foro per inserire il prossimo movimento Mano SX. Dopo l'inserimento il turno passa automaticamente a DX.",
                 _ => "Tap sul foro per inserire il prossimo movimento Mano DX. Dopo l'inserimento il turno passa automaticamente a SX."
             }

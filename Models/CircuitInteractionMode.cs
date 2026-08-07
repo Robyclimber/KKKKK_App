@@ -8,6 +8,7 @@ public enum CircuitInteractionMode
     Start = 3,
     Top = 4,
     Remove = 5,
-    Feet = 6
+    Feet = 6,
+    Simulation = 7
 }
 
