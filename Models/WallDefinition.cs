@@ -520,13 +520,17 @@ public sealed class WallDefinition
         foreach (var wallColumn in wallColumns)
         {
             var panels = wallColumn.ToList();
-            var internalColumns = panels
-                .SelectMany(panel => panel.Select(hole => Math.Round(hole.RelativeX, 4)))
-                .Distinct()
-                .OrderBy(x => x)
-                .ToList();
+            var panelColumns = panels.ToDictionary(
+                panel => panel.Key,
+                panel => panel
+                    .GroupBy(hole => Math.Round(hole.RelativeX, 4))
+                    .OrderBy(column => column.Key)
+                    .Select(column => column.ToList())
+                    .ToList(),
+                StringComparer.OrdinalIgnoreCase);
+            var internalColumnCount = panelColumns.Values.Max(columns => columns.Count);
 
-            for (var internalColumnIndex = 0; internalColumnIndex < internalColumns.Count; internalColumnIndex++)
+            for (var internalColumnIndex = 0; internalColumnIndex < internalColumnCount; internalColumnIndex++)
             {
                 var bottomToTop = internalColumnIndex % 2 == 0;
                 var orderedPanels = bottomToTop
@@ -535,7 +539,9 @@ public sealed class WallDefinition
 
                 foreach (var panel in orderedPanels)
                 {
-                    var panelHoles = panel.Where(hole => Math.Abs(Math.Round(hole.RelativeX, 4) - internalColumns[internalColumnIndex]) < 0.0001d);
+                    var columns = panelColumns[panel.Key];
+                    if (internalColumnIndex >= columns.Count) continue;
+                    var panelHoles = columns[internalColumnIndex];
                     result.AddRange(bottomToTop
                         ? panelHoles.OrderByDescending(hole => hole.RelativeY)
                         : panelHoles.OrderBy(hole => hole.RelativeY));
