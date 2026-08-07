@@ -506,62 +506,15 @@ public sealed class WallDefinition
 
     private static IEnumerable<WallHoleDefinition> GetHolesInWallNumberOrder(IEnumerable<WallHoleDefinition> holes)
     {
-        // I pannelli possono essere sfalsati: l'ordine deriva dal loro nome.
-        // Si percorre una colonna interna di fori su tutti i pannelli 1..6,
-        // poi la colonna interna successiva al contrario; solo alla fine si
-        // passa ai pannelli 7..12.
-        var wallColumns = holes
-            .GroupBy(hole => hole.PanelName, StringComparer.OrdinalIgnoreCase)
-            .GroupBy(group => GetPanelColumn(group.Key))
-            .OrderBy(group => group.Key)
-            .ToList();
-
-        var result = new List<WallHoleDefinition>();
-        foreach (var wallColumn in wallColumns)
-        {
-            var panels = wallColumn.ToList();
-            var panelColumns = panels.ToDictionary(
-                panel => panel.Key,
-                panel => panel
-                    .GroupBy(hole => Math.Round(hole.RelativeX, 4))
-                    .OrderBy(column => column.Key)
-                    .Select(column => column.ToList())
-                    .ToList(),
-                StringComparer.OrdinalIgnoreCase);
-            var internalColumnCount = panelColumns.Values.Max(columns => columns.Count);
-
-            for (var internalColumnIndex = 0; internalColumnIndex < internalColumnCount; internalColumnIndex++)
-            {
-                var bottomToTop = internalColumnIndex % 2 == 0;
-                var orderedPanels = bottomToTop
-                    ? panels.OrderByDescending(panel => GetPanelOrdinal(panel.Key))
-                    : panels.OrderBy(panel => GetPanelOrdinal(panel.Key));
-
-                foreach (var panel in orderedPanels)
-                {
-                    var columns = panelColumns[panel.Key];
-                    if (internalColumnIndex >= columns.Count) continue;
-                    var panelHoles = columns[internalColumnIndex];
-                    result.AddRange(bottomToTop
-                        ? panelHoles.OrderByDescending(hole => hole.RelativeY)
-                        : panelHoles.OrderBy(hole => hole.RelativeY));
-                }
-            }
-        }
-
-        return result;
-    }
-
-    private static int GetPanelColumn(string panelName)
-    {
-        var ordinal = GetPanelOrdinal(panelName);
-        return ordinal > 0 ? (ordinal - 1) / 6 : int.MaxValue;
-    }
-
-    private static int GetPanelOrdinal(string panelName)
-    {
-        var digits = new string(panelName.Reverse().TakeWhile(char.IsDigit).Reverse().ToArray());
-        return int.TryParse(digits, out var ordinal) ? ordinal : 0;
+        // L'ordine rispecchia la posizione fisica sulla parete: prima la colonna
+        // più a sinistra, dal basso verso l'alto; la colonna seguente al contrario.
+        const double tolerance = 0.0001d;
+        return holes
+            .GroupBy(hole => Math.Round(hole.AbsoluteX / tolerance) * tolerance)
+            .OrderBy(column => column.Key)
+            .SelectMany((column, index) => index % 2 == 0
+                ? column.OrderByDescending(hole => hole.AbsoluteY).ThenBy(hole => hole.AbsoluteX)
+                : column.OrderBy(hole => hole.AbsoluteY).ThenBy(hole => hole.AbsoluteX));
     }
 
 
