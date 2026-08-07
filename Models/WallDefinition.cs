@@ -506,19 +506,41 @@ public sealed class WallDefinition
 
     private static IEnumerable<WallHoleDefinition> GetHolesInWallNumberOrder(IEnumerable<WallHoleDefinition> holes)
     {
-        // Il numero identifica fisicamente il foro nella parete, non il suo LED:
-        // parte dal basso a sinistra e percorre verticalmente tutta la parete,
-        // alternando il verso a ogni colonna come una serpentina continua.
+        // I pannelli possono essere sfalsati: l'ordine fisico viene quindi dal
+        // numero nel loro nome. 1..6 sono la colonna sinistra e 7..12 quella
+        // destra; in ogni colonna si parte dal pannello con numero maggiore.
+        return holes
+            .GroupBy(hole => hole.PanelName, StringComparer.OrdinalIgnoreCase)
+            .OrderBy(group => GetPanelColumn(group.Key))
+            .ThenByDescending(group => GetPanelOrdinal(group.Key))
+            .ThenBy(group => group.Key, StringComparer.OrdinalIgnoreCase)
+            .SelectMany(group => GetHolesInPanelVerticalSerpentine(group));
+    }
+
+    private static int GetPanelColumn(string panelName)
+    {
+        var ordinal = GetPanelOrdinal(panelName);
+        return ordinal > 0 ? (ordinal - 1) / 6 : int.MaxValue;
+    }
+
+    private static int GetPanelOrdinal(string panelName)
+    {
+        var digits = new string(panelName.Reverse().TakeWhile(char.IsDigit).Reverse().ToArray());
+        return int.TryParse(digits, out var ordinal) ? ordinal : 0;
+    }
+
+    private static IEnumerable<WallHoleDefinition> GetHolesInPanelVerticalSerpentine(IEnumerable<WallHoleDefinition> holes)
+    {
         const double tolerance = 0.0001d;
         var columns = holes
-            .GroupBy(hole => Math.Round(hole.AbsoluteX / tolerance) * tolerance)
+            .GroupBy(hole => Math.Round(hole.RelativeX / tolerance) * tolerance)
             .OrderBy(group => group.Key)
             .ToList();
 
-        return columns.SelectMany((column, columnIndex) =>
-            columnIndex % 2 == 0
-                ? column.OrderByDescending(hole => hole.AbsoluteY).ThenBy(hole => hole.PanelName, StringComparer.Ordinal).ThenByDescending(hole => hole.RelativeY)
-                : column.OrderBy(hole => hole.AbsoluteY).ThenBy(hole => hole.PanelName, StringComparer.Ordinal).ThenBy(hole => hole.RelativeY));
+        return columns.SelectMany((column, index) =>
+            index % 2 == 0
+                ? column.OrderByDescending(hole => hole.RelativeY).ThenBy(hole => hole.AbsoluteY)
+                : column.OrderBy(hole => hole.RelativeY).ThenBy(hole => hole.AbsoluteY));
     }
 
     private void ReplaceHoleMetadata(WallHoleDefinition replacement)

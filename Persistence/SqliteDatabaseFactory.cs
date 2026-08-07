@@ -7,6 +7,7 @@ public sealed class SqliteDatabaseFactory : ISqliteDatabaseFactory
 {
     private const string CircuitHoleNumberMigrationKey = "routelab.circuit-hole-numbering-v2";
     private const string CircuitColumnNumberMigrationKey = "routelab.circuit-hole-numbering-v3";
+    private const string CircuitPanelNumberMigrationKey = "routelab.circuit-hole-numbering-v4";
     private const string CurrentDatabaseFileName = "ruotelab.db3";
     private const string LegacyDatabaseFileName = "kkkk-konki-kingkong.db3";
     private readonly SemaphoreSlim semaphore = new(1, 1);
@@ -87,6 +88,7 @@ public sealed class SqliteDatabaseFactory : ISqliteDatabaseFactory
             await EnsureDefaultRoomAsync();
             await MigrateCircuitHoleNumbersAsync();
             await MigrateCircuitNumbersToVerticalSerpentineAsync();
+            await MigrateCircuitNumbersToPanelOrderAsync();
 
             return connection;
         }
@@ -302,6 +304,49 @@ public sealed class SqliteDatabaseFactory : ISqliteDatabaseFactory
             index % 2 == 0
                 ? column.OrderByDescending(hole => hole.AbsoluteY).ThenBy(hole => hole.Id)
                 : column.OrderBy(hole => hole.AbsoluteY).ThenBy(hole => hole.Id));
+    }
+
+    private async Task MigrateCircuitNumbersToPanelOrderAsync()
+    {
+        if (connection is null || Microsoft.Maui.Storage.Preferences.Default.Get(CircuitPanelNumberMigrationKey, false)) return;
+        var walls = await connection.Table<WallEntity>().ToListAsync();
+        var holes = await connection.Table<WallHoleEntity>().ToListAsync();
+        var movements = await connection.Table<CircuitMovementEntity>().ToListAsync();
+        var changed = new List<CircuitMovementEntity>();
+
+        foreach (var wall in walls)
+        {
+            var wallHoles = holes.Where(hole => hole.WallId == wall.Id).ToList();
+            var oldOrder = GetVerticalSerpentineOrder(wallHoles).ToList();
+            var newOrder = GetPanelNameOrder(wallHoles).ToList();
+            var newNumbers = newOrder.Select((hole, index) => (hole.Id, index: index + 1)).ToDictionary(item => item.Id, item => item.index);
+            foreach (var movement in movements.Where(movement => movement.WallName == wall.Name && movement.HoleNumber > 0 && movement.HoleNumber <= oldOrder.Count))
+            {
+                var replacement = newNumbers[oldOrder[movement.HoleNumber - 1].Id];
+                if (replacement == movement.HoleNumber) continue;
+                movement.HoleNumber = replacement;
+                changed.Add(movement);
+            }
+        }
+
+        if (changed.Count > 0) await connection.RunInTransactionAsync(transaction => { foreach (var movement in changed) transaction.Update(movement); });
+        Microsoft.Maui.Storage.Preferences.Default.Set(CircuitPanelNumberMigrationKey, true);
+    }
+
+    private static IEnumerable<WallHoleEntity> GetPanelNameOrder(IEnumerable<WallHoleEntity> holes)
+    {
+        const double tolerance = 0.0001d;
+        return holes.GroupBy(hole => hole.PanelName, StringComparer.OrdinalIgnoreCase)
+            .OrderBy(group => (GetPanelOrdinal(group.Key) - 1) / 6)
+            .ThenByDescending(group => GetPanelOrdinal(group.Key))
+            .SelectMany(group => group.GroupBy(hole => Math.Round(hole.RelativeX / tolerance) * tolerance).OrderBy(column => column.Key)
+                .SelectMany((column, index) => index % 2 == 0 ? column.OrderByDescending(hole => hole.RelativeY).ThenBy(hole => hole.Id) : column.OrderBy(hole => hole.RelativeY).ThenBy(hole => hole.Id)));
+    }
+
+    private static int GetPanelOrdinal(string panelName)
+    {
+        var digits = new string(panelName.Reverse().TakeWhile(char.IsDigit).Reverse().ToArray());
+        return int.TryParse(digits, out var ordinal) ? ordinal : int.MaxValue;
     }
 
     private static string EnsureDatabasePath()
