@@ -35,6 +35,7 @@ public partial class HardwareMappingPage : ContentPage
     private readonly List<HoleMappingEditor> holeMappingEditors = new();
     private bool isSyncingSelection;
     private bool showOnlyHoleMappingConflicts;
+    private bool showOnlyManualOrder;
     private int visibleHoleMappingCount = HoleMappingBatchSize;
 
     public HardwareMappingPage()
@@ -142,6 +143,7 @@ public partial class HardwareMappingPage : ContentPage
         holeMappingEditors.Clear();
         HoleMappingsHost.Children.Clear();
         HoleMappingSummaryLabel.Text = string.Empty;
+        ManualOrderStatusLabel.Text = string.Empty;
         LoadMoreHoleMappingsButton.IsVisible = false;
 
         var wall = viewModel.SelectedWall;
@@ -153,6 +155,10 @@ public partial class HardwareMappingPage : ContentPage
         }
 
         var orderedHoles = wall.GetOrderedHoles();
+        var manualCount = orderedHoles.Count(hole => hole.ManualOrder > 0);
+        ManualOrderStatusLabel.Text = manualCount == 0
+            ? "1. Premi Azzera e ricomincia. 2. Sui fori, premi Assegna #1, #2, #3 nell'ordine fisico desiderato."
+            : $"Ordine manuale: {manualCount} / {orderedHoles.Count} fori assegnati. Prossimo numero: {wall.GetNextManualOrder()}.";
         var conflictState = BuildHoleMappingConflictState(orderedHoles);
         if (orderedHoles.Count == 0)
         {
@@ -161,7 +167,9 @@ public partial class HardwareMappingPage : ContentPage
             return;
         }
 
-        var holesToDisplay = showOnlyHoleMappingConflicts
+        var holesToDisplay = showOnlyManualOrder
+            ? orderedHoles.Where(hole => hole.ManualOrder > 0).OrderBy(hole => hole.ManualOrder).ToList()
+            : showOnlyHoleMappingConflicts
             ? orderedHoles.Where(hole => HasHoleMappingConflict(hole, conflictState)).ToList()
             : orderedHoles;
 
@@ -187,6 +195,7 @@ public partial class HardwareMappingPage : ContentPage
 
     private View CreateHoleMappingCard(WallHoleDefinition hole)
     {
+        var wall = viewModel.SelectedWall!;
         var pointIdEntry = new Entry
         {
             Text = hole.PointId,
@@ -231,6 +240,25 @@ public partial class HardwareMappingPage : ContentPage
         };
         pointIdEntry.Completed += async (_, _) => await ApplyAsync();
         pointIdEntry.Unfocused += async (_, _) => await ApplyAsync();
+        var assignManualOrderButton = new Button
+        {
+            Text = hole.ManualOrder > 0 ? $"Ordine manuale: {hole.ManualOrder}" : $"Assegna #{wall.GetNextManualOrder()}",
+            Style = (Style)Application.Current!.Resources["SecondaryActionButtonStyle"]!
+        };
+        assignManualOrderButton.Clicked += async (_, _) =>
+        {
+            try
+            {
+                viewModel.SetManualHoleOrder(hole.Number, wall.GetNextManualOrder());
+                await viewModel.SaveSelectedWallAsync();
+                visibleHoleMappingCount = Math.Max(visibleHoleMappingCount, HoleMappingBatchSize);
+                SyncViewFromState();
+            }
+            catch (InvalidOperationException ex)
+            {
+                await DisplayAlertAsync("Ordine manuale", ex.Message, "OK");
+            }
+        };
         var hardwareGrid = new Grid
         {
             ColumnDefinitions =
@@ -291,7 +319,8 @@ public partial class HardwareMappingPage : ContentPage
                     },
                     conflictLabel,
                     pointIdEntry,
-                    hardwareGrid
+                    hardwareGrid,
+                    assignManualOrderButton
                 }
             }
         };
@@ -375,6 +404,24 @@ public partial class HardwareMappingPage : ContentPage
     private void OnShowOnlyHoleConflictsToggled(object? sender, ToggledEventArgs e)
     {
         showOnlyHoleMappingConflicts = e.Value;
+        visibleHoleMappingCount = HoleMappingBatchSize;
+        RebuildHoleMappingsList();
+    }
+
+    private async void OnClearManualOrderClicked(object? sender, EventArgs e)
+    {
+        if (viewModel.SelectedWall is null) return;
+        var confirmed = await DisplayAlertAsync("Ordine manuale", "Vuoi cancellare l'ordine manuale e ricominciare da 1?", "Sì", "No");
+        if (!confirmed) return;
+        viewModel.ClearManualHoleOrder();
+        await viewModel.SaveSelectedWallAsync();
+        showOnlyManualOrder = false;
+        SyncViewFromState();
+    }
+
+    private void OnShowManualOrderClicked(object? sender, EventArgs e)
+    {
+        showOnlyManualOrder = !showOnlyManualOrder;
         visibleHoleMappingCount = HoleMappingBatchSize;
         RebuildHoleMappingsList();
     }

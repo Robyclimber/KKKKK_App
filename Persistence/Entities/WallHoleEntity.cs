@@ -40,5 +40,7 @@ public sealed class WallHoleEntity
     public bool HasEstimatedHoldMetadata { get; set; } = true;
 
     public int SourceKind { get; set; }
+
+    public int ManualOrder { get; set; }
 }
 

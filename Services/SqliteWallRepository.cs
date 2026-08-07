@@ -121,7 +121,8 @@ public sealed class SqliteWallRepository : IWallRepository
                     HoldSize = (int)hole.HoldSize,
                     HoldType = (int)hole.HoldType,
                     HasEstimatedHoldMetadata = hole.HasEstimatedHoldMetadata,
-                    SourceKind = (int)hole.SourceKind
+                    SourceKind = (int)hole.SourceKind,
+                    ManualOrder = hole.ManualOrder
                 });
             }
 
@@ -279,7 +280,8 @@ public sealed class SqliteWallRepository : IWallRepository
                             HoldSize = (int)generatedHole.HoldSize,
                             HoldType = (int)generatedHole.HoldType,
                             HasEstimatedHoldMetadata = generatedHole.HasEstimatedHoldMetadata,
-                            SourceKind = (int)generatedHole.SourceKind
+                            SourceKind = (int)generatedHole.SourceKind,
+                            ManualOrder = generatedHole.ManualOrder
                         });
                     }
                 }
@@ -305,7 +307,8 @@ public sealed class SqliteWallRepository : IWallRepository
                             holeEntity.HasEstimatedHoldMetadata,
                             Enum.IsDefined(typeof(WallHoleSourceKind), holeEntity.SourceKind)
                                 ? (WallHoleSourceKind)holeEntity.SourceKind
-                                : WallHoleSourceKind.Generated));
+                                : WallHoleSourceKind.Generated,
+                            holeEntity.ManualOrder));
                     }
                 }
 

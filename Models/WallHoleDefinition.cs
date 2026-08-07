@@ -16,7 +16,8 @@ public readonly record struct WallHoleDefinition(
     HoldSize HoldSize = HoldSize.M,
     HoldType HoldType = HoldType.Jug,
     bool HasEstimatedHoldMetadata = true,
-    WallHoleSourceKind SourceKind = WallHoleSourceKind.Generated)
+    WallHoleSourceKind SourceKind = WallHoleSourceKind.Generated,
+    int ManualOrder = 0)
 {
     public string HoldSummary =>
         !HasHold

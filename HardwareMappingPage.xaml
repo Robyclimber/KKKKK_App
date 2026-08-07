@@ -78,6 +78,25 @@
                                     Toggled="OnShowOnlyHoleConflictsToggled" />
                         </HorizontalStackLayout>
                     </Grid>
+                    <Border BackgroundColor="#282217" Stroke="#B9922F" StrokeShape="RoundRectangle 10" Padding="10">
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="Procedura ordine manuale dei fori"
+                                   TextColor="{StaticResource WarmGold}"
+                                   FontFamily="OpenSansSemibold" />
+                            <Label x:Name="ManualOrderStatusLabel"
+                                   TextColor="{StaticResource MutedText}"
+                                   FontSize="12" />
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                <Button Text="Azzera e ricomincia"
+                                        Style="{StaticResource SecondaryActionButtonStyle}"
+                                        Clicked="OnClearManualOrderClicked" />
+                                <Button Grid.Column="1"
+                                        Text="Mostra ordine manuale"
+                                        Style="{StaticResource SecondaryActionButtonStyle}"
+                                        Clicked="OnShowManualOrderClicked" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
                     <Button Text="Aggiorna elenco"
                             Style="{StaticResource SecondaryActionButtonStyle}"
                             Clicked="OnRefreshClicked" />

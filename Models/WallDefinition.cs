@@ -179,6 +179,41 @@ public sealed class WallDefinition
         ValidateHardwareMappings();
     }
 
+    public int GetNextManualOrder() => HoleLayout.Count(hole => hole.ManualOrder > 0) + 1;
+
+    public void SetManualHoleOrder(int holeNumber, int manualOrder)
+    {
+        if (manualOrder <= 0)
+        {
+            throw new InvalidOperationException("L'ordine manuale deve essere maggiore di zero.");
+        }
+
+        var orderedHoles = GetOrderedHoles();
+        var targetHole = orderedHoles.FirstOrDefault(hole => hole.Number == holeNumber);
+        if (targetHole.Number == 0)
+        {
+            throw new InvalidOperationException("Foro non trovato.");
+        }
+
+        if (HoleLayout.Any(hole => hole.ManualOrder == manualOrder && !IsSameHole(hole, targetHole)))
+        {
+            throw new InvalidOperationException($"L'ordine {manualOrder} è già assegnato a un altro foro.");
+        }
+
+        ReplaceHoleMetadata(targetHole with { ManualOrder = manualOrder });
+    }
+
+    public void ClearManualHoleOrder()
+    {
+        for (var index = 0; index < HoleLayout.Count; index++)
+        {
+            if (HoleLayout[index].ManualOrder > 0)
+            {
+                HoleLayout[index] = HoleLayout[index] with { Number = 0, ManualOrder = 0 };
+            }
+        }
+    }
+
     public void AutoAssignLedIndicesByWallRouting()
     {
         if (HoleLayout.Count == 0)
@@ -509,12 +544,21 @@ public sealed class WallDefinition
         // L'ordine rispecchia la posizione fisica sulla parete: prima la colonna
         // più a sinistra, dal basso verso l'alto; la colonna seguente al contrario.
         const double tolerance = 0.0001d;
-        return holes
+        var materialized = holes.ToList();
+        var manuallyOrdered = materialized
+            .Where(hole => hole.ManualOrder > 0)
+            .OrderBy(hole => hole.ManualOrder)
+            .ThenBy(hole => hole.AbsoluteX)
+            .ThenByDescending(hole => hole.AbsoluteY)
+            .ToList();
+        var remaining = materialized.Where(hole => hole.ManualOrder <= 0);
+
+        return manuallyOrdered.Concat(remaining
             .GroupBy(hole => Math.Round(hole.AbsoluteX / tolerance) * tolerance)
             .OrderBy(column => column.Key)
             .SelectMany((column, index) => index % 2 == 0
                 ? column.OrderByDescending(hole => hole.AbsoluteY).ThenBy(hole => hole.AbsoluteX)
-                : column.OrderBy(hole => hole.AbsoluteY).ThenBy(hole => hole.AbsoluteX));
+                : column.OrderBy(hole => hole.AbsoluteY).ThenBy(hole => hole.AbsoluteX)));
     }
 
 

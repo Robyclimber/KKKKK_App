@@ -316,6 +316,18 @@ public class GymSetupViewModel
         SelectedWall!.UpdateHoleHardware(holeNumber, pointId, ledIndex, isEnabled);
     }
 
+    public void SetManualHoleOrder(int holeNumber, int manualOrder)
+    {
+        EnsureWallSelected();
+        SelectedWall!.SetManualHoleOrder(holeNumber, manualOrder);
+    }
+
+    public void ClearManualHoleOrder()
+    {
+        EnsureWallSelected();
+        SelectedWall!.ClearManualHoleOrder();
+    }
+
     public IReadOnlyList<WallHoleDefinition> GetSelectedPanelHoles()
     {
         EnsureWallSelected();

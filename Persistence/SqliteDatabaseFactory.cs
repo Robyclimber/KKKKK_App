@@ -87,6 +87,7 @@ public sealed class SqliteDatabaseFactory : ISqliteDatabaseFactory
             await EnsureColumnAsync("wall_holes", "PointId", "TEXT NOT NULL DEFAULT ''");
             await EnsureColumnAsync("wall_holes", "LedIndex", "INTEGER NOT NULL DEFAULT 0");
             await EnsureColumnAsync("wall_holes", "IsEnabled", "INTEGER NOT NULL DEFAULT 1");
+            await EnsureColumnAsync("wall_holes", "ManualOrder", "INTEGER NOT NULL DEFAULT 0");
             await EnsureDefaultRoomAsync();
             await MigrateCircuitHoleNumbersAsync();
             await MigrateCircuitNumbersToVerticalSerpentineAsync();
