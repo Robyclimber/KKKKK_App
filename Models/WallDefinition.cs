@@ -506,15 +506,44 @@ public sealed class WallDefinition
 
     private static IEnumerable<WallHoleDefinition> GetHolesInWallNumberOrder(IEnumerable<WallHoleDefinition> holes)
     {
-        // I pannelli possono essere sfalsati: l'ordine fisico viene quindi dal
-        // numero nel loro nome. 1..6 sono la colonna sinistra e 7..12 quella
-        // destra; in ogni colonna si parte dal pannello con numero maggiore.
-        return holes
+        // I pannelli possono essere sfalsati: l'ordine deriva dal loro nome.
+        // Si percorre una colonna interna di fori su tutti i pannelli 1..6,
+        // poi la colonna interna successiva al contrario; solo alla fine si
+        // passa ai pannelli 7..12.
+        var wallColumns = holes
             .GroupBy(hole => hole.PanelName, StringComparer.OrdinalIgnoreCase)
-            .OrderBy(group => GetPanelColumn(group.Key))
-            .ThenByDescending(group => GetPanelOrdinal(group.Key))
-            .ThenBy(group => group.Key, StringComparer.OrdinalIgnoreCase)
-            .SelectMany(group => GetHolesInPanelVerticalSerpentine(group));
+            .GroupBy(group => GetPanelColumn(group.Key))
+            .OrderBy(group => group.Key)
+            .ToList();
+
+        var result = new List<WallHoleDefinition>();
+        foreach (var wallColumn in wallColumns)
+        {
+            var panels = wallColumn.ToList();
+            var internalColumns = panels
+                .SelectMany(panel => panel.Select(hole => Math.Round(hole.RelativeX, 4)))
+                .Distinct()
+                .OrderBy(x => x)
+                .ToList();
+
+            for (var internalColumnIndex = 0; internalColumnIndex < internalColumns.Count; internalColumnIndex++)
+            {
+                var bottomToTop = internalColumnIndex % 2 == 0;
+                var orderedPanels = bottomToTop
+                    ? panels.OrderByDescending(panel => GetPanelOrdinal(panel.Key))
+                    : panels.OrderBy(panel => GetPanelOrdinal(panel.Key));
+
+                foreach (var panel in orderedPanels)
+                {
+                    var panelHoles = panel.Where(hole => Math.Abs(Math.Round(hole.RelativeX, 4) - internalColumns[internalColumnIndex]) < 0.0001d);
+                    result.AddRange(bottomToTop
+                        ? panelHoles.OrderByDescending(hole => hole.RelativeY)
+                        : panelHoles.OrderBy(hole => hole.RelativeY));
+                }
+            }
+        }
+
+        return result;
     }
 
     private static int GetPanelColumn(string panelName)
@@ -529,19 +558,6 @@ public sealed class WallDefinition
         return int.TryParse(digits, out var ordinal) ? ordinal : 0;
     }
 
-    private static IEnumerable<WallHoleDefinition> GetHolesInPanelVerticalSerpentine(IEnumerable<WallHoleDefinition> holes)
-    {
-        const double tolerance = 0.0001d;
-        var columns = holes
-            .GroupBy(hole => Math.Round(hole.RelativeX / tolerance) * tolerance)
-            .OrderBy(group => group.Key)
-            .ToList();
-
-        return columns.SelectMany((column, index) =>
-            index % 2 == 0
-                ? column.OrderByDescending(hole => hole.RelativeY).ThenBy(hole => hole.AbsoluteY)
-                : column.OrderBy(hole => hole.RelativeY).ThenBy(hole => hole.AbsoluteY));
-    }
 
     private void ReplaceHoleMetadata(WallHoleDefinition replacement)
     {
