@@ -555,12 +555,18 @@ public sealed class WallDefinition
             .ThenBy(hole => hole.AbsoluteX)
             .ThenByDescending(hole => hole.AbsoluteY)
             .ToList();
+        // Panel names are labels only: physical PanelX/PanelY define which
+        // holes belong together and therefore the wall numbering order.
         var panelGroups = materialized
             .Where(hole => hole.ManualOrder <= 0)
-            .GroupBy(hole => hole.PanelName, StringComparer.OrdinalIgnoreCase)
+            .GroupBy(hole => new
+            {
+                PanelX = Math.Round(hole.PanelX / tolerance) * tolerance,
+                PanelY = Math.Round(hole.PanelY / tolerance) * tolerance
+            })
             .ToList();
         var wallColumns = panelGroups
-            .GroupBy(panel => Math.Round(panel.Min(hole => hole.PanelX) / tolerance) * tolerance)
+            .GroupBy(panel => panel.Key.PanelX)
             .OrderBy(column => column.Key)
             .ToList();
 
@@ -568,11 +574,11 @@ public sealed class WallDefinition
         foreach (var wallColumn in wallColumns)
         {
             var panels = wallColumn
-                .OrderByDescending(panel => panel.Max(hole => hole.PanelY))
-                .ThenBy(panel => panel.Key, StringComparer.OrdinalIgnoreCase)
+                .OrderByDescending(panel => panel.Key.PanelY)
+                .ThenBy(panel => panel.Key.PanelX)
                 .Select(panel => new
                 {
-                    PanelY = panel.Max(hole => hole.PanelY),
+                    PanelY = panel.Key.PanelY,
                     Columns = panel
                         .GroupBy(hole => Math.Round(hole.RelativeX / tolerance) * tolerance)
                         .OrderBy(column => column.Key)
