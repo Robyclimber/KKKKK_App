@@ -44,9 +44,11 @@ public sealed class WallDefinition
 
     public IReadOnlyList<WallHoleDefinition> GetOrderedHoles()
     {
-        var allHoles = HoleLayout.Count > 0
+        var allHoles = (HoleLayout.Count > 0
             ? HoleLayout.ToList()
-            : BuildHoleLayoutFromPanels();
+            : BuildHoleLayoutFromPanels())
+            .Where(hole => hole.IsEnabled && !hole.IsSuppressed)
+            .ToList();
 
         if (allHoles.Count == 0)
         {
@@ -180,7 +182,7 @@ public sealed class WallDefinition
         ValidateHardwareMappings();
     }
 
-    public int GetNextManualOrder() => HoleLayout.Count(hole => hole.ManualOrder > 0) + 1;
+    public int GetNextManualOrder() => HoleLayout.Count(hole => hole.IsEnabled && !hole.IsSuppressed && hole.ManualOrder > 0) + 1;
 
     public void SetManualHoleOrder(int holeNumber, int manualOrder)
     {
