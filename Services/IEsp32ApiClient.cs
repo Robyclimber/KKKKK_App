@@ -36,6 +36,8 @@ public interface IEsp32ApiClient
 
     Task<Esp32ApiResponse<Esp32SimpleResultData>> SimulatePointAsync(Esp32DeviceSettings settings, string pointId, CancellationToken cancellationToken = default);
 
+    Task<Esp32ApiResponse<Esp32SimpleResultData>> SetSignTextAsync(Esp32DeviceSettings settings, string text, CancellationToken cancellationToken = default);
+
     Task<Esp32ApiResponse<Esp32SimpleResultData>> StartRestFeedbackAsync(Esp32DeviceSettings settings, Esp32RestFeedbackStartRequest request, CancellationToken cancellationToken = default);
 
     Task<Esp32ApiResponse<Esp32SimpleResultData>> CompleteRestFeedbackAsync(Esp32DeviceSettings settings, Esp32RestFeedbackCompleteRequest request, CancellationToken cancellationToken = default);

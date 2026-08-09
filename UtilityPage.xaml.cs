@@ -147,6 +147,24 @@ public partial class UtilityPage : ContentPage
         });
     }
 
+    private async void OnSendSignTextClicked(object? sender, EventArgs e)
+    {
+        var text = SignTextEntry.Text?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            Esp32StatusLabel.Text = "Scrivi prima una frase da mostrare sulla matrice.";
+            return;
+        }
+
+        await RunEsp32ActionAsync(async settings =>
+        {
+            var response = await app!.Esp32ApiClient.SetSignTextAsync(settings, text);
+            return response.Success
+                ? $"Scritta matrice aggiornata: {text}"
+                : $"Scritta matrice KO - {response.ErrorCode} - {response.Message}";
+        });
+    }
+
     private async void OnSendWallConfigClicked(object? sender, EventArgs e)
     {
         await RunEsp32ActionAsync(async settings =>

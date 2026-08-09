@@ -52,6 +52,20 @@
                         <Button Grid.Column="1" Text="Status" Clicked="OnEsp32StatusClicked" />
                     </Grid>
                     <VerticalStackLayout Spacing="4">
+                        <Label Text="Scritta matrice LED" TextColor="{StaticResource MutedText}" FontSize="13" />
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                            <Entry x:Name="SignTextEntry"
+                                   Placeholder="Scrivi una frase (max 80 caratteri)"
+                                   MaxLength="80"
+                                   ReturnType="Send"
+                                   Completed="OnSendSignTextClicked" />
+                            <Button Grid.Column="1" Text="Mostra" Clicked="OnSendSignTextClicked" />
+                        </Grid>
+                        <Label Text="Fino a due lettere restano fisse; le frasi più lunghe scorrono sulla matrice 5×8."
+                               TextColor="{StaticResource MutedText}"
+                               FontSize="12" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Spacing="4">
                         <Label Text="Parete da sincronizzare" TextColor="{StaticResource MutedText}" FontSize="13" />
                         <Picker x:Name="Esp32WallPicker"
                                 Title="Seleziona parete"

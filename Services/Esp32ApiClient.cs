@@ -108,6 +108,11 @@ public sealed class Esp32ApiClient : IEsp32ApiClient
         return SendAsync<Esp32SimpleResultData>(settings, HttpMethod.Post, "test/simulate-point", new { PointId = pointId }, cancellationToken);
     }
 
+    public Task<Esp32ApiResponse<Esp32SimpleResultData>> SetSignTextAsync(Esp32DeviceSettings settings, string text, CancellationToken cancellationToken = default)
+    {
+        return SendAsync<Esp32SimpleResultData>(settings, HttpMethod.Post, "sign/text", new { Text = text }, cancellationToken);
+    }
+
     public Task<Esp32ApiResponse<Esp32SimpleResultData>> StartRestFeedbackAsync(Esp32DeviceSettings settings, Esp32RestFeedbackStartRequest request, CancellationToken cancellationToken = default)
     {
         return SendAsync<Esp32SimpleResultData>(settings, HttpMethod.Post, "training/rest/start", request, cancellationToken);
