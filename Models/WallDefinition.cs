@@ -542,9 +542,9 @@ public sealed class WallDefinition
 
     private static IEnumerable<WallHoleDefinition> GetHolesInWallNumberOrder(IEnumerable<WallHoleDefinition> holes)
     {
-        // Prima i pannelli da sinistra a destra e, nella stessa colonna di
-        // pannelli, dal basso verso l'alto. Poi si percorre la prima colonna
-        // interna di tutti i pannelli, quindi la seconda e così via.
+        // Si completa una colonna esterna di pannelli alla volta (6..1, poi
+        // 12..7). All'interno di ogni colonna esterna, le colonne dei fori
+        // sono una serpentina: basso→alto, alto→basso, e così via.
         const double tolerance = 0.0001d;
         var materialized = holes.ToList();
         var manuallyOrdered = materialized
@@ -553,29 +553,47 @@ public sealed class WallDefinition
             .ThenBy(hole => hole.AbsoluteX)
             .ThenByDescending(hole => hole.AbsoluteY)
             .ToList();
-        var panels = materialized
+        var panelGroups = materialized
             .Where(hole => hole.ManualOrder <= 0)
             .GroupBy(hole => hole.PanelName, StringComparer.OrdinalIgnoreCase)
-            .OrderBy(panel => panel.Min(hole => hole.PanelX))
-            .ThenByDescending(panel => panel.Max(hole => hole.PanelY))
-            .ThenBy(panel => panel.Key, StringComparer.OrdinalIgnoreCase)
-            .Select(panel => panel
-                .GroupBy(hole => Math.Round(hole.RelativeX / tolerance) * tolerance)
-                .OrderBy(column => column.Key)
-                .Select(column => column.ToList())
-                .ToList())
+            .ToList();
+        var wallColumns = panelGroups
+            .GroupBy(panel => Math.Round(panel.Min(hole => hole.PanelX) / tolerance) * tolerance)
+            .OrderBy(column => column.Key)
             .ToList();
 
-        var internalColumnCount = panels.Count == 0 ? 0 : panels.Max(panel => panel.Count);
         var ordered = new List<WallHoleDefinition>();
-        for (var internalColumn = 0; internalColumn < internalColumnCount; internalColumn++)
+        foreach (var wallColumn in wallColumns)
         {
-            foreach (var panelColumns in panels)
+            var panels = wallColumn
+                .OrderByDescending(panel => panel.Max(hole => hole.PanelY))
+                .ThenBy(panel => panel.Key, StringComparer.OrdinalIgnoreCase)
+                .Select(panel => new
+                {
+                    PanelY = panel.Max(hole => hole.PanelY),
+                    Columns = panel
+                        .GroupBy(hole => Math.Round(hole.RelativeX / tolerance) * tolerance)
+                        .OrderBy(column => column.Key)
+                        .Select(column => column.ToList())
+                        .ToList()
+                })
+                .ToList();
+            var internalColumnCount = panels.Count == 0 ? 0 : panels.Max(panel => panel.Columns.Count);
+
+            for (var internalColumn = 0; internalColumn < internalColumnCount; internalColumn++)
             {
-                if (internalColumn >= panelColumns.Count) continue;
-                ordered.AddRange(panelColumns[internalColumn]
-                    .OrderByDescending(hole => hole.RelativeY)
-                    .ThenBy(hole => hole.RelativeX));
+                var bottomToTop = internalColumn % 2 == 0;
+                var orderedPanels = bottomToTop
+                    ? panels.OrderByDescending(panel => panel.PanelY)
+                    : panels.OrderBy(panel => panel.PanelY);
+
+                foreach (var panel in orderedPanels)
+                {
+                    if (internalColumn >= panel.Columns.Count) continue;
+                    ordered.AddRange(bottomToTop
+                        ? panel.Columns[internalColumn].OrderByDescending(hole => hole.RelativeY)
+                        : panel.Columns[internalColumn].OrderBy(hole => hole.RelativeY));
+                }
             }
         }
 
