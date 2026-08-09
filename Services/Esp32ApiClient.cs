@@ -34,9 +34,33 @@ public sealed class Esp32ApiClient : IEsp32ApiClient
         return SendAsync<Esp32EditorialCircuitsCatalogData>(settings, HttpMethod.Get, "circuits/editorial", null, cancellationToken);
     }
 
-    public Task<Esp32ApiResponse<Esp32SimpleResultData>> PostConfigAsync(Esp32DeviceSettings settings, Esp32WallConfigPayload payload, CancellationToken cancellationToken = default)
+    public async Task<Esp32ApiResponse<Esp32SimpleResultData>> PostConfigAsync(Esp32DeviceSettings settings, Esp32WallConfigPayload payload, CancellationToken cancellationToken = default)
     {
-        return SendAsync<Esp32SimpleResultData>(settings, HttpMethod.Post, "config", payload, cancellationToken);
+        var started = await SendAsync<Esp32SimpleResultData>(settings, HttpMethod.Post, "config/begin", new
+        {
+            payload.WallId,
+            payload.WallName,
+            payload.RoomId,
+            payload.RoomName,
+            payload.ControllerId,
+            payload.LedCount,
+            payload.BrightnessLimit
+        }, cancellationToken);
+        if (!started.Success)
+        {
+            return started;
+        }
+
+        foreach (var points in payload.Points.Chunk(24))
+        {
+            var accepted = await SendAsync<Esp32SimpleResultData>(settings, HttpMethod.Post, "config/points", new { Points = points }, cancellationToken);
+            if (!accepted.Success)
+            {
+                return accepted;
+            }
+        }
+
+        return await SendAsync<Esp32SimpleResultData>(settings, HttpMethod.Post, "config/commit", new { }, cancellationToken);
     }
 
     public Task<Esp32ApiResponse<Esp32SimpleResultData>> PostCircuitsAsync(Esp32DeviceSettings settings, Esp32CircuitsPayload payload, CancellationToken cancellationToken = default)
