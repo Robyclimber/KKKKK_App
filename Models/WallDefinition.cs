@@ -542,8 +542,9 @@ public sealed class WallDefinition
 
     private static IEnumerable<WallHoleDefinition> GetHolesInWallNumberOrder(IEnumerable<WallHoleDefinition> holes)
     {
-        // L'ordine rispecchia la posizione fisica sulla parete: prima la colonna
-        // più a sinistra, dal basso verso l'alto; la colonna seguente al contrario.
+        // Prima i pannelli da sinistra a destra e, nella stessa colonna di
+        // pannelli, dal basso verso l'alto. Poi si percorre la prima colonna
+        // interna di tutti i pannelli, quindi la seconda e così via.
         const double tolerance = 0.0001d;
         var materialized = holes.ToList();
         var manuallyOrdered = materialized
@@ -552,14 +553,33 @@ public sealed class WallDefinition
             .ThenBy(hole => hole.AbsoluteX)
             .ThenByDescending(hole => hole.AbsoluteY)
             .ToList();
-        var remaining = materialized.Where(hole => hole.ManualOrder <= 0);
+        var panels = materialized
+            .Where(hole => hole.ManualOrder <= 0)
+            .GroupBy(hole => hole.PanelName, StringComparer.OrdinalIgnoreCase)
+            .OrderBy(panel => panel.Min(hole => hole.PanelX))
+            .ThenByDescending(panel => panel.Max(hole => hole.PanelY))
+            .ThenBy(panel => panel.Key, StringComparer.OrdinalIgnoreCase)
+            .Select(panel => panel
+                .GroupBy(hole => Math.Round(hole.RelativeX / tolerance) * tolerance)
+                .OrderBy(column => column.Key)
+                .Select(column => column.ToList())
+                .ToList())
+            .ToList();
 
-        return manuallyOrdered.Concat(remaining
-            .GroupBy(hole => Math.Round(hole.AbsoluteX / tolerance) * tolerance)
-            .OrderBy(column => column.Key)
-            .SelectMany((column, index) => index % 2 == 0
-                ? column.OrderByDescending(hole => hole.AbsoluteY).ThenBy(hole => hole.AbsoluteX)
-                : column.OrderBy(hole => hole.AbsoluteY).ThenBy(hole => hole.AbsoluteX)));
+        var internalColumnCount = panels.Count == 0 ? 0 : panels.Max(panel => panel.Count);
+        var ordered = new List<WallHoleDefinition>();
+        for (var internalColumn = 0; internalColumn < internalColumnCount; internalColumn++)
+        {
+            foreach (var panelColumns in panels)
+            {
+                if (internalColumn >= panelColumns.Count) continue;
+                ordered.AddRange(panelColumns[internalColumn]
+                    .OrderByDescending(hole => hole.RelativeY)
+                    .ThenBy(hole => hole.RelativeX));
+            }
+        }
+
+        return manuallyOrdered.Concat(ordered);
     }
 
 
